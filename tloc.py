@@ -1,4 +1,5 @@
 import numpy as np
+import random
 from pathlib import Path
 
 class Structure:
@@ -88,3 +89,17 @@ class Structure:
       
    def squared_length(self):
       nmol, nconnect, transinter, distx, disty = get_interactions()
+
+   def get_jrnd(javg, jdelta):   # Assuming it is not a function of (xmed, xvar, x, y)
+    
+    rnd1 = random.random()    #discuss whether we need seed
+    rnd2 = random.random()    #maybe not use random seed, but keep track of values used for possible reproducibility
+    
+    log = -2 * np.log(1 - rnd1)
+    cos = np.sqrt(log) * np.cos(2 * np.pi * rnd2)
+    sin = np.sqrt(log) * np.sin(2 * np.pi * rnd2)
+    
+    jrnd = javg + (jdelta * cos)
+    #y = javg + (jdelta * sin)     this might be forgotten and not implemented 
+    
+    return jrnd       # Assuming it is to return (x, y)
