@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import linalg
 from pathlib import Path
 
 class Structure:
@@ -72,19 +73,65 @@ class Structure:
       transcoords_mk = (transvecs_tk[:, None] \
          + self.coordmol[None, :]).reshape(nmol, 3)
 
-      # distance between molecules and enforces PBC
-      distx = transcoords_mk[transinter[:, 0] - 1, 0] \
+      # n distances between molecules and enforces PBC
+      distx_nt = transcoords_mk[transinter[:, 0] - 1, 0] \
          - transcoords_mk[transinter[:, 1] - 1, 0]
-      disty = transcoords_mk[transinter[:, 0] - 1, 1] \
+      disty_nt = transcoords_mk[transinter[:, 0] - 1, 1] \
          - transcoords_mk[transinter[:, 1] - 1, 1]
 
       superlengthx = self.unitcell[0, 0] * self.supercell[0]
       superlengthy = self.unitcell[1, 1] * self.supercell[1]
 
-      distx[distx > superlengthx / 2] -= superlengthx
-      distx[distx < -superlengthx / 2] += superlengthx
-      disty[disty > superlengthy / 2] -= superlengthy
-      disty[disty < -superlengthy / 2] += superlengthy
-      
-   def squared_length(self):
-      nmol, nconnect, transinter, distx, disty = get_interactions()
+      distx_nt[distx_nt > superlengthx / 2] -= superlengthx
+      distx_nt[distx_nt < -superlengthx / 2] += superlengthx
+      disty_nt[disty_nt > superlengthy / 2] -= superlengthy
+      disty_nt[disty_nt < -superlengthy / 2] += superlengthy
+
+      return nmol, nconnect, transinter, distx_nt, disty_nt
+
+   def get_energies(self):
+      hamiltonian_nn = get_jrnd(self.javg, self.jdelta)
+
+      energies, vectors = linalg.eigsh(hamiltonian_nn)
+
+      return energies, vectors
+
+   def get_squared_length(self):
+      nmol, nconnect, transinter, distx_nt, disty_nt = get_interactions()
+
+      energies, vectors = get_energies()
+
+      operatorx = distx_nt * vectors * vectors * \
+         (energies - energies)
+
+      operatory = disty_nt * vectors * vectors * \
+         (energies - energies)
+
+      sqlx = operatorx**2 * 2 / (self.invtau**2 + (energies - energies)**2)
+      sqly = operatory**2 * 2 / (self.invtau**2 + (energies - energies)**2)
+
+      return sqlx, sqly
+
+   def get_disorder_avg_sql(self):
+      dsqlx, dsqly = 0, 0
+
+      for i in range(self.nrepeat):
+         sqlx, sqly = get_squared_length()
+         tsqlx = get_therm_avg(sqlx)
+         tsqly = get_therm_avg(sqly)
+         partfunc = get_therm_avg()
+
+         dsqlx = (1 - 1 / i) * dsqlx + (tsqlx / partfunc) / i
+         dsqly = (1 - 1 / i) * dsqly + (tsqly / partfunc) / i
+
+         print(i, dsqlx, dsqly)
+
+      return dsqlx, dsqly
+   
+   def get_mobility(self):
+      dsqlx, dsqly = get_disorder_avg_sql():
+
+      mobx = self.temp * self.invtau * dsqlx / 2
+      moby = self.temp * self.invtau * dsqly / 2
+
+      return mobx, moby
