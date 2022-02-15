@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import linalg
+from scipy.sparse import linalg
 from pathlib import Path
 
 class Structure:
@@ -74,37 +74,61 @@ class Structure:
          + self.coordmol[None, :]).reshape(nmol, 3)
 
       # n distances between molecules and enforces PBC
-      distx_nt = transcoords_mk[transinter[:, 0] - 1, 0] \
+      distx_n = transcoords_mk[transinter[:, 0] - 1, 0] \
          - transcoords_mk[transinter[:, 1] - 1, 0]
-      disty_nt = transcoords_mk[transinter[:, 0] - 1, 1] \
+      disty_n = transcoords_mk[transinter[:, 0] - 1, 1] \
          - transcoords_mk[transinter[:, 1] - 1, 1]
 
       superlengthx = self.unitcell[0, 0] * self.supercell[0]
       superlengthy = self.unitcell[1, 1] * self.supercell[1]
 
-      distx_nt[distx_nt > superlengthx / 2] -= superlengthx
-      distx_nt[distx_nt < -superlengthx / 2] += superlengthx
-      disty_nt[disty_nt > superlengthy / 2] -= superlengthy
-      disty_nt[disty_nt < -superlengthy / 2] += superlengthy
+      distx_n[distx_n > superlengthx / 2] -= superlengthx
+      distx_n[distx_n < -superlengthx / 2] += superlengthx
+      disty_n[disty_n > superlengthy / 2] -= superlengthy
+      disty_n[disty_n < -superlengthy / 2] += superlengthy
 
-      return nmol, nconnect, transinter, distx_nt, disty_nt
+      return nmol, nconnect, transinter, distx_n, disty_n
 
-   def get_energies(self):
-      hamiltonian_nn = get_jrnd(self.javg, self.jdelta)
+   def get_hamiltonian(self, nmol, transinter):
+      rnd1_n = np.random.rand(len(transinter))
+      rnd2_n = np.random.rand(len(transinter))
+    
+      log_n = -2 * np.log(1 - rnd1_n)
+      cos_n = np.sqrt(log_n) * np.cos(2 * np.pi * rnd2_n)
+      # sin = np.sqrt(log) * np.sin(2 * np.pi * rnd2)
+    
+      # populate sparse hamiltonian with just interactions 
+      # between transinter[0] and transinter[1] molecules
+      hamiltonian_mm = np.zeros([nmol, nmol])
+      hamiltonian_mm[transinter[:, 0] - 1, transinter[:, 1] - 1] = \
+         self.javg[transinter[:, 2] - 1] \
+         + (self.jdelta[transinter[:, 2] - 1] * cos_n)
 
-      energies, vectors = linalg.eigsh(hamiltonian_nn)
+      # assert that Hamiltonian is Hermitian
+      hamiltonian_mm[transinter[:, 1] - 1, transinter[:, 0] - 1] = \
+         self.javg[transinter[:, 2] - 1] \
+         + (self.jdelta[transinter[:, 2] - 1] * cos_n) # Corina: I use self.
+
+      # y = javg + (jdelta * sin)     
+    
+    return hamiltonian_mm
+
+   def get_energies(self, nmol, transinter):
+      hamiltonian_mm = get_hamiltonian(nmol, transinter)
+
+      energies, vectors = linalg.eigsh(hamiltonian_mm)
 
       return energies, vectors
 
    def get_squared_length(self):
-      nmol, nconnect, transinter, distx_nt, disty_nt = get_interactions()
+      nmol, nconnect, transinter, distx_n, disty_n = get_interactions()
 
-      energies, vectors = get_energies()
+      energies, vectors = get_energies(nmol, transinter)
 
-      operatorx = distx_nt * vectors * vectors * \
+      operatorx = distx_n * vectors * vectors * \
          (energies - energies)
 
-      operatory = disty_nt * vectors * vectors * \
+      operatory = disty_n * vectors * vectors * \
          (energies - energies)
 
       sqlx = operatorx**2 * 2 / (self.invtau**2 + (energies - energies)**2)
