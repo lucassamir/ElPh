@@ -21,8 +21,8 @@ class Structure:
 
       with open(params_file + '.json', 'r') as json_file:
          par_dic = json.load(json_file)
-      self.javg = par_dic['javg']
-      self.jdelta = par_dic['jdelta']
+      self.javg = np.array(par_dic['javg'])
+      self.jdelta = np.array(par_dic['jdelta'])
       self.nrepeat = par_dic['nrepeat']
       self.iseed = par_dic['iseed']
       self.invtau = par_dic['invtau']
@@ -51,7 +51,7 @@ class Structure:
 
       # u unique connections to other molecules and enforced PBC
       connec_tuk = (translations_tk[:, None] \
-         + self.uniqinter[:, 2:5][None, :]).reshape(nconnect, 3)
+         + self.uniqinter[:, 2:5][None, :])
       connec_tuk[:, :, 0][connec_tuk[:, :, 0] == self.supercell[0]] = 0
       connec_tuk[:, :, 1][connec_tuk[:, :, 1] == self.supercell[1]] = 0
       connec_tuk[:, :, 2][connec_tuk[:, :, 2] == self.supercell[2]] = 0
