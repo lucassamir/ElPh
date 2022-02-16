@@ -1,4 +1,5 @@
 import numpy as np
+import json
 from scipy.sparse import linalg
 from pathlib import Path
 
@@ -9,7 +10,8 @@ class Structure:
    javg=None, jdelta=None, nrepeat=None,
    iseed=None, invtau=None, temp=None):
 
-      lat_dic = read_json(lattice_file)
+      with open(lattice_file + '.json', 'r') as json_file:
+         lat_dic = json.load(json_file)
       self.nmuc = lat_dic['nmuc']
       self.coordmol = np.array(lat_dic['coordmol'])
       self.unitcell = np.array(lat_dic['unitcell'])
@@ -17,20 +19,14 @@ class Structure:
       self.unique = lat_dic['unique']
       self.uniqinter = np.array(lat_dic['uniqinter'])
 
-      par_dic = read_json(params_file)
+      with open(params_file + '.json', 'r') as json_file:
+         par_dic = json.load(json_file)
       self.javg = par_dic['javg']
       self.jdelta = par_dic['jdelta']
       self.nrepeat = par_dic['nrepeat']
       self.iseed = par_dic['iseed']
       self.invtau = par_dic['invtau']
       self.temp = par_dic['temp']
-        
-   def write_json(filename, data):
-      Path(filename).write_text(jsonio.MyEncoder(indent=4).encode(data))
-        
-   def read_json(filename):
-      dct = jsonio.decode(Path(filename).read_text())
-      return dct
 
    def get_interactions(self):
       # nmol number of molecules in the supercell
@@ -114,16 +110,16 @@ class Structure:
       return hamiltonian_mm
 
    def get_energies(self, nmol, transinter):
-      hamiltonian_mm = get_hamiltonian(nmol, transinter)
+      hamiltonian_mm = self.get_hamiltonian(nmol, transinter)
 
       energies, vectors = linalg.eigsh(hamiltonian_mm)
 
       return energies, vectors
 
    def get_squared_length(self):
-      nmol, nconnect, transinter, distx_n, disty_n = get_interactions()
+      nmol, nconnect, transinter, distx_n, disty_n = self.get_interactions()
 
-      energies, vectors = get_energies(nmol, transinter)
+      energies, vectors = self.get_energies(nmol, transinter)
 
       operatorx = distx_n * vectors * vectors * \
          (energies - energies)
@@ -139,11 +135,12 @@ class Structure:
    def get_disorder_avg_sql(self):
       dsqlx, dsqly = 0, 0
 
+      print('Calculating average of squared transient localization')
       for i in range(self.nrepeat):
-         sqlx, sqly = get_squared_length()
-         tsqlx = get_therm_avg(sqlx)
-         tsqly = get_therm_avg(sqly)
-         partfunc = get_therm_avg()
+         sqlx, sqly = self.get_squared_length()
+         tsqlx = self.get_therm_avg(sqlx)
+         tsqly = self.get_therm_avg(sqly)
+         partfunc = self.get_therm_avg()
 
          dsqlx = (1 - 1 / i) * dsqlx + (tsqlx / partfunc) / i
          dsqly = (1 - 1 / i) * dsqly + (tsqly / partfunc) / i
@@ -153,9 +150,103 @@ class Structure:
       return dsqlx, dsqly
    
    def get_mobility(self):
-      dsqlx, dsqly = get_disorder_avg_sql()
+      dsqlx, dsqly = self.get_disorder_avg_sql()
 
       mobx = self.temp * self.invtau * dsqlx / 2
       moby = self.temp * self.invtau * dsqly / 2
 
       return mobx, moby
+
+def write_lattice_file():
+   lattice = {'nmuc':2,
+              'coordmol':[[0.0, 0.0, 0.0], [0.5, 0.5, 0.0]],
+              'unitcell':[[1.0, 0.0, 0.0], [0.0, 1.7321, 0.0], [0.0, 0.0, 1000.0]],
+              'supercell':[16, 16, 1],
+              'unique':6,
+              'uniqinter':[[1, 1, 1, 0, 0, 1], 
+              [2, 2, 1, 0, 0, 1], 
+              [1, 2, 0, 0, 0, 3], 
+              [2, 1, 1, 0, 0, 2], 
+              [2, 1, 0, 1, 0, 2], 
+              [2, 1, 1, 1, 0, 3]]
+   }
+   with open('lattice.json', 'w', encoding='utf-8') as f:
+      json.dump(lattice, f, ensure_ascii=False, indent=2)
+
+def write_params_file():
+   params = {'javg':[-0.98296, 0.12994, 0.12994],
+             'jdelta':[0.49148, 0.06497, 0.06497],
+             'nrepeat':50,
+             'iseed':3987187,
+             'invtau':0.05,
+             'temp':0.25
+   }
+   with open('params.json', 'w', encoding='utf-8') as f:
+      json.dump(params, f, ensure_ascii=False, indent=4)
+
+def main(args=None):
+   import argparse
+
+   description = "Transient Localization Theory command line interface"
+
+   example_text = """examples:
+
+   Calculate charge mobility with:
+      tloc --mobility
+   """
+
+   formatter = argparse.RawDescriptionHelpFormatter
+   parser = argparse.ArgumentParser(description=description,
+                                    epilog=example_text, 
+                                    formatter_class=formatter)
+
+   help = """
+   All calculations require a lattice JSON 
+   file with the following properties:
+
+   lattice.json:
+
+   """
+   parser.add_argument('--lattice_file', nargs='*', help=help,
+                        default='lattice', type=str)
+
+   help = """
+   All calculations require a params json 
+   file with the following properties:
+
+   params.json:
+   
+   """
+   parser.add_argument('--params_file', nargs='*', help=help,
+                        default='params', type=str)
+
+   help = ("write example of lattice and params files")
+   parser.add_argument('--write_examples', action='store_true' , help=help)
+
+   help = ("Calculate charge mobility")
+   parser.add_argument('--mobility', action='store_true' , help=help)
+
+   args = parser.parse_args(args)
+
+   if args.write_examples:
+      write_lattice_file()
+      write_params_file()
+      return
+
+   if not Path(args.lattice_file + '.json').is_file():
+      msg = 'Lattice file could not be found'
+      raise FileNotFoundError(msg)
+
+   if not Path(args.params_file + '.json').is_file():
+      msg = 'Params file could not be found'
+      raise FileNotFoundError(msg)
+
+   print('Initializing molecular structure')
+   st = Structure(args.lattice_file, args.params_file)
+
+   if args.mobility:
+      print('Calculating charge mobility')
+      st.get_mobility()
+
+if __name__  == '__main__':
+   main()
