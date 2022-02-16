@@ -111,7 +111,7 @@ class Structure:
 
       # y = javg + (jdelta * sin)     
     
-    return hamiltonian_mm
+      return hamiltonian_mm
 
    def get_energies(self, nmol, transinter):
       hamiltonian_mm = get_hamiltonian(nmol, transinter)
@@ -153,7 +153,7 @@ class Structure:
       return dsqlx, dsqly
    
    def get_mobility(self):
-      dsqlx, dsqly = get_disorder_avg_sql():
+      dsqlx, dsqly = get_disorder_avg_sql()
 
       mobx = self.temp * self.invtau * dsqlx / 2
       moby = self.temp * self.invtau * dsqly / 2
