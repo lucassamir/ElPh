@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from scipy.sparse import linalg
+from scipy import linalg
 from pathlib import Path
 
 class Structure:
@@ -37,7 +37,7 @@ class Structure:
       translations_tk = np.mgrid[0:self.supercell[0]:1, 
                                  0:self.supercell[1]:1, 
                                  0:self.supercell[2]:1].reshape(3,-1).T
-      transvecs_tk = np.matmul(translations_tk, self.unitcell)
+      transvecs_tk = np.dot(translations_tk, self.unitcell)
       t = len(transvecs_tk)
 
       # nconnect number of connections
@@ -47,7 +47,7 @@ class Structure:
       mapcell_k = [self.supercell[1] * self.supercell[2], 
                    self.supercell[2], 
                    1]
-      map2same_t = self.nmuc * np.matmul(translations_tk, mapcell_k)
+      map2same_t = self.nmuc * np.dot(translations_tk, mapcell_k)
 
       # u unique connections to other molecules and enforced PBC
       connec_tuk = (translations_tk[:, None] \
@@ -55,80 +55,91 @@ class Structure:
       connec_tuk[:, :, 0][connec_tuk[:, :, 0] == self.supercell[0]] = 0
       connec_tuk[:, :, 1][connec_tuk[:, :, 1] == self.supercell[1]] = 0
       connec_tuk[:, :, 2][connec_tuk[:, :, 2] == self.supercell[2]] = 0
-      map2others_tu = self.nmuc * np.matmul(connec_tuk, mapcell_k)
+      map2others_tu = self.nmuc * np.dot(connec_tuk, mapcell_k)
       
-      # translated interactions 
-      transinter = np.empty([nconnect, 3], dtype='int')
-      transinter[:, 0] = (map2same_t[:, None] \
+      # translated interactions between a pair of molecules
+      transinter_mm = np.zeros([nmol, nmol], dtype='int')
+      firstmol = (map2same_t[:, None] \
          + self.uniqinter[:, 0][None, :]).reshape(nconnect)
-      transinter[:, 1] = (map2others_tu[:, None] \
+      secondmol = (map2others_tu[:, None] \
          + self.uniqinter[:, 1][None, :]).reshape(nconnect)
-      transinter[:, 2] = np.tile(self.uniqinter[:, 5], t)
+      typeinter = np.tile(self.uniqinter[:, 5], t)
+      transinter_mm[firstmol - 1, secondmol - 1] = typeinter
+
+      # enforce hermitian
+      transinter_mm[secondmol - 1, firstmol - 1] = typeinter
 
       # translated coordinates for m molecules
       transcoords_mk = (transvecs_tk[:, None] \
          + self.coordmol[None, :]).reshape(nmol, 3)
 
-      # n distances between molecules and enforces PBC
-      distx_n = transcoords_mk[transinter[:, 0] - 1, 0] \
-         - transcoords_mk[transinter[:, 1] - 1, 0]
-      disty_n = transcoords_mk[transinter[:, 0] - 1, 1] \
-         - transcoords_mk[transinter[:, 1] - 1, 1]
+      # distances between all molecules THAT INTERACT and enforces PBC
+      distx_mm = transcoords_mk[:, 0, None] - transcoords_mk[None, :, 0]
+      disty_mm = transcoords_mk[:, 1, None] - transcoords_mk[None, :, 1]
+
+      index = np.where(transinter_mm == 0)
+      distx_mm[index] = 0
+      disty_mm[index] = 0
 
       superlengthx = self.unitcell[0, 0] * self.supercell[0]
       superlengthy = self.unitcell[1, 1] * self.supercell[1]
 
-      distx_n[distx_n > superlengthx / 2] -= superlengthx
-      distx_n[distx_n < -superlengthx / 2] += superlengthx
-      disty_n[disty_n > superlengthy / 2] -= superlengthy
-      disty_n[disty_n < -superlengthy / 2] += superlengthy
+      distx_mm[distx_mm > superlengthx / 2] -= superlengthx
+      distx_mm[distx_mm < -superlengthx / 2] += superlengthx
+      disty_mm[disty_mm > superlengthy / 2] -= superlengthy
+      disty_mm[disty_mm < -superlengthy / 2] += superlengthy
 
-      return nmol, nconnect, transinter, distx_n, disty_n
+      return nmol, transinter_mm, distx_mm, disty_mm
 
-   def get_hamiltonian(self, nmol, transinter):
-      rnd1_n = np.random.rand(len(transinter))
-      rnd2_n = np.random.rand(len(transinter))
-    
-      log_n = -2 * np.log(1 - rnd1_n)
-      cos_n = np.sqrt(log_n) * np.cos(2 * np.pi * rnd2_n)
+   def get_hamiltonian(self, nmol, transinter_mm):
+      rnd1_mm = np.random.rand(nmol, nmol)
+      rnd1_mm = (rnd1_mm + rnd1_mm.T) / 2 # enforce hermitian
+      rnd2_mm = np.random.rand(nmol, nmol)
+      rnd2_mm = (rnd2_mm + rnd2_mm.T) / 2 # enforce hermitian
+
+      log_mm = -2 * np.log(1 - rnd1_mm)
+      cos_mm = np.sqrt(log_mm) * np.cos(2 * np.pi * rnd2_mm)
+
       # sin = np.sqrt(log) * np.sin(2 * np.pi * rnd2)
-    
-      # populate sparse hamiltonian with just interactions 
-      # between transinter[0] and transinter[1] molecules
-      hamiltonian_mm = np.zeros([nmol, nmol])
-      hamiltonian_mm[transinter[:, 0] - 1, transinter[:, 1] - 1] = \
-         self.javg[transinter[:, 2] - 1] \
-         + (self.jdelta[transinter[:, 2] - 1] * cos_n)
 
-      # assert that Hamiltonian is Hermitian
-      hamiltonian_mm[transinter[:, 1] - 1, transinter[:, 0] - 1] = \
-         self.javg[transinter[:, 2] - 1] \
-         + (self.jdelta[transinter[:, 2] - 1] * cos_n) # Corina: I use self.
+      # addind 0 for the case that molecules dont interact
+      self.javg = np.insert(self.javg, 0, 0)
+      self.jdelta = np.insert(self.jdelta, 0, 0)
 
+      hamiltonian_mm = self.javg[transinter_mm] + self.jdelta[transinter_mm] * cos_mm
+      
       # y = javg + (jdelta * sin)     
     
       return hamiltonian_mm
 
-   def get_energies(self, nmol, transinter):
-      hamiltonian_mm = self.get_hamiltonian(nmol, transinter)
+   def get_energies(self, nmol, transinter_mm):
+      hamiltonian_mm = self.get_hamiltonian(nmol, transinter_mm)
 
-      energies, vectors = linalg.eigsh(hamiltonian_mm)
-
-      return energies, vectors
+      energies_m, vectors_mm = linalg.eigh(hamiltonian_mm)
+      
+      return energies_m.real, vectors_mm
 
    def get_squared_length(self):
-      nmol, nconnect, transinter, distx_n, disty_n = self.get_interactions()
+      nmol, transinter_mm, distx_mm, disty_mm = self.get_interactions()
 
-      energies, vectors = self.get_energies(nmol, transinter)
+      energies_m, vectors_mm = self.get_energies(nmol, transinter_mm)
 
-      operatorx = distx_n * vectors * vectors * \
-         (energies - energies)
+      operatorx_mm = (energies_m[:, None] - energies_m[None, :]) * \
+         np.dot(vectors_mm, np.dot(distx_mm, vectors_mm))
 
-      operatory = disty_n * vectors * vectors * \
-         (energies - energies)
+      operatory_mm = (energies_m[:, None] - energies_m[None, :]) * \
+         np.dot(vectors_mm, np.dot(disty_mm, vectors_mm))
 
-      sqlx = operatorx**2 * 2 / (self.invtau**2 + (energies - energies)**2)
-      sqly = operatory**2 * 2 / (self.invtau**2 + (energies - energies)**2)
+      partfunc_m = np.exp(energies_m / self.temp)
+      partfunc = sum(partfunc_m)
+
+      sqlx = sum(sum(partfunc_m * (operatorx_mm**2 * 2 / (self.invtau**2 + \
+         (energies_m[:, None] - energies_m[None, :])**2))))
+      sqly = sum(sum(partfunc_m * (operatory_mm**2 * 2 / (self.invtau**2 + \
+         (energies_m[:, None] - energies_m[None, :])**2))))
+
+      sqlx /= partfunc
+      sqly /= partfunc
 
       return sqlx, sqly
 
@@ -136,14 +147,21 @@ class Structure:
       dsqlx, dsqly = 0, 0
 
       print('Calculating average of squared transient localization')
-      for i in range(self.nrepeat):
+      for i in range(1, self.nrepeat + 1):
          sqlx, sqly = self.get_squared_length()
-         tsqlx = self.get_therm_avg(sqlx)
-         tsqly = self.get_therm_avg(sqly)
-         partfunc = self.get_therm_avg()
+         #tsqlx = self.get_therm_avg(sqlx)
+         #tsqly = self.get_therm_avg(sqly)
+         #partfunc = self.get_therm_avg()
 
-         dsqlx = (1 - 1 / i) * dsqlx + (tsqlx / partfunc) / i
-         dsqly = (1 - 1 / i) * dsqly + (tsqly / partfunc) / i
+         #dsqlx = (1 - 1 / i) * dsqlx + (tsqlx / partfunc) / i
+         #dsqly = (1 - 1 / i) * dsqly + (tsqly / partfunc) / i
+
+         #moving average
+         dsqlx -= dsqlx / i
+         dsqlx += sqlx / i
+
+         dsqly -= dsqly / i
+         dsqly += sqly / i
 
          print(i, dsqlx, dsqly)
 
@@ -152,8 +170,8 @@ class Structure:
    def get_mobility(self):
       dsqlx, dsqly = self.get_disorder_avg_sql()
 
-      mobx = self.temp * self.invtau * dsqlx / 2
-      moby = self.temp * self.invtau * dsqly / 2
+      mobx = (1 / self.temp) * self.invtau * dsqlx / 2
+      moby = (1 / self.temp) * self.invtau * dsqly / 2
 
       return mobx, moby
 
@@ -245,8 +263,10 @@ def main(args=None):
    st = Structure(args.lattice_file, args.params_file)
 
    if args.mobility:
+      mobx, moby = st.get_mobility()
       print('Calculating charge mobility')
-      st.get_mobility()
+      print('mu_x = ', mobx)
+      print('mu_y = ', moby)
 
 if __name__  == '__main__':
    main()
