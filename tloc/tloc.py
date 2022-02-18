@@ -8,7 +8,7 @@ class Structure:
    nmuc=None, coordmol=None, unitcell=None, 
    supercell=None, unique=None, uniqinter=None,
    javg=None, jdelta=None, nrepeat=None,
-   iseed=None, invtau=None, temp=None):
+   invtau=None, temp=None):
 
       with open(lattice_file + '.json', 'r') as json_file:
          lat_dic = json.load(json_file)
@@ -24,7 +24,6 @@ class Structure:
       self.javg = np.array(par_dic['javg'])
       self.jdelta = np.array(par_dic['jdelta'])
       self.nrepeat = par_dic['nrepeat']
-      self.iseed = par_dic['iseed']
       self.invtau = par_dic['invtau']
       self.temp = par_dic['temp']
 
@@ -193,7 +192,6 @@ def write_params_file():
    params = {'javg':[-0.98296, 0.12994, 0.12994],
              'jdelta':[0.49148, 0.06497, 0.06497],
              'nrepeat':50,
-             'iseed':3987187,
              'invtau':0.05,
              'temp':0.25
    }
