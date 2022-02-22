@@ -8,7 +8,7 @@ class Structure:
    nmuc=None, coordmol=None, unitcell=None, 
    supercell=None, unique=None, uniqinter=None,
    javg=None, jdelta=None, nrepeat=None,
-   iseed=None, invtau=None, temp=None):
+   invtau=None, temp=None):
 
       with open(lattice_file + '.json', 'r') as json_file:
          lat_dic = json.load(json_file)
@@ -24,9 +24,12 @@ class Structure:
       self.javg = np.array(par_dic['javg'])
       self.jdelta = np.array(par_dic['jdelta'])
       self.nrepeat = par_dic['nrepeat']
-      self.iseed = par_dic['iseed']
       self.invtau = par_dic['invtau']
       self.temp = par_dic['temp']
+
+      # addind 0 for the case that molecules dont interact
+      self.javg = np.insert(self.javg, 0, 0)
+      self.jdelta = np.insert(self.jdelta, 0, 0)
 
    def get_interactions(self):
       # nmol number of molecules in the supercell
@@ -99,15 +102,9 @@ class Structure:
 
       log_mm = -2 * np.log(1 - rnd1_mm)
       cos_mm = np.sqrt(log_mm) * np.cos(2 * np.pi * rnd2_mm)
-
       # sin = np.sqrt(log) * np.sin(2 * np.pi * rnd2)
 
-      # addind 0 for the case that molecules dont interact
-      self.javg = np.insert(self.javg, 0, 0)
-      self.jdelta = np.insert(self.jdelta, 0, 0)
-
       hamiltonian_mm = self.javg[transinter_mm] + self.jdelta[transinter_mm] * cos_mm
-      
       # y = javg + (jdelta * sin)     
     
       return hamiltonian_mm
@@ -192,7 +189,6 @@ def write_params_file():
    params = {'javg':[-0.98296, 0.12994, 0.12994],
              'jdelta':[0.49148, 0.06497, 0.06497],
              'nrepeat':50,
-             'iseed':3987187,
              'invtau':0.05,
              'temp':0.25
    }
@@ -236,14 +232,14 @@ def main(args=None):
                         default='params', type=str)
 
    help = ("write example of lattice and params files")
-   parser.add_argument('--write_examples', action='store_true' , help=help)
+   parser.add_argument('--write_files', action='store_true' , help=help)
 
    help = ("Calculate charge mobility")
    parser.add_argument('--mobility', action='store_true' , help=help)
 
    args = parser.parse_args(args)
 
-   if args.write_examples:
+   if args.write_files:
       write_lattice_file()
       write_params_file()
       return
