@@ -153,9 +153,6 @@ class Structure:
          #tsqly = self.get_therm_avg(sqly)
          #partfunc = self.get_therm_avg()
 
-         #dsqlx = (1 - 1 / i) * dsqlx + (tsqlx / partfunc) / i
-         #dsqly = (1 - 1 / i) * dsqly + (tsqly / partfunc) / i
-
          #moving average
          dsqlx -= dsqlx / i
          dsqlx += sqlx / i
