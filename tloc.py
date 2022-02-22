@@ -102,3 +102,19 @@ class Structure:
     #y = javg + (jdelta * sin)     this might be forgotten and not implemented 
     
     return jrnd       # Assuming it is to return (x, y)
+
+
+   def therm(eh, energies_m, q_m, nmol):       
+      return np.dot(np.exp(-eh * (energies_m / self.temp)), q_m / nmol)
+   
+   def thermQ(eh, energies_m, q_m, nmol):
+    
+    if eh == 1:
+        idx = 0  
+    elif eh == -1:                            
+        idx = nmol-1
+    else:
+        msg = 'isw_H must be 1 or -1'
+        raise NotImplementedError(msg)    
+
+    return np.dot(np.exp(-eh * ((energies_m - energies_m[idx]) / self.temp)) ,  q_m / nmol)
