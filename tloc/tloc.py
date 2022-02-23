@@ -1,3 +1,5 @@
+from ast import operator
+from dis import dis
 import numpy as np
 import json
 from scipy import linalg
@@ -84,6 +86,18 @@ class Structure:
       distx_mm[index] = 0
       disty_mm[index] = 0
 
+      # for i in range(nmol):
+      #    for j in range(nmol):
+      #       if i > j:
+      #          distx_mm[i, j] = 0
+      #          disty_mm[i, j] = 0
+
+      # distx_mm = np.zeros([nmol, nmol])
+      # disty_mm = np.zeros([nmol, nmol])
+      # for i, j in zip(firstmol, secondmol):
+      #    distx_mm[i-1, j-1] = transcoords_mk[i-1, 0] - transcoords_mk[j-1, 0]
+      #    disty_mm[i-1, j-1] = transcoords_mk[i-1, 1] - transcoords_mk[j-1, 1]
+
       superlengthx = self.unitcell[0, 0] * self.supercell[0]
       superlengthy = self.unitcell[1, 1] * self.supercell[1]
 
@@ -114,12 +128,12 @@ class Structure:
 
       energies_m, vectors_mm = linalg.eigh(hamiltonian_mm)
       
-      return energies_m.real, vectors_mm, hamiltonian_mm
+      return energies_m.real, vectors_mm
 
    def get_squared_length(self):
       nmol, transinter_mm, distx_mm, disty_mm = self.get_interactions()
 
-      energies_m, vectors_mm, hamiltonian_mm = self.get_energies(nmol, transinter_mm)
+      energies_m, vectors_mm = self.get_energies(nmol, transinter_mm)
 
       energies_m = np.array([-0.20138311553842075, 
       -0.12440805722822261,
@@ -140,13 +154,28 @@ class Structure:
       [-0.19635549465943125 ,     -0.50314983040031747    ,   -7.1381462893388550E-002, -0.33956349364522065     ,  0.44692648316627426 ,      0.46317672987682074    ,   0.30244660568633364   ,    0.28659409393407004]
       ])
 
-      test = energies_m[:, None] - energies_m[None, :]
-
       operatorx_mm = (energies_m[:, None] - energies_m[None, :]) * \
-         np.dot(vectors_mm.T, np.dot(distx_mm, vectors_mm))
+         np.matmul(vectors_mm.T, np.matmul(distx_mm, vectors_mm))
       operatory_mm = (energies_m[:, None] - energies_m[None, :]) * \
-         np.dot(vectors_mm.T, np.dot(disty_mm, vectors_mm))
-      
+         np.matmul(vectors_mm.T, np.matmul(disty_mm, vectors_mm))
+
+      operatortest = np.array([[ 0.        , -0.02162705,  0.0514972 , -0.14925563,  0.01177694,
+         0.01902865, -0.01842725, -0.01001451],
+       [ 0.02162705,  0.        , -0.01636065, -0.03114326,  0.01237228,
+        -0.04715012, -0.08404744, -0.03709172],
+       [-0.0514972 ,  0.01636065,  0.        , -0.08566205,  0.0041514 ,
+        -0.06176061,  0.07756356, -0.09640877],
+       [ 0.14925563,  0.03114326,  0.08566205,  0.        , -0.0365928 ,
+        -0.00888585,  0.04842959,  0.00694075],
+       [-0.01177694, -0.01237228, -0.0041514 ,  0.0365928 ,  0.        ,
+         0.09151587, -0.04492908, -0.01670109],
+       [-0.01902865,  0.04715012,  0.06176061,  0.00888585, -0.09151587,
+         0.        , -0.02689614,  0.00876937],
+       [ 0.01842725,  0.08404744, -0.07756356, -0.04842959,  0.04492908,
+         0.02689614,  0.        ,  0.03058795],
+       [ 0.01001451,  0.03709172,  0.09640877, -0.00694075,  0.01670109,
+        -0.00876937, -0.03058795,  0.        ]])
+
       partfunc_m = np.exp(energies_m / self.temp)
       partfunc = sum(partfunc_m)
 
@@ -155,7 +184,6 @@ class Structure:
       sqly = sum(sum(partfunc_m * (operatory_mm**2 * 2 / (self.invtau**2 + \
          (energies_m[:, None] - energies_m[None, :])**2))))
 
-      #print(partfunc, sqlx)
       sqlx /= partfunc
       sqly /= partfunc
 
