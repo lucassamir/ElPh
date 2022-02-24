@@ -1,4 +1,3 @@
-from argparse import _StoreTrueAction
 from ase.io import read, write
 from ase.visualize import view
 from ase.neighborlist import natural_cutoffs, NeighborList
@@ -28,8 +27,24 @@ def find_structure_file(folder):
 
     return structure_file
 
-def unwrap_atoms(structure_file=None):
-    traj_writer = Trajectory('traj.traj','w')
+def compute_total_weight(centers_of_mass):
+    total_weight = 0
+    for i in range(len(centers_of_mass)):
+        for j in range(i+1, len(centers_of_mass)):
+            total_weight +=  np.linalg.norm(centers_of_mass[i] - centers_of_mass[j])
+    return total_weight
+
+def get_centers_of_mass(atoms, n_components, component_list):
+    centers_of_mass = []
+    for i in range(n_components):
+        molIdx_i = component_list[i]
+        molIdxs_i = [ x for x in range(len(component_list)) if component_list[x] == molIdx_i ]
+        centers_of_mass.append(atoms[molIdxs_i].get_center_of_mass())
+    return centers_of_mass
+
+def unwrap_atoms(structure_file=None, write_traj=False):
+    if write_traj:
+        traj_writer = Trajectory('traj.traj','w')
     folder = os.getcwd()
 
     if structure_file:
@@ -45,7 +60,7 @@ def unwrap_atoms(structure_file=None):
     neighbor_list.update(atoms)
     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
     n_components, component_list = sparse.csgraph.connected_components(matrix)
-    idx = 1
+    idx = 0
     molIdx = component_list[idx]
     print("There are {} molecules in the system".format(n_components))
     molIdxs = [ i for i in range(len(component_list)) if component_list[i] == molIdx ]
@@ -55,11 +70,13 @@ def unwrap_atoms(structure_file=None):
     cell = list(atoms.get_cell())
     new_atoms = read(structure_file)
     new_atoms.set_pbc([False,False,False])
-    traj_writer.write(new_atoms)
+    if write_traj:
+        traj_writer.write(new_atoms)
     all_positions = new_atoms.get_positions()
     is_optimized = False
     # For each bond, take the lower left and move it upper right until the bond shrinks
     iterations = 0
+    print("optimizing atoms")
     while not is_optimized:
         iterations += 1
         print("{} iterations".format(iterations))
@@ -81,11 +98,43 @@ def unwrap_atoms(structure_file=None):
                     else:
                         all_positions[edge[0]] = max_pos
                         all_positions[edge[1]] = new_pos
-                    new_atoms.set_positions(all_positions)
-                    traj_writer.write(new_atoms)
-    # TODO: Translate molecules back to box if outside and make sure they are as close as possible 
-    # Should be roughly same as above, but check that COM of molecule is as close as possible
+                    if write_traj:
+                        new_atoms.set_positions(all_positions)
+                        traj_writer.write(new_atoms)
+    new_atoms.set_positions(all_positions)
+
+    # Construct graph (compute total weight)
+    original_centers_of_mass = get_centers_of_mass(new_atoms, n_components, component_list)
+    centers_of_mass = np.copy(original_centers_of_mass)
+    weight = compute_total_weight(centers_of_mass)
+    test_dirs = cell
+    test_dirs.extend([-x for x in test_dirs])
+
+    is_optimized = False
+    while not is_optimized:
+        is_optimized = True
+        for i in range(n_components):
+            for j in range(6):
+                test_centers_of_mass = np.copy(centers_of_mass)
+                test_centers_of_mass[i] += test_dirs[j]
+                test_weight = compute_total_weight(test_centers_of_mass)
+                if test_weight < weight:
+                    centers_of_mass = np.copy(test_centers_of_mass)
+                    weight = test_weight
+                    is_optimized = False
+    translations = np.zeros([len(new_atoms), 3])
     
+    for i in range(n_components):
+        molIdx = component_list[i]
+        molIdxs = [ x for x in range(len(component_list)) if component_list[x] == molIdx ]
+        
+        dif = centers_of_mass[i] - original_centers_of_mass[i]
+        translations[molIdxs,:] = dif
+
+    new_atoms.translate(translations)
+    new_atoms.center()
+    if write_traj:
+        traj_writer.write(new_atoms)
     write("structure.xyz", new_atoms)
 
-unwrap_atoms("phthalocyanine.cif")
+unwrap_atoms("tloc/tests/rubrene.cif")
