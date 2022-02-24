@@ -44,7 +44,7 @@ def get_centers_of_mass(atoms, n_components, component_list):
 
 def unwrap_atoms(structure_file=None, write_traj=False):
     if write_traj:
-        traj_writer = Trajectory('traj.traj','w')
+        traj_writer = Trajectory('tloc/tests/traj.traj','w')
     folder = os.getcwd()
 
     if structure_file:
@@ -135,6 +135,6 @@ def unwrap_atoms(structure_file=None, write_traj=False):
     new_atoms.center()
     if write_traj:
         traj_writer.write(new_atoms)
-    write("structure.xyz", new_atoms)
+    write("tloc/tests/structure.xyz", new_atoms)
 
 unwrap_atoms("tloc/tests/rubrene.cif")
