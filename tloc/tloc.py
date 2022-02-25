@@ -35,8 +35,8 @@ class Structure:
 
    def get_interactions(self):
       # nmol number of molecules in the supercell
-      nmol = self.nmuc * self.supercell[0] * self.supercell[1] \
-      * self.supercell[2]
+      nmol = self.nmuc * self.supercell[0] * self.supercell[1] * \
+         self.supercell[2]
       
       # t number of translations and k directions
       translations_tk = np.mgrid[0:self.supercell[0]:1, 
@@ -75,24 +75,15 @@ class Structure:
       transinter_mm[secondmol - 1, firstmol - 1] = typeinter
 
       # translated coordinates for m molecules
-      transcoords_mk = (transvecs_tk[:, None] \
-         + self.coordmol[None, :]).reshape(nmol, 3)
+      transcoords_mk = (transvecs_tk[:, None] + \
+         self.coordmol[None, :]).reshape(nmol, 3)
 
-      # distances between all molecules THAT INTERACT and enforces PBC
-      distx_mm = transcoords_mk[:, 0, None] - transcoords_mk[None, :, 0]
-      disty_mm = transcoords_mk[:, 1, None] - transcoords_mk[None, :, 1]
-
-      index = np.where(transinter_mm == 0)
-      distx_mm[index] = 0
-      disty_mm[index] = 0
-
-      # distx_mm = np.zeros([nmol, nmol])
-      # disty_mm = np.zeros([nmol, nmol])
-      # for i, j in zip(firstmol, secondmol):
-      #    distx_mm[i-1, j-1] = transcoords_mk[i-1, 0] - transcoords_mk[j-1, 0]
-      #    disty_mm[i-1, j-1] = transcoords_mk[i-1, 1] - transcoords_mk[j-1, 1]
-      #    distx_mm[j-1, i-1] = distx_mm[i-1, j-1]
-      #    disty_mm[j-1, i-1] = disty_mm[i-1, j-1]
+      # distances between all molecules THAT INTERACT with enforced PBC
+      distx_mm = np.zeros([nmol, nmol])
+      disty_mm = np.zeros([nmol, nmol])
+      for i, j in zip(firstmol, secondmol):
+         distx_mm[i-1, j-1] = transcoords_mk[i-1, 0] - transcoords_mk[j-1, 0]
+         disty_mm[i-1, j-1] = transcoords_mk[i-1, 1] - transcoords_mk[j-1, 1]
 
       superlengthx = self.unitcell[0, 0] * self.supercell[0]
       superlengthy = self.unitcell[1, 1] * self.supercell[1]
@@ -106,16 +97,12 @@ class Structure:
 
    def get_hamiltonian(self, nmol, transinter_mm):
       rnd1_mm = np.random.rand(nmol, nmol)
-      rnd1_mm = (rnd1_mm + rnd1_mm.T) / 2 # enforce hermitian
       rnd2_mm = np.random.rand(nmol, nmol)
-      rnd2_mm = (rnd2_mm + rnd2_mm.T) / 2 # enforce hermitian
 
       log_mm = -2 * np.log(1 - rnd1_mm)
       cos_mm = np.sqrt(log_mm) * np.cos(2 * np.pi * rnd2_mm)
-      # sin = np.sqrt(log) * np.sin(2 * np.pi * rnd2)
 
       hamiltonian_mm = self.javg[transinter_mm] + self.jdelta[transinter_mm] * cos_mm
-      # y = javg + (jdelta * sin)     
     
       return hamiltonian_mm
 
@@ -131,74 +118,11 @@ class Structure:
 
       energies_m, vectors_mm, hamiltonian_mm = self.get_energies(nmol, transinter_mm)
 
-      # distx_mm = np.array([[ 0. , -0.5,  0. ,  0. , -1. ,  0. ,  0. ,  0. ],
-      #  [ 0. ,  0. ,  0.5,  0. , -0.5, -1. , -0.5,  0. ],
-      #  [ 0. ,  0. ,  0. , -0.5,  0. ,  0. , -1. ,  0. ],
-      #  [ 0.5,  0. ,  0. ,  0. , -0.5,  0. , -0.5, -1. ],
-      #  [ 1. ,  0. ,  0. ,  0. ,  0. , -0.5,  0. ,  0. ],
-      #  [-0.5,  1. , -0.5,  0. ,  0. ,  0. ,  0.5,  0. ],
-      #  [ 0. ,  0. ,  1. ,  0. ,  0. ,  0. ,  0. , -0.5],
-      #  [-0.5,  0. , -0.5,  1. ,  0.5,  0. ,  0. ,  0. ]])
+      operatorx_mm = np.matmul(vectors_mm.T, np.matmul(distx_mm * hamiltonian_mm, vectors_mm))
+      operatorx_mm -= np.matmul(vectors_mm.T, np.matmul(distx_mm * hamiltonian_mm, vectors_mm)).T
 
-      # disty_mm = np.array([[ 0.    , -0.5   ,  0.    ,  0.    ,  0.    ,  0.    ,  0.    ,
-      #    0.    ],
-      #  [ 0.    ,  0.    , -1.2321,  0.    ,  0.5   ,  0.    , -1.2321,
-      #    0.    ],
-      #  [ 0.    ,  0.    ,  0.    , -0.5   ,  0.    ,  0.    ,  0.    ,
-      #    0.    ],
-      #  [-1.2321,  0.    ,  0.    ,  0.    , -1.2321,  0.    ,  0.5   ,
-      #    0.    ],
-      #  [ 0.    ,  0.    ,  0.    ,  0.    ,  0.    , -0.5   ,  0.    ,
-      #    0.    ],
-      #  [ 0.5   ,  0.    , -1.2321,  0.    ,  0.    ,  0.    , -1.2321,
-      #    0.    ],
-      #  [ 0.    ,  0.    ,  0.    ,  0.    ,  0.    ,  0.    ,  0.    ,
-      #   -0.5   ],
-      #  [-1.2321,  0.    ,  0.5   ,  0.    , -1.2321,  0.    ,  0.    ,
-      #    0.    ]])
-
-      energies_m = np.array([-0.18380123, -0.11254101, -0.06712183, -0.03992229, -0.01513981,
-        0.04659048,  0.10156646,  0.27036923])
-
-      vectors_mm = np.array([[-0.45067206,  0.14752397, -0.31214393,  0.37677655, -0.24454416,
-         0.39062209, -0.3644489 ,  0.43649343],
-       [ 0.48587756,  0.10014234,  0.11475412, -0.43982887, -0.601462  ,
-         0.35887722, -0.22213129,  0.0859352 ],
-       [-0.08975363,  0.78527288,  0.13372808, -0.03139488, -0.19872195,
-        -0.54458401,  0.00238198,  0.14266789],
-       [-0.14355376,  0.06738457,  0.67685997,  0.13240093,  0.17950772,
-         0.12947228, -0.59382681, -0.31235531],
-       [-0.16130825, -0.20858283,  0.17946051, -0.53707259,  0.33543284,
-        -0.14803364, -0.18073517,  0.66537618],
-       [ 0.51820716,  0.08898245, -0.47402055,  0.1036017 ,  0.34837347,
-        -0.21218319, -0.56708729, -0.01186977],
-       [-0.25635183,  0.44166188, -0.28181132, -0.49459355,  0.36166542,
-         0.42248325,  0.05107811, -0.32136457],
-       [ 0.41458295,  0.31705541,  0.2775894 ,  0.31979884,  0.37689129,
-         0.39982365,  0.3291452 ,  0.37152001]])
-
-      hamiltonian_mm = np.array([[0.        , 0.03753952, 0.        , 0.        , 0.05019617,
-        0.        , 0.        , 0.        ],
-       [0.        , 0.        , 0.00805658, 0.        , 0.07443592,
-        0.06867039, 0.04144196, 0.        ],
-       [0.        , 0.        , 0.        , 0.06133004, 0.        ,
-        0.        , 0.07032592, 0.        ],
-       [0.10574363, 0.        , 0.        , 0.        , 0.00462445,
-        0.        , 0.03907385, 0.06666902],
-       [0.0545231 , 0.        , 0.        , 0.        , 0.        ,
-        0.08722668, 0.        , 0.        ],
-       [0.03852616, 0.06559814, 0.04216896, 0.        , 0.        ,
-        0.        , 0.08126763, 0.        ],
-       [0.        , 0.        , 0.03424028, 0.        , 0.        ,
-        0.        , 0.        , 0.05748844],
-       [0.08187641, 0.        , 0.06662846, 0.0295968 , 0.05205903,
-        0.        , 0.        , 0.        ]])
-
-      operatorx_mm = np.matmul(vectors_mm, np.matmul(distx_mm * hamiltonian_mm, vectors_mm.T))
-      operatorx_mm -= np.matmul(vectors_mm, np.matmul(distx_mm * hamiltonian_mm, vectors_mm.T)).T
-
-      operatory_mm = np.matmul(vectors_mm, np.matmul(disty_mm * hamiltonian_mm, vectors_mm.T))
-      operatory_mm -= np.matmul(vectors_mm, np.matmul(disty_mm * hamiltonian_mm, vectors_mm.T)).T
+      operatory_mm = np.matmul(vectors_mm.T, np.matmul(disty_mm * hamiltonian_mm, vectors_mm))
+      operatory_mm -= np.matmul(vectors_mm.T, np.matmul(disty_mm * hamiltonian_mm, vectors_mm)).T
 
       partfunc_m = np.exp(energies_m / self.temp)
       partfunc = sum(partfunc_m)
@@ -236,6 +160,8 @@ class Structure:
    
    def get_mobility(self):
       dsqlx, dsqly = self.get_disorder_avg_sql()
+
+      print((dsqlx + dsqly) / 2)
 
       mobx = (1 / self.temp) * self.invtau * dsqlx / 2
       moby = (1 / self.temp) * self.invtau * dsqly / 2
