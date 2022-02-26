@@ -100,13 +100,10 @@ class Structure:
       return nmol, transinter_mm, distx_mm, disty_mm, firstmol, secondmol
 
    def get_hamiltonian(self, nmol, transinter_mm, firstmol, secondmol):
-      rnd1_mm = np.zeros([nmol, nmol])
-      rnd2_mm = np.zeros([nmol, nmol])
-      for i, j in zip(firstmol, secondmol):
-         rnd1_mm[i-1, j-1] = np.random.random()
-         rnd1_mm[j-1, i-1] = rnd1_mm[i-1, j-1]
-         rnd2_mm[i-1, j-1] = np.random.random()
-         rnd2_mm[j-1, i-1] = rnd2_mm[i-1, j-1]
+      rnd1_mm = np.random.rand(nmol, nmol)
+      rnd1_mm = np.tril(rnd1_mm) + np.tril(rnd1_mm, -1).T
+      rnd2_mm = np.random.rand(nmol, nmol)
+      rnd2_mm = np.tril(rnd2_mm) + np.tril(rnd2_mm, -1).T
 
       log_mm = -2 * np.log(1 - rnd1_mm)
       cos_mm = np.sqrt(log_mm) * np.cos(2 * np.pi * rnd2_mm)
