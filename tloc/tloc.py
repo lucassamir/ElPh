@@ -28,10 +28,14 @@ class Structure:
       self.nrepeat = par_dic['nrepeat']
       self.invtau = par_dic['invtau']
       self.temp = par_dic['temp']
+      self.iseed = par_dic['iseed']
 
       # addind 0 for the case that molecules dont interact
       self.javg = np.insert(self.javg, 0, 0)
       self.jdelta = np.insert(self.jdelta, 0, 0)
+
+      # making random numbers predictable
+      np.random.seed(self.iseed)
 
    def get_interactions(self):
       # nmol number of molecules in the supercell
@@ -188,6 +192,7 @@ def write_params_file():
    params = {'javg':[-0.98296, 0.12994, 0.12994],
              'jdelta':[0.49148, 0.06497, 0.06497],
              'nrepeat':50,
+             "iseed": 3987187,
              'invtau':0.05,
              'temp':0.25
    }
