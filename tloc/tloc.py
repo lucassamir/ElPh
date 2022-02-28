@@ -6,29 +6,45 @@ from scipy import linalg
 from pathlib import Path
 
 class Structure:
-   def __init__(self, lattice_file, params_file, 
+   def __init__(self, lattice_file=None, params_file=None, 
    nmuc=None, coordmol=None, unitcell=None, 
    supercell=None, unique=None, uniqinter=None,
    javg=None, jdelta=None, nrepeat=None,
-   invtau=None, temp=None):
+   iseed=None, invtau=None, temp=None):
 
-      with open(lattice_file + '.json', 'r') as json_file:
-         lat_dic = json.load(json_file)
-      self.nmuc = lat_dic['nmuc']
-      self.coordmol = np.array(lat_dic['coordmol'])
-      self.unitcell = np.array(lat_dic['unitcell'])
-      self.supercell = lat_dic['supercell']
-      self.unique = lat_dic['unique']
-      self.uniqinter = np.array(lat_dic['uniqinter'])
+      if lattice_file:
+         with open(lattice_file + '.json', 'r') as json_file:
+            lat_dic = json.load(json_file)
+         self.nmuc = lat_dic['nmuc']
+         self.coordmol = np.array(lat_dic['coordmol'])
+         self.unitcell = np.array(lat_dic['unitcell'])
+         self.supercell = lat_dic['supercell']
+         self.unique = lat_dic['unique']
+         self.uniqinter = np.array(lat_dic['uniqinter'])
+      else:
+         self.nmuc = nmuc
+         self.coordmol = np.array(coordmol)
+         self.unitcell = np.array(unitcell)
+         self.supercell = supercell
+         self.unique = unique
+         self.uniqinter = np.array(uniqinter)
 
-      with open(params_file + '.json', 'r') as json_file:
-         par_dic = json.load(json_file)
-      self.javg = np.array(par_dic['javg'])
-      self.jdelta = np.array(par_dic['jdelta'])
-      self.nrepeat = par_dic['nrepeat']
-      self.invtau = par_dic['invtau']
-      self.temp = par_dic['temp']
-      self.iseed = par_dic['iseed']
+      if params_file:
+         with open(params_file + '.json', 'r') as json_file:
+            par_dic = json.load(json_file)
+         self.javg = np.array(par_dic['javg'])
+         self.jdelta = np.array(par_dic['jdelta'])
+         self.nrepeat = par_dic['nrepeat']
+         self.iseed = par_dic['iseed']
+         self.invtau = par_dic['invtau']
+         self.temp = par_dic['temp']
+      else:
+         self.javg = np.array(javg )
+         self.jdelta = np.array(jdelta)
+         self.nrepeat = nrepeat
+         self.iseed = iseed
+         self.invtau = invtau
+         self.temp = temp
 
       # addind 0 for the case that molecules dont interact
       self.javg = np.insert(self.javg, 0, 0)
@@ -149,9 +165,6 @@ class Structure:
       print('Calculating average of squared transient localization')
       for i in range(1, self.nrepeat + 1):
          sqlx, sqly = self.get_squared_length()
-         #tsqlx = self.get_therm_avg(sqlx)
-         #tsqly = self.get_therm_avg(sqly)
-         #partfunc = self.get_therm_avg()
 
          #moving average
          dsqlx -= dsqlx / i
