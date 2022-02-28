@@ -1,16 +1,14 @@
-from ast import operator
-from dis import dis
 import numpy as np
 import json
 from scipy import linalg
 from pathlib import Path
 
 class Structure:
-   def __init__(self, lattice_file=None, params_file=None, 
-   nmuc=None, coordmol=None, unitcell=None, 
+   def __init__(self, nmuc=None, coordmol=None, unitcell=None, 
    supercell=None, unique=None, uniqinter=None,
    javg=None, jdelta=None, nrepeat=None,
-   iseed=None, invtau=None, temp=None):
+   iseed=None, invtau=None, temp=None, 
+   lattice_file=None, params_file=None, results={}):
 
       if lattice_file:
          with open(lattice_file + '.json', 'r') as json_file:
@@ -45,6 +43,8 @@ class Structure:
          self.iseed = iseed
          self.invtau = invtau
          self.temp = temp
+
+      self.results = results
 
       # addind 0 for the case that molecules dont interact
       self.javg = np.insert(self.javg, 0, 0)
@@ -161,10 +161,19 @@ class Structure:
 
    def get_disorder_avg_sql(self):
       dsqlx, dsqly = 0, 0
+      self.results['squared_length_x'] = []
+      self.results['squared_length_y'] = []
+      self.results['squared_length'] = []
+      self.results['avg_sqlx'] = []
+      self.results['avg_sqly'] = []
+      self.results['avg_sql'] = []
 
       print('Calculating average of squared transient localization')
       for i in range(1, self.nrepeat + 1):
          sqlx, sqly = self.get_squared_length()
+         self.results['squared_length_x'].append(sqlx)
+         self.results['squared_length_y'].append(sqly)
+         self.results['squared_length'].append((sqlx + sqly) / 2)
 
          #moving average
          dsqlx -= dsqlx / i
@@ -173,6 +182,10 @@ class Structure:
          dsqly -= dsqly / i
          dsqly += sqly / i
 
+         self.results['avg_sqlx'].append(dsqlx)
+         self.results['avg_sqly'].append(dsqly)
+         self.results['avg_sql'].append((dsqlx + dsqly) / 2)
+
          print(i, dsqlx, dsqly)
 
       return dsqlx, dsqly
@@ -180,10 +193,11 @@ class Structure:
    def get_mobility(self):
       dsqlx, dsqly = self.get_disorder_avg_sql()
 
-      print((dsqlx + dsqly) / 2)
-
       mobx = (1 / self.temp) * self.invtau * dsqlx / 2
       moby = (1 / self.temp) * self.invtau * dsqly / 2
+
+      self.results['mobx'] = mobx
+      self.results['moby'] = moby
 
       return mobx, moby
 
@@ -201,7 +215,7 @@ def write_lattice_file():
               [2, 1, 1, 1, 0, 3]]
    }
    with open('lattice.json', 'w', encoding='utf-8') as f:
-      json.dump(lattice, f, ensure_ascii=False, indent=2)
+      json.dump(lattice, f, ensure_ascii=False, indent=4)
 
 def write_params_file():
    params = {'javg':[-0.98296, 0.12994, 0.12994],
@@ -272,13 +286,16 @@ def main(args=None):
       raise FileNotFoundError(msg)
 
    print('Initializing molecular structure')
-   st = Structure(args.lattice_file, args.params_file)
+   st = Structure(lattice_file=args.lattice_file, 
+      params_file=args.params_file)
 
    if args.mobility:
       mobx, moby = st.get_mobility()
       print('Calculating charge mobility')
       print('mu_x = ', mobx)
       print('mu_y = ', moby)
+      with open('results.json', 'w', encoding='utf-8') as f:
+         json.dump(st.results, f)
 
 if __name__  == '__main__':
    main()
