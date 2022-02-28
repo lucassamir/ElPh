@@ -97,9 +97,9 @@ class Structure:
       disty_mm[disty_mm > superlengthy / 2] -= superlengthy
       disty_mm[disty_mm < -superlengthy / 2] += superlengthy
 
-      return nmol, transinter_mm, distx_mm, disty_mm, firstmol, secondmol
+      return nmol, transinter_mm, distx_mm, disty_mm
 
-   def get_hamiltonian(self, nmol, transinter_mm, firstmol, secondmol):
+   def get_hamiltonian(self, nmol, transinter_mm):
       rnd1_mm = np.random.rand(nmol, nmol)
       rnd1_mm = np.tril(rnd1_mm) + np.tril(rnd1_mm, -1).T
       rnd2_mm = np.random.rand(nmol, nmol)
@@ -112,17 +112,17 @@ class Structure:
     
       return hamiltonian_mm
 
-   def get_energies(self, nmol, transinter_mm, firstmol, secondmol):
-      hamiltonian_mm = self.get_hamiltonian(nmol, transinter_mm, firstmol, secondmol)
+   def get_energies(self, nmol, transinter_mm):
+      hamiltonian_mm = self.get_hamiltonian(nmol, transinter_mm)
 
       energies_m, vectors_mm = linalg.eigh(hamiltonian_mm)
       
       return energies_m.real, vectors_mm, hamiltonian_mm
 
    def get_squared_length(self):
-      nmol, transinter_mm, distx_mm, disty_mm, firstmol, secondmol = self.get_interactions()
+      nmol, transinter_mm, distx_mm, disty_mm = self.get_interactions()
 
-      energies_m, vectors_mm, hamiltonian_mm = self.get_energies(nmol, transinter_mm, firstmol, secondmol)
+      energies_m, vectors_mm, hamiltonian_mm = self.get_energies(nmol, transinter_mm)
 
       operatorx_mm = np.matmul(vectors_mm.T, np.matmul(distx_mm * hamiltonian_mm, vectors_mm))
       operatorx_mm -= np.matmul(vectors_mm.T, np.matmul(distx_mm * hamiltonian_mm, vectors_mm)).T
