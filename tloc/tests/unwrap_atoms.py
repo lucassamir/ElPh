@@ -1,10 +1,11 @@
 from ase.io import read, write
-from ase.visualize import view
 from ase.neighborlist import natural_cutoffs, NeighborList
 from scipy import sparse
 import numpy as np
 import os
 from ase.io.trajectory import Trajectory
+from ase import Atoms
+import json
 
 def find_structure_file(folder):
     """Searches the current working directory for the molecular structure file. 
@@ -28,11 +29,15 @@ def find_structure_file(folder):
     return structure_file
 
 def compute_total_weight(centers_of_mass):
+    
     total_weight = 0
+    has_dupes = False
     for i in range(len(centers_of_mass)):
         for j in range(i+1, len(centers_of_mass)):
             total_weight +=  np.linalg.norm(centers_of_mass[i] - centers_of_mass[j])
-    return total_weight
+            if np.linalg.norm(centers_of_mass[i] - centers_of_mass[j]) == 0:
+                has_dupes = True
+    return total_weight, has_dupes
 
 def get_centers_of_mass(atoms, n_components, component_list):
     centers_of_mass = []
@@ -68,11 +73,11 @@ def unwrap_atoms(structure_file=None, write_traj=False):
     edges = list(matrix.keys())
     max_bond_len = max(natural_cutoffs(atoms))
     cell = list(atoms.get_cell())
-    new_atoms = read(structure_file)
-    new_atoms.set_pbc([False,False,False])
+    atoms = read(structure_file)
+    atoms.set_pbc([False,False,False])
     if write_traj:
-        traj_writer.write(new_atoms)
-    all_positions = new_atoms.get_positions()
+        traj_writer.write(atoms)
+    all_positions = atoms.get_positions()
     is_optimized = False
     # For each bond, take the lower left and move it upper right until the bond shrinks
     iterations = 0
@@ -99,14 +104,15 @@ def unwrap_atoms(structure_file=None, write_traj=False):
                         all_positions[edge[0]] = max_pos
                         all_positions[edge[1]] = new_pos
                     if write_traj:
-                        new_atoms.set_positions(all_positions)
-                        traj_writer.write(new_atoms)
-    new_atoms.set_positions(all_positions)
+                        atoms.set_positions(all_positions)
+                        traj_writer.write(atoms)
+    atoms.set_positions(all_positions)
+    write("tloc/tests/structure_no_molecule_opt.xyz", atoms)
 
     # Construct graph (compute total weight)
-    original_centers_of_mass = get_centers_of_mass(new_atoms, n_components, component_list)
+    original_centers_of_mass = get_centers_of_mass(atoms, n_components, component_list)
     centers_of_mass = np.copy(original_centers_of_mass)
-    weight = compute_total_weight(centers_of_mass)
+    weight, has_dupes = compute_total_weight(centers_of_mass)
     test_dirs = cell
     test_dirs.extend([-x for x in test_dirs])
 
@@ -117,12 +123,15 @@ def unwrap_atoms(structure_file=None, write_traj=False):
             for j in range(6):
                 test_centers_of_mass = np.copy(centers_of_mass)
                 test_centers_of_mass[i] += test_dirs[j]
-                test_weight = compute_total_weight(test_centers_of_mass)
-                if test_weight < weight:
+                test_weight, has_dupes = compute_total_weight(test_centers_of_mass)
+                if test_weight < weight and not has_dupes:
                     centers_of_mass = np.copy(test_centers_of_mass)
                     weight = test_weight
                     is_optimized = False
-    translations = np.zeros([len(new_atoms), 3])
+    
+    # Write centers of mass to file
+    np.savetxt('tloc/tests/supercell_lattice.xyz',centers_of_mass)
+    translations = np.zeros([len(atoms), 3])
     
     for i in range(n_components):
         molIdx = component_list[i]
@@ -131,10 +140,25 @@ def unwrap_atoms(structure_file=None, write_traj=False):
         dif = centers_of_mass[i] - original_centers_of_mass[i]
         translations[molIdxs,:] = dif
 
-    new_atoms.translate(translations)
-    new_atoms.center()
+    atoms.translate(translations)
+    atoms.center()
     if write_traj:
-        traj_writer.write(new_atoms)
-    write("tloc/tests/structure.xyz", new_atoms)
+        traj_writer.write(atoms)
 
-unwrap_atoms("tloc/tests/rubrene.cif")
+    new_atoms = Atoms()
+    new_atoms.set_cell(atoms.get_cell())
+
+    atom_mapping = {}
+    counter = 0
+    for i in range(n_components):
+        molIdx = i
+        molIdxs = [ x for x in range(len(component_list)) if component_list[x] == molIdx ]
+        for idx in molIdxs:
+            atom_mapping[idx] = counter 
+            counter += 1
+        new_atoms.extend(atoms[molIdxs])
+    write("tloc/tests/structure.xyz", new_atoms)
+    with open('tloc/tests/atom_mapping.json', 'w') as f:
+        f.write(json.dumps(atom_mapping, sort_keys=True, indent=2))
+
+unwrap_atoms("tloc/tests/bdt.cif", write_traj=False)
