@@ -193,9 +193,10 @@ class Structure:
    def get_mobility(self):
       dsqlx, dsqly = self.get_disorder_avg_sql()
 
-      # unit converter (ang**2) * e / (hbar)
+      # unit converter unit = ang**2 * e / hbar
       unit = 0.15192674605831966
 
+      # in units of cm**2 / (V s)
       mobx = (1 / self.temp) * self.invtau * dsqlx / 2 * unit
       moby = (1 / self.temp) * self.invtau * dsqly / 2 * unit
 
