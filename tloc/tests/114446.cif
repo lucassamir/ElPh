@@ -1,0 +1,136 @@
+####################################################################### 
+# 
+# This file contains crystal structure data downloaded from the 
+# Cambridge Structural Database (CSD) hosted by the Cambridge 
+# Crystallographic Data Centre (CCDC).
+# 
+# Full information about CCDC data access policies and citation 
+# guidelines are available at http://www.ccdc.cam.ac.uk/access/V1 
+# 
+# Audit and citation data items may have been added by the CCDC. 
+# Please retain this information to preserve the provenance of 
+# this file and to allow appropriate attribution of the data. 
+# 
+#######################################################################
+
+data_CSD_CIF_TETCEN01
+_audit_block_doi                 10.5517/cc3v2tt
+_database_code_depnum_ccdc_archive 'CCDC 114446'
+loop_
+_citation_id
+_citation_doi
+_citation_year
+1 10.1002/(SICI)1521-3765(19991105)5:11<3399::AID-CHEM3399>3.0.CO;2-V 1999
+_audit_update_record             
+;
+1999-02-08 deposited with the CCDC.	2022-03-02 downloaded from the CCDC.
+;
+_chemical_name_common            Tetracene
+_audit_creation_date             2000-05-08
+_audit_creation_method           CSD-ConQuest-V1
+_database_code_CSD               TETCEN01
+#_database_code_depnum_ccdc_archive 'CCDC 114446'
+_chemical_formula_sum            'C18 H12'
+_chemical_formula_moiety         
+;
+C18 H12
+;
+_chemical_name_systematic        
+;
+Tetracene
+;
+_cell_volume                     572.968
+_exptl_crystal_colour            orange
+_exptl_crystal_density_diffrn    1.32
+_exptl_crystal_description       plate
+_exptl_crystal_preparation       1,2,4-trichlorobenzene
+_diffrn_ambient_temperature      175.15
+#These two values have been output from a single CSD field.
+_refine_ls_R_factor_gt           0.057
+_refine_ls_wR_factor_gt          0.057
+_symmetry_cell_setting           triclinic
+_symmetry_space_group_name_H-M   'P -1'
+_symmetry_Int_Tables_number      2
+loop_
+_symmetry_equiv_pos_site_id
+_symmetry_equiv_pos_as_xyz
+1 x,y,z
+2 -x,-y,-z
+_cell_length_a                   6.0565(9)
+_cell_length_b                   7.8376(11)
+_cell_length_c                   13.0104(18)
+_cell_angle_alpha                77.127(2)
+_cell_angle_beta                 72.118(2)
+_cell_angle_gamma                85.792(2)
+_cell_formula_units_Z            2
+loop_
+_atom_type_symbol
+_atom_type_radius_bond
+C 0.68
+H 0.23
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+C1 C -0.0534(6) 0.5277(4) -0.1365(3)
+C2 C 0.1374(6) 0.6258(4) -0.2075(3)
+C3 C 0.1708(6) 0.6799(5) -0.3232(3)
+C4 C 0.3615(7) 0.7740(5) -0.3917(3)
+C5 C 0.5298(6) 0.8221(5) -0.3468(3)
+C6 C 0.5042(6) 0.7755(4) -0.2377(3)
+C7 C 0.3102(6) 0.6751(4) -0.1628(3)
+C8 C 0.2772(5) 0.6229(4) -0.0500(3)
+C9 C -0.0856(6) 0.4761(4) -0.0232(3)
+C10 C -0.5989(5) 0.1640(4) -0.1051(3)
+C11 C -0.3976(6) 0.1951(5) -0.1933(3)
+C12 C -0.3898(6) 0.3128(4) -0.2956(3)
+C13 C -0.1909(6) 0.3389(5) -0.3806(3)
+C14 C 0.0173(6) 0.2477(5) -0.3696(3)
+C15 C 0.0185(6) 0.1360(5) -0.2751(3)
+C16 C -0.1861(6) 0.1036(5) -0.1827(3)
+C17 C -0.1903(5) -0.0121(5) -0.0847(3)
+C18 C -0.6063(5) 0.0457(4) -0.0054(3)
+H1 H -0.16730 0.49480 -0.16480
+H2 H 0.05830 0.65000 -0.35350
+H3 H 0.38210 0.80720 -0.46890
+H4 H 0.66160 0.88780 -0.39450
+H5 H 0.61780 0.81030 -0.21000
+H6 H 0.38960 0.65560 -0.02080
+H7 H -0.73860 0.22310 -0.11090
+H8 H -0.52670 0.37370 -0.30410
+H9 H -0.18930 0.41790 -0.44780
+H10 H 0.15590 0.26660 -0.42980
+H11 H 0.15860 0.07710 -0.26950
+H12 H -0.05100 -0.07090 -0.07790
+C9A* C 0.0856(6) 0.5239(4) 0.0232(3)
+C1A* C 0.0534(6) 0.4723(4) 0.1365(3)
+C2A* C -0.1374(6) 0.3742(4) 0.2075(3)
+C3A* C -0.1708(6) 0.3201(5) 0.3232(3)
+C4A* C -0.3615(7) 0.2260(5) 0.3917(3)
+C5A* C -0.5298(6) 0.1779(5) 0.3468(3)
+C6A* C -0.5042(6) 0.2245(4) 0.2377(3)
+C7A* C -0.3102(6) 0.3249(4) 0.1628(3)
+C8A* C -0.2772(5) 0.3771(4) 0.0500(3)
+H6A* H -0.38960 0.34440 0.02080
+H5A* H -0.61780 0.18970 0.21000
+H4A* H -0.66160 0.11220 0.39450
+H3A* H -0.38210 0.19280 0.46890
+H2A* H -0.05830 0.35000 0.35350
+H1A* H 0.16730 0.50520 0.16480
+C18A* C -0.3937(5) -0.0457(4) 0.0054(3)
+C10A* C -0.4011(5) -0.1640(4) 0.1051(3)
+C11A* C -0.6024(6) -0.1951(5) 0.1933(3)
+C12A* C -0.6102(6) -0.3128(4) 0.2956(3)
+C13A* C -0.8091(6) -0.3389(5) 0.3806(3)
+C14A* C -1.0173(6) -0.2477(5) 0.3696(3)
+C15A* C -1.0185(6) -0.1360(5) 0.2751(3)
+C16A* C -0.8139(6) -0.1036(5) 0.1827(3)
+C17A* C -0.8097(5) 0.0121(5) 0.0847(3)
+H12A* H -0.94900 0.07090 0.07790
+H11A* H -1.15860 -0.07710 0.26950
+H10A* H -1.15590 -0.26660 0.42980
+H9A* H -0.81070 -0.41790 0.44780
+H8A* H -0.47330 -0.37370 0.30410
+H7A* H -0.26140 -0.22310 0.11090

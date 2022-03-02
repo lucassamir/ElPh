@@ -42,7 +42,7 @@ def compute_total_weight(centers_of_mass):
 def get_centers_of_mass(atoms, n_components, component_list):
     centers_of_mass = []
     for i in range(n_components):
-        molIdx_i = component_list[i]
+        molIdx_i = i
         molIdxs_i = [ x for x in range(len(component_list)) if component_list[x] == molIdx_i ]
         centers_of_mass.append(atoms[molIdxs_i].get_center_of_mass())
     return centers_of_mass
@@ -130,7 +130,7 @@ def unwrap_atoms(structure_file=None, write_traj=False):
                     is_optimized = False
     
     # Write centers of mass to file
-    np.savetxt('tloc/tests/supercell_lattice.xyz',centers_of_mass)
+    np.savetxt('tloc/tests/supercell_lattice.xyz', centers_of_mass)
     translations = np.zeros([len(atoms), 3])
     
     for i in range(n_components):
@@ -157,8 +157,8 @@ def unwrap_atoms(structure_file=None, write_traj=False):
             atom_mapping[idx] = counter 
             counter += 1
         new_atoms.extend(atoms[molIdxs])
-    write("tloc/tests/structure.xyz", new_atoms)
+    write("tloc/tests/structure.com", new_atoms)
     with open('tloc/tests/atom_mapping.json', 'w') as f:
         f.write(json.dumps(atom_mapping, sort_keys=True, indent=2))
 
-unwrap_atoms("tloc/tests/bdt.cif", write_traj=False)
+unwrap_atoms("tloc/tests/114446.cif", write_traj=False)
