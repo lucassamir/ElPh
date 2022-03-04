@@ -49,7 +49,7 @@ def get_centers_of_mass(atoms, n_components, component_list):
 
 def unwrap_atoms(structure_file=None, write_traj=False):
     if write_traj:
-        traj_writer = Trajectory('tloc/tests/traj.traj','w')
+        traj_writer = Trajectory('tloc/rearrange_atoms/traj.traj','w')
     folder = os.getcwd()
 
     if structure_file:
@@ -107,8 +107,7 @@ def unwrap_atoms(structure_file=None, write_traj=False):
                         atoms.set_positions(all_positions)
                         traj_writer.write(atoms)
     atoms.set_positions(all_positions)
-    write("tloc/tests/structure_no_molecule_opt.xyz", atoms)
-
+    
     # Construct graph (compute total weight)
     original_centers_of_mass = get_centers_of_mass(atoms, n_components, component_list)
     centers_of_mass = np.copy(original_centers_of_mass)
@@ -130,7 +129,7 @@ def unwrap_atoms(structure_file=None, write_traj=False):
                     is_optimized = False
     
     # Write centers of mass to file
-    np.savetxt('tloc/tests/supercell_lattice.xyz', centers_of_mass)
+    np.savetxt('tloc/rearrange_atoms/supercell_lattice.xyz', centers_of_mass)
     translations = np.zeros([len(atoms), 3])
     
     for i in range(n_components):
@@ -157,8 +156,29 @@ def unwrap_atoms(structure_file=None, write_traj=False):
             atom_mapping[idx] = counter 
             counter += 1
         new_atoms.extend(atoms[molIdxs])
-    write("tloc/tests/structure.com", new_atoms)
-    with open('tloc/tests/atom_mapping.json', 'w') as f:
+    write("tloc/rearrange_atoms/structure.com", new_atoms)
+    with open('tloc/rearrange_atoms/atom_mapping.json', 'w') as f:
         f.write(json.dumps(atom_mapping, sort_keys=True, indent=2))
+    
+    # TODO: Create every possible interaction between molecules
 
-unwrap_atoms("tloc/tests/114446.cif", write_traj=False)
+    # start with molecule 0, place a copy at the same location.
+
+    # Move the copy up, save, move it back.
+
+    # Move the copy right, save, move it back.
+
+    # Move the copy forward, save, move it back.
+
+
+    # Now, start with a close pair of molecule 1 and molecule 0, determine their distance
+
+    # Move molecule 1 up and down and determine which is closer, move it back
+
+    # Move molecule 1 left and right and determine which is closer, move it back
+
+    # Move molecule 1 forward and back and determine which is closer, move it back
+
+    # Take the smallest 
+
+unwrap_atoms("tloc/rearrange_atoms/rubrene.cif", write_traj=False)
