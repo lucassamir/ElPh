@@ -116,15 +116,10 @@ class Structure:
       return nmol, transinter_mm, distx_mm, disty_mm
 
    def get_hamiltonian(self, nmol, transinter_mm):
-      rnd1_mm = np.random.rand(nmol, nmol)
-      rnd1_mm = np.tril(rnd1_mm) + np.tril(rnd1_mm, -1).T
-      rnd2_mm = np.random.rand(nmol, nmol)
-      rnd2_mm = np.tril(rnd2_mm) + np.tril(rnd2_mm, -1).T
+      rnd_mm = np.random.normal(0, 1, size=(nmol, nmol))
+      rnd_mm = np.tril(rnd_mm) + np.tril(rnd_mm, -1).T
 
-      log_mm = -2 * np.log(1 - rnd1_mm)
-      cos_mm = np.sqrt(log_mm) * np.cos(2 * np.pi * rnd2_mm)
-
-      hamiltonian_mm = self.javg[transinter_mm] + self.jdelta[transinter_mm] * cos_mm
+      hamiltonian_mm = self.javg[transinter_mm] + self.jdelta[transinter_mm] * rnd_mm
     
       return hamiltonian_mm
 
@@ -222,12 +217,12 @@ def write_lattice_file():
       json.dump(lattice, f, ensure_ascii=False, indent=4)
 
 def write_params_file():
-   params = {'javg':[-0.98296, 0.12994, 0.12994],
-             'jdelta':[0.49148, 0.06497, 0.06497],
+   params = {'javg':[0.058, 0.058, 0.058],
+             'jdelta':[0.029, 0.029, 0.029],
              'nrepeat':50,
-             "iseed": 3987187,
-             'invtau':0.05,
-             'temp':0.25
+             "iseed":3987187,
+             'invtau':0.005,
+             'temp':0.025
    }
    with open('params.json', 'w', encoding='utf-8') as f:
       json.dump(params, f, ensure_ascii=False, indent=4)
