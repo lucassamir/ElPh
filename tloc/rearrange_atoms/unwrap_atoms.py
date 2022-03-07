@@ -73,6 +73,7 @@ def unwrap_atoms(structure_file=None, write_traj=False):
     edges = list(matrix.keys())
     max_bond_len = max(natural_cutoffs(atoms))
     cell = list(atoms.get_cell())
+    cell_array = atoms.get_cell()
     atoms = read(structure_file)
     atoms.set_pbc([False,False,False])
     if write_traj:
@@ -145,7 +146,7 @@ def unwrap_atoms(structure_file=None, write_traj=False):
         traj_writer.write(atoms)
 
     new_atoms = Atoms()
-    new_atoms.set_cell(atoms.get_cell())
+    new_atoms.set_cell(cell_array)
 
     atom_mapping = {}
     counter = 0
@@ -156,29 +157,24 @@ def unwrap_atoms(structure_file=None, write_traj=False):
             atom_mapping[idx] = counter 
             counter += 1
         new_atoms.extend(atoms[molIdxs])
+    
+    
+    
     write("tloc/rearrange_atoms/structure.com", new_atoms)
     with open('tloc/rearrange_atoms/atom_mapping.json', 'w') as f:
         f.write(json.dumps(atom_mapping, sort_keys=True, indent=2))
     
-    # TODO: Create every possible interaction between molecules
+    # TODO: Create the 3 interactions
 
-    # start with molecule 0, place a copy at the same location.
+    # The three interactions are the 3 shortest (not necessarily unique) adjacent paths
 
-    # Move the copy up, save, move it back.
+    # Create 3x3x3 supercell and determine which molecule is closest to the middle
 
-    # Move the copy right, save, move it back.
+    # Identify 6 nearest neighbors
 
-    # Move the copy forward, save, move it back.
+    # For each unique distance between centers of mass, create a file with the pair (up to 3)
 
 
-    # Now, start with a close pair of molecule 1 and molecule 0, determine their distance
 
-    # Move molecule 1 up and down and determine which is closer, move it back
 
-    # Move molecule 1 left and right and determine which is closer, move it back
-
-    # Move molecule 1 forward and back and determine which is closer, move it back
-
-    # Take the smallest 
-
-unwrap_atoms("tloc/rearrange_atoms/rubrene.cif", write_traj=False)
+unwrap_atoms("tloc/rearrange_atoms/bdt.cif", write_traj=False)
