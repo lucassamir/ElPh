@@ -118,3 +118,11 @@ class Structure:
         raise NotImplementedError(msg)    
 
     return np.dot(np.exp(-eh * ((energies_m - energies_m[idx]) / self.temp)) ,  q_m / nmol)
+
+
+from tqdm.auto import trange, tqdm
+from time import sleep
+
+for i in trange(3, desc='1st loop'):
+    for j in tqdm(range(100), desc='2nd loop'):
+        sleep(0.001)
