@@ -1,7 +1,9 @@
+from genericpath import exists
 import numpy as np
 from ase.calculators.gaussian import Gaussian
 from ase.io import read
-from shutil import move
+from os import rename
+from os.path import exists
 
 def get_orbitals(atoms, name):
     atoms.calc = Gaussian(mem='4GB',
@@ -14,7 +16,7 @@ def get_orbitals(atoms, name):
                           pop='full',
                           extra='nosymm punch=mo iop(3/33=1)')
     atoms.get_potential_energy()
-    move('fort.7', name)
+    rename('fort.7', name + '.pun')
 
 def derivative(i, k, delta1, delta2):
     dj = []
@@ -43,13 +45,14 @@ def finite_dif(delta=0.01):
     for i in indices:
         for k in range(3):
             for sign in [-1, 1]:
-                # Update atomic positions
-                atoms.positions = pos_ik
-                atoms.positions[i, k] = pos_ik[i, k] + sign * delta
                 prefix = 'dj-{}-{}{}{}' .format(delta, i,
                                                 'xyz'[k],
                                                 ' +-'[sign])
-                get_orbitals(atoms, prefix)
+                if not path.exists(prefix + '.pun'):
+                    # Update atomic positions   
+                    atoms.positions = pos_ik
+                    atoms.positions[i, k] = pos_ik[i, k] + sign * delta
+                    get_orbitals(atoms, prefix)
 
 def jdelta(delta=0.01):
     d1 = delta / 2
