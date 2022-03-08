@@ -48,7 +48,7 @@ def finite_dif(delta=0.01):
                 prefix = 'dj-{}-{}{}{}' .format(delta, i,
                                                 'xyz'[k],
                                                 ' +-'[sign])
-                if not path.exists(prefix + '.pun'):
+                if not exists(prefix + '.pun'):
                     # Update atomic positions   
                     atoms.positions = pos_ik
                     atoms.positions[i, k] = pos_ik[i, k] + sign * delta
