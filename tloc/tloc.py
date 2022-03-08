@@ -2,6 +2,7 @@ import numpy as np
 import json
 from scipy import linalg
 from pathlib import Path
+from tqdm.auto import trange
 
 class Structure:
    def __init__(self, nmuc=None, coordmol=None, unitcell=None, 
@@ -164,7 +165,7 @@ class Structure:
       self.results['avg_sql'] = []
 
       print('Calculating average of squared transient localization')
-      for i in range(1, self.nrepeat + 1):
+      for i in trange(1, self.nrepeat + 1, desc='Loop Name'):
          sqlx, sqly = self.get_squared_length()
          self.results['squared_length_x'].append(sqlx)
          self.results['squared_length_y'].append(sqly)
