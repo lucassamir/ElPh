@@ -2,7 +2,9 @@ import numpy as np
 from ase.calculators.gaussian import Gaussian
 from ase.io import read
 from os.path import exists
+from shutil import copyfile
 from tloc.javerage import get_orbitals
+from tloc import chdir, mkdir
 
 def get_all_displacements(atoms):
     for ia in range(len(atoms)):
@@ -19,7 +21,6 @@ def displace_atom(atoms, ia, iv, sign, delta):
 
 def finite_dif(delta=0.01):
     atoms = read('static.xyz')
-
     for ia, iv, sign in get_all_displacements(atoms):
         prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
                                         ia,
@@ -48,12 +49,29 @@ def get_dj_matrix(delta1, delta2):
         for iv in range(3):
             dj_ik[ia, iv] = derivative(ia, iv, delta1, delta2)
 
-def jdelta(delta=0.01):
-    d1 = delta / 2
-    d2 = delta
-    finite_dif(d1)
-    finite_dif(d2)
-    get_dj_matrix(d1, d2)
+def get_jdelta(pair, delta=0.01):
+    # run Gaussian for displacements of first molecule
+    name = str(pair[1][0] + 1)
+    with chdir(name):
+        mkdir('displacements')
+        with chdir('displacements'):
+            copyfile('../' + name + '.xyz', 'static.xyz')
+            finite_dif(delta / 2)
+            finite_dif(delta)
+
+    # run Gaussian for displacements of first molecule in the pair
+    name = str(pair[0])
+    with chdir(name):
+        mkdir('displacements')
+        with chdir('displacements'):
+            copyfile('../' + name + '.xyz', 'static.xyz')
+            finite_dif(delta / 2)
+            finite_dif(delta)
 
 if __name__ == '__main__':
-    jdelta(delta=0.01)
+    pairs = {'A':[0, 1], 
+             'B':[1, 2],
+             'C':[0, 2]}
+    
+    for pair in pairs.items():
+        get_jdelta(pair, delta=0.01)
