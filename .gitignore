@@ -1,2 +1,5 @@
 tloc.egg-info
 tloc/__pycache__
+tloc/rearrange_atoms/atom_mapping.json
+*.com
+*.cif
