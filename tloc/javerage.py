@@ -1,12 +1,8 @@
-from ase.io import read, write
-from ase.io.gaussian import write_gaussian_in
+from ase.io import read
 from ase.neighborlist import natural_cutoffs, NeighborList
 from scipy import sparse
 import numpy as np
 import os
-from ase.io.trajectory import Trajectory
-from ase import Atoms
-import json
 from tqdm.auto import trange, tqdm
 import warnings
 from halo import Halo
@@ -41,25 +37,17 @@ def get_centers_of_mass(atoms, n_components, component_list):
         centers_of_mass.append(atoms[molIdxs_i].get_center_of_mass())
     return centers_of_mass
 
-def write_structure(label, component_list, molecules, all_atoms):
+def write_pairs(label, component_list, molecules, all_atoms):
     if isinstance(molecules, list):
         idxs = [ i for i in range(len(component_list)) if component_list[i] in molecules ]
     else:
         idxs = [ i for i in range(len(component_list)) if component_list[i] == molecules ]
     atoms = all_atoms[idxs]
     atoms.set_pbc([False, False, False])
+    atoms.set_cell([0, 0, 0])
 
     os.mkdir(label)
-    outfile = open(f"{label}/{label}.com", 'w')
-    write_gaussian_in(outfile, 
-                      atoms,
-                      nprocshared=24,
-                      mem="48GB",
-                      method="b3lyp",
-                      basis="6-31G*",
-                      scf="tight",
-                      pop='full',
-                      extra="nosymm punch=mo iop(3/33=1)")
+    atoms.write(label + '/' + label + '.xyz')
 
 def unwrap_atoms(structure_file=None):
     spinner = Halo(text="Reading structure", color='blue', spinner='dots')
@@ -75,7 +63,6 @@ def unwrap_atoms(structure_file=None):
         structure_file = find_structure_file(folder)
 
     with warnings.catch_warnings():
-        tqdm
         warnings.simplefilter("ignore")
         atoms = read(structure_file)
     atoms *= [3, 3, 3]
@@ -142,7 +129,6 @@ def unwrap_atoms(structure_file=None):
                 if cycle_length < min_cycle_length and is_triangle:
                     min_cycle_length = cycle_length
                     min_cycle = [i, j, k]
-    print(f"Minimum cycle: {min_cycle} With weight: {min_cycle_length}")
 
     # Keep only these atoms
     keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in min_cycle ]
@@ -151,48 +137,51 @@ def unwrap_atoms(structure_file=None):
     # Center in cell
     new_atoms.center()
     new_atoms.set_pbc([False, False, False])
-    new_atoms.calc = Gaussian(mem="48GB", 
-                              nprocshared=24, 
-                              method="b3lyp", 
-                              basis="6-31G*", 
-                              scf="tight", 
-                              pop='full', 
-                              extra="nosymm punch=mo iop(3/33=1)")
-    outfile = open("full_structure.com", 'w')
-    write_gaussian_in(outfile, 
-                      new_atoms,
-                      nprocshared=24,
-                      mem="48GB",
-                      method="b3lyp",
-                      basis="6-31G*",
-                      scf="tight",
-                      pop='full',
-                      extra="nosymm punch=mo iop(3/33=1)")
+    new_atoms.set_cell([0, 0, 0])
+    new_atoms.write('all_pairs.xyz')
 
     # Create structures with each pair of atoms
     """
     Directory structure will be as follows:
     >main_folder
-        >0
-            -0.com
-            ~0.log
-            ~fort.7 > 0.pun
+        >1
+            -1.com
+            ~1.log
+            ~fort.7 > 1.punatoms
             >Displacements
                 -0
                 -1
                 ...
-        >1
-            -1.com
-            ~1.log
-            ~fort.7 > 1.pun
         >2
-            -C.com
-            ~C.log
-            ~fort.7 > C.pun
+            -2.com
+            ~2.log
+            ~fort.7 > 2.pun
+        >3
+            -3.com
+            ~3.log
+            ~fort.7 > 3.pun
         >A
             -PairA.com
             ~PairA.log
-            ~fort.7 > PairA.pun
+            ~fort.7 > PairA.pun# new_atoms.set_pbc([False, False, False])
+    # new_atoms.calc = Gaussian(mem="48GB", 
+    #                           nprocshared=24, 
+    #                           method="b3lyp", 
+    #                           basis="6-31G*", 
+    #                           scf="tight", atoms
+    #                           pop='full', 
+    #                           extra="nosymm punch=mo iop(3/33=1)")
+    # outfile = open("full_structure.com", 'w')
+    # write_gaussian_in(outfile, 
+    #                   new_atoms,
+    #                   nprocshared=24,
+    #                   mem="48GB",
+    #                   method="b3lyp",
+    #                   basis="6-31G*",
+    #                   scf="tight",
+    #                   pop='full',
+    #                   extra="nosymm punch=mo iop(3/33=1)")
+
         >B
             -PairB.com
             ~PairB.log
@@ -204,17 +193,17 @@ def unwrap_atoms(structure_file=None):
     """
 
     # A
-    write_structure('A', component_list, min_cycle[0], fully_connected_atoms)
+    write_pairs('1', component_list, min_cycle[0], fully_connected_atoms)
     # B
-    write_structure('B', component_list, min_cycle[1], fully_connected_atoms)
+    write_pairs('2', component_list, min_cycle[1], fully_connected_atoms)
     # C
-    write_structure('C', component_list, min_cycle[2], fully_connected_atoms)
+    write_pairs('3', component_list, min_cycle[2], fully_connected_atoms)
     # AB
-    write_structure('AB', component_list, [min_cycle[0], min_cycle[1]], fully_connected_atoms)
+    write_pairs('A', component_list, [min_cycle[0], min_cycle[1]], fully_connected_atoms)
     # BC
-    write_structure('BC', component_list, [min_cycle[1], min_cycle[2]], fully_connected_atoms)
+    write_pairs('B', component_list, [min_cycle[1], min_cycle[2]], fully_connected_atoms)
     # AC
-    write_structure('AC', component_list, [min_cycle[0], min_cycle[2]], fully_connected_atoms)
+    write_pairs('C', component_list, [min_cycle[0], min_cycle[2]], fully_connected_atoms)
 
 if __name__ == '__main__':
     unwrap_atoms()
