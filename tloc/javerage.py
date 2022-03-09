@@ -6,7 +6,7 @@ import os
 from tqdm.auto import trange, tqdm
 from halo import Halo
 from ase.calculators.gaussian import Gaussian
-from tloc import chdir
+from tloc import chdir, mkdir
 
 def find_structure_file(folder):
     """Searches the current working directory for the molecular structure file. 
@@ -46,7 +46,7 @@ def write_structure(label, component_list, molecules, all_atoms):
     atoms.set_pbc([False, False, False])
     atoms.set_cell([0, 0, 0])
 
-    os.mkdir(label)
+    mkdir(label)
     atoms.write(label + '/' + label + '.xyz')
 
 def unwrap_atoms(structure_file=None):
