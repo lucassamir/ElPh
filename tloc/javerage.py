@@ -109,7 +109,6 @@ def unwrap_atoms(structure_file=None):
             keep_idx.append(i)
     keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in keep_idx ]
     fully_connected_atoms = atoms[keep_idxs]
-
     spinner = Halo(text="Re-identifying molecules", color='green', spinner='dots')
     spinner.start()
     # Re-compute molecules so that they fall in order
