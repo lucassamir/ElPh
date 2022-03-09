@@ -74,7 +74,8 @@ def unwrap_atoms(structure_file=None):
     else:
         structure_file = find_structure_file(folder)
 
-    with warnings.catch_warnings():tqdm
+    with warnings.catch_warnings():
+        tqdm
         warnings.simplefilter("ignore")
         atoms = read(structure_file)
     atoms *= [3, 3, 3]
