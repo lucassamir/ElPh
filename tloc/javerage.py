@@ -109,7 +109,7 @@ def unwrap_atoms(structure_file=None):
             keep_idx.append(i)
     keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in keep_idx ]
     fully_connected_atoms = atoms[keep_idxs]
-    
+
     spinner = Halo(text="Re-identifying molecules", color='green', spinner='dots')
     spinner.start()
     # Re-compute molecules so that they fall in order
@@ -134,8 +134,12 @@ def unwrap_atoms(structure_file=None):
     for i in range(len(centers_of_mass)):
         for j in range(i+1, len(centers_of_mass)):
             for k in range(j+1, len(centers_of_mass)):
+                # TODO: Impose triangle condition
                 cycle_length = com_edges[(i,j)] + com_edges[(j,k)] + com_edges[(i,k)]
-                if cycle_length < min_cycle_length:
+                is_triangle = com_edges[(i,j)] < com_edges[(j,k)] + com_edges[(i,k)] and \
+                                com_edges[(j,k)] < com_edges[(i,k)] + com_edges[(i,j)] and \
+                                com_edges[(i,k)] < com_edges[(i,j)] + com_edges[(j,k)]
+                if cycle_length < min_cycle_length and is_triangle:
                     min_cycle_length = cycle_length
                     min_cycle = [i, j, k]
     print(f"Minimum cycle: {min_cycle} With weight: {min_cycle_length}")
@@ -168,43 +172,35 @@ def unwrap_atoms(structure_file=None):
     # Create structures with each pair of atoms
     """
     Directory structure will be as follows:
-    >main_foldertqdm
-        >A
-            -A.com
-            ~A.log
-            ~fort.7 > A.pun
+    >main_folder
+        >0
+            -0.com
+            ~0.log
+            ~fort.7 > 0.pun
             >Displacements
                 -0
                 -1
                 ...
-        >B
-            -B.com
-            ~B.log
-            ~fort.7 > B.pun
-            >Displacements
-                -0
-                -1
-                ...
-        >C
+        >1
+            -1.com
+            ~1.log
+            ~fort.7 > 1.pun
+        >2
             -C.com
             ~C.log
             ~fort.7 > C.pun
-            >Displacements
-                -0
-                -1
-                ...
-        >AB
-            -PairAB.com
-            ~PairAB.log
-            ~fort.7 > PairAB.pun
-        >BC
-            -PairBC.com
-            ~PairBC.log
-            ~fort.7 > PairBC.pun
-        >AC
-            -PairAC.com
-            ~PairAC.log
-            ~fort.7 > PairAC.pun
+        >A
+            -PairA.com
+            ~PairA.log
+            ~fort.7 > PairA.pun
+        >B
+            -PairB.com
+            ~PairB.log
+            ~fort.7 > PairB.pun
+        >C
+            -PairC.com
+            ~PairC.log
+            ~fort.7 > PairC.pun
     """
 
     # A

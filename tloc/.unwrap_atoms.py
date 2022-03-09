@@ -163,17 +163,6 @@ def unwrap_atoms(structure_file=None, write_traj=False):
     write("tloc/rearrange_atoms/structure.com", new_atoms)
     with open('tloc/rearrange_atoms/atom_mapping.json', 'w') as f:
         f.write(json.dumps(atom_mapping, sort_keys=True, indent=2))
-    
-    # TODO: Create the 3 interactions
-
-    # The three interactions are the 3 shortest (not necessarily unique) adjacent paths
-
-    # Create 3x3x3 supercell and determine which molecule is closest to the middle
-
-    # Identify 6 nearest neighbors
-
-    # For each unique distance between centers of mass, create a file with the pair (up to 3)
-
 
 
 
