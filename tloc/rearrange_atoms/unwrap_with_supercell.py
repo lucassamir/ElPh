@@ -52,13 +52,14 @@ def write_structure(label, component_list, molecules, all_atoms):
     os.mkdir(label)
     outfile = open(f"{label}/{label}.com", 'w')
     write_gaussian_in(outfile, 
-                        atoms,
-                        nprocshared=24,
-                        mem="48GB",
-                        method="b3lyp",
-                        basis="6-31G*",
-                        scf="tight",
-                        extra="nosymm punch=mo iop(3/33=1)")
+                      atoms,
+                      nprocshared=24,
+                      mem="48GB",
+                      method="b3lyp",
+                      basis="6-31G*",
+                      scf="tight",
+                      pop='full'
+                      extra="nosymm punch=mo iop(3/33=1)")
 
 def unwrap_atoms(structure_file=None):
     spinner = Halo(text="Reading structure", color='blue', spinner='dots')
@@ -73,7 +74,7 @@ def unwrap_atoms(structure_file=None):
     else:
         structure_file = find_structure_file(folder)
 
-    with warnings.catch_warnings():
+    with warnings.catch_warnings():tqdm
         warnings.simplefilter("ignore")
         atoms = read(structure_file)
     atoms *= [3, 3, 3]
@@ -147,24 +148,27 @@ def unwrap_atoms(structure_file=None):
     new_atoms.center()
     new_atoms.set_pbc([False, False, False])
     new_atoms.calc = Gaussian(mem="48GB",
-                                method="b3lyp",
-                                basis="6-31G*",
-                                scf="tight",
-                                extra="nosymm punch=mo iop(3/33=1)")
+                              nprocshared=24,
+                              method="b3lyp",
+                              basis="6-31G*",
+                              scf="tight",
+                              pop='full'
+                              extra="nosymm punch=mo iop(3/33=1)")
     outfile = open("full_structure.com", 'w')
     write_gaussian_in(outfile, 
-                        new_atoms,
-                        nprocshared=24,
-                        mem="48GB",
-                        method="b3lyp",
-                        basis="6-31G*",
-                        scf="tight",
-                        extra="nosymm punch=mo iop(3/33=1)")
+                      new_atoms,
+                      nprocshared=24,
+                      mem="48GB",
+                      method="b3lyp",
+                      basis="6-31G*",
+                      scf="tight",
+                      pop='full'
+                      extra="nosymm punch=mo iop(3/33=1)")
 
     # Create structures with each pair of atoms
     """
     Directory structure will be as follows:
-    >main_folder
+    >main_foldertqdm
         >A
             -A.com
             ~A.log
