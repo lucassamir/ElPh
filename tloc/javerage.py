@@ -58,7 +58,7 @@ def write_structure(label, component_list, molecules, all_atoms):
                       method="b3lyp",
                       basis="6-31G*",
                       scf="tight",
-                      pop='full'
+                      pop='full',
                       extra="nosymm punch=mo iop(3/33=1)")
 
 def unwrap_atoms(structure_file=None):
@@ -150,12 +150,12 @@ def unwrap_atoms(structure_file=None):
     # Center in cell
     new_atoms.center()
     new_atoms.set_pbc([False, False, False])
-    new_atoms.calc = Gaussian(mem="48GB",
-                              nprocshared=24,
-                              method="b3lyp",
-                              basis="6-31G*",
-                              scf="tight",
-                              pop='full'
+    new_atoms.calc = Gaussian(mem="48GB", 
+                              nprocshared=24, 
+                              method="b3lyp", 
+                              basis="6-31G*", 
+                              scf="tight", 
+                              pop='full', 
                               extra="nosymm punch=mo iop(3/33=1)")
     outfile = open("full_structure.com", 'w')
     write_gaussian_in(outfile, 
@@ -165,7 +165,7 @@ def unwrap_atoms(structure_file=None):
                       method="b3lyp",
                       basis="6-31G*",
                       scf="tight",
-                      pop='full'
+                      pop='full',
                       extra="nosymm punch=mo iop(3/33=1)")
 
     # Create structures with each pair of atoms
@@ -214,3 +214,6 @@ def unwrap_atoms(structure_file=None):
     write_structure('BC', component_list, [min_cycle[1], min_cycle[2]], fully_connected_atoms)
     # AC
     write_structure('AC', component_list, [min_cycle[0], min_cycle[2]], fully_connected_atoms)
+
+if __name__ == '__main__':
+    unwrap_atoms()
