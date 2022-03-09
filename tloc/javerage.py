@@ -4,9 +4,9 @@ from scipy import sparse
 import numpy as np
 import os
 from tqdm.auto import trange, tqdm
-import warnings
 from halo import Halo
 from ase.calculators.gaussian import Gaussian
+from tloc import chdir
 
 def find_structure_file(folder):
     """Searches the current working directory for the molecular structure file. 
@@ -37,7 +37,7 @@ def get_centers_of_mass(atoms, n_components, component_list):
         centers_of_mass.append(atoms[molIdxs_i].get_center_of_mass())
     return centers_of_mass
 
-def write_pairs(label, component_list, molecules, all_atoms):
+def write_structure(label, component_list, molecules, all_atoms):
     if isinstance(molecules, list):
         idxs = [ i for i in range(len(component_list)) if component_list[i] in molecules ]
     else:
@@ -53,18 +53,8 @@ def unwrap_atoms(structure_file=None):
     spinner = Halo(text="Reading structure", color='blue', spinner='dots')
     spinner.start()
     folder = os.getcwd()
-
-    if structure_file:
-        if os.path.exists(folder + '/../' + structure_file):
-            structure_file = folder + '/../' + structure_file
-        else:
-            structure_file = folder + '/' + structure_file
-    else:
-        structure_file = find_structure_file(folder)
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        atoms = read(structure_file)
+    structure_file = find_structure_file(folder)
+    atoms = read(structure_file)
     atoms *= [3, 3, 3]
     spinner.stop()
     spinner = Halo(text="Identifying molecules", color='green', spinner='dots')
@@ -163,25 +153,7 @@ def unwrap_atoms(structure_file=None):
         >A
             -PairA.com
             ~PairA.log
-            ~fort.7 > PairA.pun# new_atoms.set_pbc([False, False, False])
-    # new_atoms.calc = Gaussian(mem="48GB", 
-    #                           nprocshared=24, 
-    #                           method="b3lyp", 
-    #                           basis="6-31G*", 
-    #                           scf="tight", atoms
-    #                           pop='full', 
-    #                           extra="nosymm punch=mo iop(3/33=1)")
-    # outfile = open("full_structure.com", 'w')
-    # write_gaussian_in(outfile, 
-    #                   new_atoms,
-    #                   nprocshared=24,
-    #                   mem="48GB",
-    #                   method="b3lyp",
-    #                   basis="6-31G*",
-    #                   scf="tight",
-    #                   pop='full',
-    #                   extra="nosymm punch=mo iop(3/33=1)")
-
+            ~fort.7 > PairA.pun
         >B
             -PairB.com
             ~PairB.log
@@ -192,18 +164,51 @@ def unwrap_atoms(structure_file=None):
             ~fort.7 > PairC.pun
     """
 
-    # A
-    write_pairs('1', component_list, min_cycle[0], fully_connected_atoms)
-    # B
-    write_pairs('2', component_list, min_cycle[1], fully_connected_atoms)
-    # C
-    write_pairs('3', component_list, min_cycle[2], fully_connected_atoms)
-    # AB
-    write_pairs('A', component_list, [min_cycle[0], min_cycle[1]], fully_connected_atoms)
-    # BC
-    write_pairs('B', component_list, [min_cycle[1], min_cycle[2]], fully_connected_atoms)
-    # AC
-    write_pairs('C', component_list, [min_cycle[0], min_cycle[2]], fully_connected_atoms)
+    molecules = {'1':0, 
+                 '2':1, 
+                 '3':2}
+
+    for key, value in molecules.items():
+        write_structure(key, component_list, min_cycle[value], fully_connected_atoms)
+
+    pairs = {'A':[0, 1], 
+             'B':[1, 2],
+             'C':[0, 2]}
+
+    for key, value in pairs.items():
+        cycle = [min_cycle[v] for v in value]
+        write_structure(key, component_list, cycle, fully_connected_atoms)
+
+    return molecules, pairs
+
+def get_orbitals(atoms, name):
+    atoms.calc = Gaussian(mem='4GB',
+                          nprocshared=24,
+                          label=name,
+                          save=None,
+                          method='b3lyp',
+                          basis='6-31G*',
+                          scf='tight',
+                          pop='full',
+                          extra='nosymm punch=mo iop(3/33=1)')
+    atoms.get_potential_energy()
+    os.rename('fort.7', name + '.pun')
+
+def get_javerage(pair):
+    # Gaussian run for each molecule
+    for mol in pair[1]:
+        name = str(mol + 1)
+        with chdir(name):
+            atoms = read(name + '.xyz')
+            get_orbitals(atoms, name)
+    
+    # Gaussian run for the pair
+    with chdir(pair[0]):
+        atoms = read(pair[0] + '.xyz')
+        get_orbitals(atoms, pair[0])
 
 if __name__ == '__main__':
-    unwrap_atoms()
+    molecules, pairs = unwrap_atoms()
+
+    for pair in pairs.items():
+        get_javerage(pair)

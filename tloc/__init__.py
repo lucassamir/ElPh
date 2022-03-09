@@ -5,6 +5,7 @@ from tloc.tloc import (write_lattice_file,
                        write_params_file)
 import os
 import errno
+from contextlib import contextmanager
 
 def mkdir(folder):
     """Creates folder in current wd unless OSError occurs.

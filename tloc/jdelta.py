@@ -1,8 +1,8 @@
 import numpy as np
 from ase.calculators.gaussian import Gaussian
 from ase.io import read
-from os import rename
 from os.path import exists
+from tloc.javerage import get_orbitals
 
 def get_all_displacements(atoms):
     for ia in range(len(atoms)):
@@ -16,19 +16,6 @@ def displace_atom(atoms, ia, iv, sign, delta):
     pos_av[ia, iv] += sign * delta
     new_atoms.set_positions(pos_av)
     return new_atoms
-
-def get_orbitals(atoms, name):
-    atoms.calc = Gaussian(mem='4GB',
-                          nprocshared=24,
-                          label=name,
-                          save=None,
-                          method='b3lyp',
-                          basis='6-31G*',
-                          scf='tight',
-                          pop='full',
-                          extra='nosymm punch=mo iop(3/33=1)')
-    atoms.get_potential_energy()
-    rename('fort.7', name + '.pun')
 
 def finite_dif(delta=0.01):
     atoms = read('static.xyz')
