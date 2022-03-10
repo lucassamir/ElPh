@@ -8,6 +8,7 @@ from halo import Halo
 from ase.calculators.gaussian import Gaussian
 from tloc import chdir, mkdir
 import subprocess
+from os.path import exists
 
 @Halo(text="Reading structure", color='blue', spinner='dots')
 def find_structure_file(folder):
@@ -181,18 +182,19 @@ def unwrap_atoms(structure_file=None):
 
 @Halo(text="Running Gaussian calculation", color='red', spinner='dots')
 def get_orbitals(atoms, name):
-    atoms.calc = Gaussian(mem='4GB',
-                          nprocshared=24,
-                          label=name,
-                          save=None,
-                          method='b3lyp',
-                          basis='6-31G*',
-                          scf='tight',
-                          pop='full',
-                          extra='nosymm punch=mo iop(3/33=1)')
-    atoms.get_potential_energy()
-    os.rename('fort.7', name + '.pun')
-    print('Simulation {} is done' .format(name))
+    if not exists(name + '.pun'):
+        atoms.calc = Gaussian(mem='4GB',
+                              nprocshared=24,
+                              label=name,
+                              save=None,
+                              method='b3lyp',
+                              basis='6-31G*',
+                              scf='tight',
+                              pop='full',
+                              extra='nosymm punch=mo iop(3/33=1)')
+        atoms.get_potential_energy()
+        os.rename('fort.7', name + '.pun')
+    print(['Simulation {} is done' .format(name)])
 
 def catnip(path1, path2, path3):
     path1 += '.pun'
@@ -226,10 +228,11 @@ def get_javerage(pair):
     j = catnip(paths[0], paths[1], paths[2])
     javg.append(j)
 
+    print(javg)
     return javg
 
 if __name__ == '__main__':
     molecules, pairs = unwrap_atoms()
 
-    for pair in pairs.items():
+    for pair in tqdm(pairs.items(), desc='Calculating trasfer integral of each pair of molecules'):
         get_javerage(pair)
