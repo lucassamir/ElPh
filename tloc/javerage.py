@@ -8,6 +8,7 @@ from halo import Halo
 from ase.calculators.gaussian import Gaussian
 from tloc import chdir, mkdir
 
+@Halo(text="Reading structure", color='blue', spinner='dots')
 def find_structure_file(folder):
     """Searches the current working directory for the molecular structure file. 
         Allowed file types are .cif, .gen, .sdf, or .xyz. 
@@ -49,22 +50,23 @@ def write_structure(label, component_list, molecules, all_atoms):
     mkdir(label)
     atoms.write(label + '/' + label + '.xyz')
 
-def unwrap_atoms(structure_file=None):
-    spinner = Halo(text="Reading structure", color='blue', spinner='dots')
-    spinner.start()
-    folder = os.getcwd()
-    structure_file = find_structure_file(folder)
-    atoms = read(structure_file)
-    atoms *= [3, 3, 3]
-    spinner.stop()
-    spinner = Halo(text="Identifying molecules", color='green', spinner='dots')
-    spinner.start()
+@Halo(text="Identifying molecules", color='green', spinner='dots')
+def find_neighbors(atoms):
     neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
     neighbor_list.update(atoms)
     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
     n_components, component_list = sparse.csgraph.connected_components(matrix)
     edges = list(matrix.keys())
-    spinner.stop()
+
+    return n_components, component_list, edges
+
+def unwrap_atoms(structure_file=None):
+    folder = os.getcwd()
+    structure_file = find_structure_file(folder)
+    atoms = read(structure_file)
+    atoms *= [3, 3, 3]
+    
+    n_components, component_list, edges = find_neighbors(atoms)
 
     # Compute total weight of each molecule and record minimum weight
     positions = atoms.get_positions()
@@ -87,17 +89,12 @@ def unwrap_atoms(structure_file=None):
             keep_idx.append(i)
     keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in keep_idx ]
     fully_connected_atoms = atoms[keep_idxs]
-    spinner = Halo(text="Re-identifying molecules", color='green', spinner='dots')
-    spinner.start()
+
     # Re-compute molecules so that they fall in order
-    neighbor_list = NeighborList(natural_cutoffs(fully_connected_atoms), self_interaction=False, bothways=True)
-    neighbor_list.update(fully_connected_atoms)
-    matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
-    n_components, component_list = sparse.csgraph.connected_components(matrix)
+    n_components, component_list, edges = find_neighbors(fully_connected_atoms)
 
     # Compute centers of mass for remaining molecules
     centers_of_mass = get_centers_of_mass(fully_connected_atoms, n_components, component_list)
-    spinner.stop()
     com_edges = {}
     for i in trange(n_components, desc="Finding 3 closest fully-connected molecules"):
         node_1 = centers_of_mass[i]
@@ -181,6 +178,7 @@ def unwrap_atoms(structure_file=None):
 
     return molecules, pairs
 
+@Halo(text="Running Gaussian calculation", color='red', spinner='dots')
 def get_orbitals(atoms, name):
     atoms.calc = Gaussian(mem='4GB',
                           nprocshared=24,
@@ -193,6 +191,7 @@ def get_orbitals(atoms, name):
                           extra='nosymm punch=mo iop(3/33=1)')
     atoms.get_potential_energy()
     os.rename('fort.7', name + '.pun')
+    print('Simulation {} is done' .format(name))
 
 def get_javerage(pair):
     # Gaussian run for each molecule
