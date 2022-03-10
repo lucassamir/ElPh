@@ -202,6 +202,7 @@ def catnip(path1, path2, path3):
 
 def get_javerage(pair):
     paths = []
+    javg = []
 
     # Gaussian run for each molecule
     for mol in pair[1]:
@@ -217,7 +218,11 @@ def get_javerage(pair):
         paths.append(pair[0] + '/' + pair[0] + '.xyz')
         get_orbitals(atoms, pair[0])
 
-    catnip(paths[0], paths[1], paths[2])
+    # Calculate J 
+    j = catnip(paths[0], paths[1], paths[2])
+    javg.append(j)
+
+    return javg
 
 if __name__ == '__main__':
     molecules, pairs = unwrap_atoms()
