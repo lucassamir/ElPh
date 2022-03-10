@@ -195,8 +195,12 @@ def get_orbitals(atoms, name):
     print('Simulation {} is done' .format(name))
 
 def catnip(path1, path2, path3):
+    path1 += '.pun'
+    path2 += '.pun'
+    path3 += '.pun'
     pwd = os.getcwd()
-    cmd = "docker run -i --rm -v {}:/projects -u $(id -u):$(id -g) madettmann/tloc -p_1 {} -p_2 {} -p_P {}" .format(pwd, path1, path2, path3)
+    cmd = os.environ['TLOC_CATNIP_CMD']
+    cmd += " -p_1 {} -p_2 {} -p_P {}" .format(pwd, path1, path2, path3)
     output = subprocess.check_output(cmd, shell=True)
     return output.decode('ascii').split()[-2]
 
@@ -209,13 +213,13 @@ def get_javerage(pair):
         name = str(mol + 1)
         with chdir(name):
             atoms = read(name + '.xyz')
-            paths.append(name + '/' + name + '.xyz')
+            paths.append(name + '/' + name)
             get_orbitals(atoms, name)
     
     # Gaussian run for the pair
     with chdir(pair[0]):
         atoms = read(pair[0] + '.xyz')
-        paths.append(pair[0] + '/' + pair[0] + '.xyz')
+        paths.append(pair[0] + '/' + pair[0])
         get_orbitals(atoms, pair[0])
 
     # Calculate J 
