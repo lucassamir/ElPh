@@ -7,6 +7,7 @@ from tqdm.auto import trange, tqdm
 from halo import Halo
 from ase.calculators.gaussian import Gaussian
 from tloc import chdir, mkdir
+import subprocess
 
 @Halo(text="Reading structure", color='blue', spinner='dots')
 def find_structure_file(folder):
@@ -193,18 +194,30 @@ def get_orbitals(atoms, name):
     os.rename('fort.7', name + '.pun')
     print('Simulation {} is done' .format(name))
 
+def catnip(path1, path2, path3):
+    pwd = os.getcwd()
+    cmd = "docker run -i --rm -v {}:/projects -u $(id -u):$(id -g) madettmann/tloc -p_1 {} -p_2 {} -p_P {}" .format(pwd, path1, path2, path3)
+    output = subprocess.check_output(cmd, shell=True)
+    return output.decode('ascii').split()[-2]
+
 def get_javerage(pair):
+    paths = []
+
     # Gaussian run for each molecule
     for mol in pair[1]:
         name = str(mol + 1)
         with chdir(name):
             atoms = read(name + '.xyz')
+            paths.append(name + '/' + name + '.xyz')
             get_orbitals(atoms, name)
     
     # Gaussian run for the pair
     with chdir(pair[0]):
         atoms = read(pair[0] + '.xyz')
+        paths.append(pair[0] + '/' + pair[0] + '.xyz')
         get_orbitals(atoms, pair[0])
+
+    catnip(paths[0], paths[1], paths[2])
 
 if __name__ == '__main__':
     molecules, pairs = unwrap_atoms()
