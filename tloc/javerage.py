@@ -196,19 +196,19 @@ def get_orbitals(atoms, name):
         os.rename('fort.7', name + '.pun')
     print(['Simulation {} is done' .format(name)])
 
+@Halo(text="Calculating transfer integral", color='red', spinner='dots')
 def catnip(path1, path2, path3):
     path1 += '.pun'
     path2 += '.pun'
     path3 += '.pun'
     pwd = os.getcwd()
     cmd = os.environ['TLOC_CATNIP_CMD']
-    cmd += " -p_1 {} -p_2 {} -p_P {}" .format(pwd, path1, path2, path3)
+    cmd += " -p_1 {} -p_2 {} -p_P {}" .format(path1, path2, path3)
     output = subprocess.check_output(cmd, shell=True)
     return output.decode('ascii').split()[-2]
 
 def get_javerage(pair):
     paths = []
-    javg = []
 
     # Gaussian run for each molecule
     for mol in pair[1]:
@@ -226,13 +226,12 @@ def get_javerage(pair):
 
     # Calculate J 
     j = catnip(paths[0], paths[1], paths[2])
-    javg.append(j)
 
-    print(javg)
-    return javg
+    print('J_{} = {}' .format(pair[0], j))
+    return j
 
 if __name__ == '__main__':
     molecules, pairs = unwrap_atoms()
 
     for pair in tqdm(pairs.items(), desc='Calculating trasfer integral of each pair of molecules'):
-        get_javerage(pair)
+        j = get_javerage(pair)
