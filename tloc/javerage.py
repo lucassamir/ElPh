@@ -233,5 +233,5 @@ def get_javerage(pair):
 if __name__ == '__main__':
     molecules, pairs = unwrap_atoms()
 
-    for pair in tqdm(pairs.items(), desc='Calculating trasfer integral of each pair of molecules'):
+    for pair in pairs.items():
         j = get_javerage(pair)
