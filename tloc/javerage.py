@@ -136,7 +136,7 @@ def unwrap_atoms(structure_file=None):
         >1
             -1.com
             ~1.log
-            ~fort.7 > 1.punatoms
+            ~fort.7 > 1.pun
             >Displacements
                 -0
                 -1
@@ -201,7 +201,6 @@ def catnip(path1, path2, path3):
     path1 += '.pun'
     path2 += '.pun'
     path3 += '.pun'
-    pwd = os.getcwd()
     cmd = os.environ['TLOC_CATNIP_CMD']
     cmd += " -p_1 {} -p_2 {} -p_P {}" .format(path1, path2, path3)
     output = subprocess.check_output(cmd, shell=True)
