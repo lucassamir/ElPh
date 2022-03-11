@@ -68,7 +68,8 @@ def get_dj_matrix(jlists, delta):
 
 def get_fluctuations(dj_av, phonons, temp):
     na = len(dj_av)
-    ep_coup = np.matmul(dj_av.T, phonons['vectors'])
+    phonons_eav = phonons['vectors']
+    ep_coup_eav = np.matmul(dj_av[None, :].T, phonons_eav)
     ssigma = (1 / na) * np.sum(ep_coup**2 / \
         (2 * np.tanh(phonons['energies'] / (2 * temp))))
 
