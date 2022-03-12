@@ -5,6 +5,25 @@ from shutil import copyfile
 from tloc.javerage import get_orbitals, catnip
 from tloc import chdir, mkdir
 
+def load_phonons(file='mesh.yaml'):
+    import yaml
+    from yaml import CLoader as Loader
+
+    freqs = []
+    vecs = []
+    with open(file) as f:
+        data = yaml.load(f, Loader=Loader)
+    for phonon in data['phonon']:
+        for mode in phonon['band']:
+            freqs.append(mode['frequency'])
+            vecs.append(mode['eigenvector'])
+    
+    # e modes, a atoms, v directions
+    freqs_e = np.array(freqs)
+    vecs_eav = np.array(vecs)
+
+    return freqs_e, vecs_eav
+
 def get_displacements(atoms, all=True):
     if all:
         latoms = len(atoms)
@@ -66,16 +85,16 @@ def get_dj_matrix(jlists, delta):
 
     return dj_matrix
 
-def get_fluctuations(dj_av, phonons, temp):
+def get_deviation(dj_av, phonon_file, temp):
     na = len(dj_av)
-    phonons_eav = phonons['vectors']
-    ep_coup_eav = np.matmul(dj_av[None, :].T, phonons_eav)
-    ssigma = (1 / na) * np.sum(ep_coup**2 / \
-        (2 * np.tanh(phonons['energies'] / (2 * temp))))
+    freqs_e, vecs_eav = load_phonons(phonon_file)
+    epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
+    ssigma = (1 / na) * np.sum(epcoup_e**2 / \
+        (2 * np.tanh(freqs_e / (2 * temp))))
 
     return np.sqrt(ssigma)
 
-def get_jdelta(pair, delta=0.01, phonons, temp):
+def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
     jlists = []
     # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
@@ -116,7 +135,7 @@ def get_jdelta(pair, delta=0.01, phonons, temp):
     dj_matrix_av = get_dj_matrix(jlists, delta)
 
     # Calculate variance
-    sigma = get_fluctuations(dj_matrix_av, phonons, temp)
+    sigma = get_deviation(dj_matrix_av, phonon_file, temp)
     print('sigma_{} = {}' .format(pair[0], sigma))
 
 if __name__ == '__main__':
