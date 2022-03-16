@@ -35,7 +35,8 @@ def main(args=None):
 
    description = "Transient Localization Theory command line interface"
 
-   example_text = """examples:
+   example_text = """
+   examples:
 
    Calculate charge mobility with:
       tloc --mobility
@@ -81,7 +82,7 @@ def main(args=None):
    help = ("write example of lattice and params files")
    parser.add_argument('--write_files', action='store_true' , help=help)
 
-   help = """"
+   help = """
    Calculate average transfer integral 
    for all unique pairs of molecules
 
@@ -91,7 +92,7 @@ def main(args=None):
    """
    parser.add_argument('--javerage', action='store_true' , help=help)
 
-   help = """"
+   help = """
    Calculate variance of the transfer integral 
    for all unique pairs of molecules
 
