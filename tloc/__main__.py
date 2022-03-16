@@ -1,2 +1,2 @@
-from tloc.tloc import main
+from tloc.main import main
 main()

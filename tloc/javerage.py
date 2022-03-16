@@ -9,6 +9,7 @@ from ase.calculators.gaussian import Gaussian
 from tloc import chdir, mkdir
 import subprocess
 from os.path import exists
+import json
 
 @Halo(text="Reading structure", color='blue', spinner='dots')
 def find_structure_file(folder):
@@ -234,3 +235,6 @@ if __name__ == '__main__':
 
     for pair in pairs.items():
         j = get_javerage(pair)
+        data = {pair[0]: j}
+        with open('javerage.json', 'w', encoding='utf-8') as f:
+             json.dump(data, f, ensure_ascii=False, indent=4)

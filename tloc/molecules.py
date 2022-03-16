@@ -1,9 +1,11 @@
+from pydoc import describe
 import numpy as np
 import json
 from scipy import linalg
-from pathlib import Path
+from tqdm.auto import tqdm
+from halo import Halo
 
-class Structure:
+class Molecules:
    def __init__(self, nmuc=None, coordmol=None, unitcell=None, 
    supercell=None, unique=None, uniqinter=None,
    javg=None, jdelta=None, nrepeat=None,
@@ -163,8 +165,7 @@ class Structure:
       self.results['avg_sqly'] = []
       self.results['avg_sql'] = []
 
-      print('Calculating average of squared transient localization')
-      for i in range(1, self.nrepeat + 1):
+      for i in tqdm(range(1, self.nrepeat + 1), desc='Calculating average of squared transient localization'):
          sqlx, sqly = self.get_squared_length()
          self.results['squared_length_x'].append(sqlx)
          self.results['squared_length_y'].append(sqly)
@@ -181,7 +182,7 @@ class Structure:
          self.results['avg_sqly'].append(dsqly)
          self.results['avg_sql'].append((dsqlx + dsqly) / 2)
 
-         print(i, dsqlx, dsqly)
+         # print(i, dsqlx, dsqly)
 
       return dsqlx, dsqly
    
@@ -198,103 +199,8 @@ class Structure:
       self.results['mobx'] = mobx
       self.results['moby'] = moby
 
-      return mobx, moby
-
-def write_lattice_file():
-   lattice = {'nmuc':2,
-              'coordmol':[[0.0, 0.0, 0.0], [0.5, 0.5, 0.0]],
-              'unitcell':[[1.0, 0.0, 0.0], [0.0, 1.7321, 0.0], [0.0, 0.0, 1000.0]],
-              'supercell':[16, 16, 1],
-              'unique':6,
-              'uniqinter':[[1, 1, 1, 0, 0, 1], 
-              [2, 2, 1, 0, 0, 1], 
-              [1, 2, 0, 0, 0, 3], 
-              [2, 1, 1, 0, 0, 2], 
-              [2, 1, 0, 1, 0, 2], 
-              [2, 1, 1, 1, 0, 3]]
-   }
-   with open('lattice.json', 'w', encoding='utf-8') as f:
-      json.dump(lattice, f, ensure_ascii=False, indent=4)
-
-def write_params_file():
-   params = {'javg':[0.058, 0.058, 0.058],
-             'jdelta':[0.029, 0.029, 0.029],
-             'nrepeat':50,
-             "iseed":3987187,
-             'invtau':0.005,
-             'temp':0.025
-   }
-   with open('params.json', 'w', encoding='utf-8') as f:
-      json.dump(params, f, ensure_ascii=False, indent=4)
-
-def main(args=None):
-   import argparse
-
-   description = "Transient Localization Theory command line interface"
-
-   example_text = """examples:
-
-   Calculate charge mobility with:
-      tloc --mobility
-   """
-
-   formatter = argparse.RawDescriptionHelpFormatter
-   parser = argparse.ArgumentParser(description=description,
-                                    epilog=example_text, 
-                                    formatter_class=formatter)
-
-   help = """
-   All calculations require a lattice JSON 
-   file with the following properties:
-
-   lattice.json:
-
-   """
-   parser.add_argument('--lattice_file', nargs='*', help=help,
-                        default='lattice', type=str)
-
-   help = """
-   All calculations require a params json 
-   file with the following properties:
-
-   params.json:
-   
-   """
-   parser.add_argument('--params_file', nargs='*', help=help,
-                        default='params', type=str)
-
-   help = ("write example of lattice and params files")
-   parser.add_argument('--write_files', action='store_true' , help=help)
-
-   help = ("Calculate charge mobility")
-   parser.add_argument('--mobility', action='store_true' , help=help)
-
-   args = parser.parse_args(args)
-
-   if args.write_files:
-      write_lattice_file()
-      write_params_file()
-      return
-
-   if not Path(args.lattice_file + '.json').is_file():
-      msg = 'Lattice file could not be found'
-      raise FileNotFoundError(msg)
-
-   if not Path(args.params_file + '.json').is_file():
-      msg = 'Params file could not be found'
-      raise FileNotFoundError(msg)
-
-   print('Initializing molecular structure')
-   st = Structure(lattice_file=args.lattice_file, 
-      params_file=args.params_file)
-
-   if args.mobility:
-      mobx, moby = st.get_mobility()
       print('Calculating charge mobility')
       print('mu_x = ', mobx)
       print('mu_y = ', moby)
-      with open('results.json', 'w', encoding='utf-8') as f:
-         json.dump(st.results, f)
 
-if __name__  == '__main__':
-   main()
+      return mobx, moby

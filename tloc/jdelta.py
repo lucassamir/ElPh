@@ -1,9 +1,9 @@
 import numpy as np
-from ase.calculators.gaussian import Gaussian
 from ase.io import read
 from shutil import copyfile
 from tloc.javerage import get_orbitals, catnip
 from tloc import chdir, mkdir
+import json
 
 def load_phonons(file='mesh.yaml'):
     import yaml
@@ -134,9 +134,11 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
     # Create GradJ matrix with a atoms and v directions
     dj_matrix_av = get_dj_matrix(jlists, delta)
 
-    # Calculate variance
-    sigma = get_deviation(dj_matrix_av, phonon_file, temp)
-    print('sigma_{} = {}' .format(pair[0], sigma))
+    # Calculate jdelta
+    jdelta = get_deviation(dj_matrix_av, phonon_file, temp)
+    print('jdelta_{} = {}' .format(pair[0], jdelta))
+
+    return jdelta
 
 if __name__ == '__main__':
     pairs = {'A':[0, 1], 
@@ -144,4 +146,7 @@ if __name__ == '__main__':
              'C':[0, 2]}
     
     for pair in pairs.items():
-        get_jdelta(pair, delta=0.01)
+        jdelta = get_jdelta(pair, delta=0.01)
+        data = {pair[0]: jdelta}
+        with open('jdelta.json', 'w', encoding='utf-8') as f:
+             json.dump(data, f, ensure_ascii=False, indent=4)
