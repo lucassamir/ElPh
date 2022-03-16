@@ -181,10 +181,28 @@ def unwrap_atoms(structure_file=None):
 
     return molecules, pairs
 
+def nersc_bash(name):
+    with open('run.py', 'w') as f:
+        f.write('#!/bin/bash \n'
+                '#SBATCH -J {} \n'
+                '#SBATCH -q flex \n'
+                '#SBATCH -N 1 \n'
+                '#SBATCH -t 03:00:00 \n'
+                '#SBATCH --time-min 00:30:00 \n'
+                '#SBATCH -C knl \n'
+                '#SBATCH --output=out.out \n'
+                '#SBATCH --error=err.out \n'
+                '\n'
+                '\n'
+                'shifter gaussian {}.com \n'
+                'mv fort.7 {}.pun'
+                .format(name, name, name))
+    subprocess.run(['sbatch', 'run.py'])
+
 @Halo(text="Running Gaussian calculation", color='red', spinner='dots')
-def get_orbitals(atoms, name):
+def get_orbitals(atoms, name, nersc=False):
     if not exists(name + '.pun'):
-        atoms.calc = Gaussian(mem='4GB',
+        calculator = Gaussian(mem='4GB',
                               nprocshared=24,
                               label=name,
                               save=None,
@@ -193,8 +211,14 @@ def get_orbitals(atoms, name):
                               scf='tight',
                               pop='full',
                               extra='nosymm punch=mo iop(3/33=1)')
-        atoms.get_potential_energy()
-        os.rename('fort.7', name + '.pun')
+        if nersc:
+            calculator.initialize(atoms)
+            calculator.write_input(atoms)
+            nersc_bash(atoms, name)
+        else:
+            atoms.calc = calculator
+            atoms.get_potential_energy()
+            os.rename('fort.7', name + '.pun')
     print(['Simulation {} is done' .format(name)])
 
 @Halo(text="Calculating transfer integral", color='red', spinner='dots')
@@ -207,7 +231,7 @@ def catnip(path1, path2, path3):
     output = subprocess.check_output(cmd, shell=True)
     return output.decode('ascii').split()[-2]
 
-def get_javerage(pair):
+def get_javerage(pair, nersc=False):
     paths = []
 
     # Gaussian run for each molecule
@@ -216,13 +240,13 @@ def get_javerage(pair):
         with chdir(name):
             atoms = read(name + '.xyz')
             paths.append(name + '/' + name)
-            get_orbitals(atoms, name)
+            get_orbitals(atoms, name, nersc)
     
     # Gaussian run for the pair
     with chdir(pair[0]):
         atoms = read(pair[0] + '.xyz')
         paths.append(pair[0] + '/' + pair[0])
-        get_orbitals(atoms, pair[0])
+        get_orbitals(atoms, pair[0], nersc)
 
     # Calculate J 
     j = catnip(paths[0], paths[1], paths[2])
@@ -234,7 +258,7 @@ if __name__ == '__main__':
     molecules, pairs = unwrap_atoms()
 
     for pair in pairs.items():
-        j = get_javerage(pair)
+        j = get_javerage(pair, nersc=True)
         data = {pair[0]: j}
         with open('javerage.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)

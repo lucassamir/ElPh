@@ -1,9 +1,7 @@
-from pydoc import describe
 import numpy as np
 import json
 from scipy import linalg
 from tqdm.auto import tqdm
-from halo import Halo
 
 class Molecules:
    def __init__(self, nmuc=None, coordmol=None, unitcell=None, 

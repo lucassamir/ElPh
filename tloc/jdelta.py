@@ -41,7 +41,7 @@ def displace_atom(atoms, ia, iv, sign, delta):
     new_atoms.set_positions(pos_av)
     return new_atoms
 
-def finite_dif(delta=0.01, all=True):
+def finite_dif(delta=0.01, all=True, nersc=False):
     atoms = read('static.xyz')
     for ia, iv, sign in get_displacements(atoms, all=all):
         prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
@@ -49,7 +49,12 @@ def finite_dif(delta=0.01, all=True):
                                         'xyz'[iv],
                                         ' +-'[sign])
         new_structure = displace_atom(atoms, ia, iv, sign, delta)
-        get_orbitals(new_structure, prefix)
+        if nersc:
+            mkdir(prefix)
+            with chdir(prefix):
+                get_orbitals(new_structure, prefix, nersc=nersc)
+        else:
+            get_orbitals(new_structure, prefix, nersc=nersc)
 
 def derivative(jpp, jp, jm, jmm, delta):
     return (-jpp + 8 * jp - 8 * jm + jmm) / 6 * delta
@@ -94,7 +99,7 @@ def get_deviation(dj_av, phonon_file, temp):
 
     return np.sqrt(ssigma)
 
-def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
+def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025, nersc=False):
     jlists = []
     # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
@@ -102,8 +107,8 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         mkdir('displacements')
         with chdir('displacements'):
             copyfile('../' + mol1 + '.xyz', 'static.xyz')
-            finite_dif(delta / 2)
-            finite_dif(delta)
+            finite_dif(delta / 2, nersc=nersc)
+            finite_dif(delta, nersc=nersc)
 
     # run Gaussian for displacements of first molecule in the pair
     molpair = str(pair[0])
@@ -111,13 +116,13 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         mkdir('displacements')
         with chdir('displacements'):
             copyfile('../' + molpair + '.xyz', 'static.xyz')
-            finite_dif(delta / 2, all=False)
-            finite_dif(delta, all=False)
+            finite_dif(delta / 2, all=False, nersc=nersc)
+            finite_dif(delta, all=False, nersc=nersc)
 
     # calculating j for each displacement
     path1 = mol1 + '/' + mol1 + 'displacements/'
     path2 = str(pair[1][0] + 1) + '/' + str(pair[1][0] + 1)
-    path3 = molpair + '/' + molpair
+    path3 = molpair + '/' + molpair + 'displacements/'
 
     atoms = read(path1 + 'static.xyz')
     for d in [delta/2, delta]:
@@ -127,7 +132,10 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
                                                 ia,
                                                 'xyz'[iv],
                                                 ' +-'[sign])
-            j = catnip(path1 + prefix, path2, path3 + prefix)
+            if nersc:
+                j = catnip(path1 + prefix + '/' + prefix, path2, path3 + prefix + '/' + prefix)
+            else:
+                j = catnip(path1 + prefix, path2, path3 + prefix)
             js.append(j)
         jlists.append(js)
 
@@ -146,7 +154,7 @@ if __name__ == '__main__':
              'C':[0, 2]}
     
     for pair in pairs.items():
-        jdelta = get_jdelta(pair, delta=0.01)
+        jdelta = get_jdelta(pair, delta=0.01, nersc=True)
         data = {pair[0]: jdelta}
         with open('jdelta.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
