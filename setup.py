@@ -22,7 +22,7 @@ setup(
     extras_require={'docs': ['sphinx', 'sphinxcontrib-programoutput']},
     entry_points='''
         [console_scripts]
-        tloc=tloc.tloc:main
+        tloc=tloc.main:main
     ''',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
