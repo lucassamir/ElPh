@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
-from tloc import javerage, jdelta
+from tloc.javerage import javerage
+from tloc.jdelta import jdelta
 from tloc.molecules import Molecules
 
 def write_lattice_file():
