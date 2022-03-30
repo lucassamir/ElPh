@@ -111,14 +111,6 @@ def main(args=None):
       write_params_file()
       return
 
-   if not Path(args.lattice_file + '.json').is_file():
-      msg = 'Lattice file could not be found'
-      raise FileNotFoundError(msg)
-
-   if not Path(args.params_file + '.json').is_file():
-      msg = 'Params file could not be found'
-      raise FileNotFoundError(msg)
-
    print('Initializing TLOC')
    mols = Molecules(lattice_file=args.lattice_file, 
       params_file=args.params_file)
@@ -130,6 +122,14 @@ def main(args=None):
       jdelta()
 
    if args.mobility:
+      if not Path(args.lattice_file + '.json').is_file():
+         msg = 'Lattice file could not be found'
+         raise FileNotFoundError(msg)
+
+      if not Path(args.params_file + '.json').is_file():
+         msg = 'Params file could not be found'
+         raise FileNotFoundError(msg)
+
       mobx, moby = mols.get_mobility()
       with open('results.json', 'w', encoding='utf-8') as f:
          json.dump(mols.results, f)
