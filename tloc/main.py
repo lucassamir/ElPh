@@ -112,8 +112,6 @@ def main(args=None):
       return
 
    print('Initializing TLOC')
-   mols = Molecules(lattice_file=args.lattice_file, 
-      params_file=args.params_file)
 
    if args.javerage:
       javerage()
@@ -129,6 +127,9 @@ def main(args=None):
       if not Path(args.params_file + '.json').is_file():
          msg = 'Params file could not be found'
          raise FileNotFoundError(msg)
+
+      mols = Molecules(lattice_file=args.lattice_file, 
+      params_file=args.params_file)
          
       mobx, moby = mols.get_mobility()
       with open('results.json', 'w', encoding='utf-8') as f:
