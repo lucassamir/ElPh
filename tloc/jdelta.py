@@ -140,7 +140,7 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
 
     return jdelta
 
-if __name__ == '__main__':
+def jdelta():
     pairs = {'A':[0, 1], 
              'B':[1, 2],
              'C':[0, 2]}
@@ -150,3 +150,6 @@ if __name__ == '__main__':
         data = {pair[0]: jdelta}
         with open('jdelta.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
+
+if __name__ == '__main__':
+    jdelta()

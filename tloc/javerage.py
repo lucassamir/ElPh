@@ -230,7 +230,7 @@ def get_javerage(pair):
     print('J_{} = {}' .format(pair[0], j))
     return j
 
-if __name__ == '__main__':
+def javerage():
     molecules, pairs = unwrap_atoms()
 
     for pair in pairs.items():
@@ -238,3 +238,6 @@ if __name__ == '__main__':
         data = {pair[0]: j}
         with open('javerage.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
+
+if __name__ == '__main__':
+    javerage()
