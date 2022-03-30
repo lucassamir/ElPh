@@ -3,15 +3,12 @@ from ase.neighborlist import natural_cutoffs, NeighborList
 from scipy import sparse
 import numpy as np
 import os
-from tqdm.auto import trange, tqdm
-from halo import Halo
 from ase.calculators.gaussian import Gaussian
 from tloc import chdir, mkdir
 import subprocess
 from os.path import exists
 import json
 
-@Halo(text="Reading structure", color='blue', spinner='dots')
 def find_structure_file(folder):
     """Searches the current working directory for the molecular structure file. 
         Allowed file types are .cif, .gen, .sdf, or .xyz. 
@@ -28,7 +25,7 @@ def find_structure_file(folder):
           glob.glob(folder + '/*.gen') + \
           glob.glob(folder + '/*.sdf') + \
           glob.glob(folder + '/*.xyz')
-    print(structure_file)
+    print("Reading structure ", structure_file)
     structure_file = structure_file[0]
 
     return structure_file
@@ -53,8 +50,8 @@ def write_structure(label, component_list, molecules, all_atoms):
     mkdir(label)
     atoms.write(label + '/' + label + '.xyz')
 
-@Halo(text="Identifying molecules", color='green', spinner='dots')
 def find_neighbors(atoms):
+    print("Identifying molecules")
     neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
     neighbor_list.update(atoms)
     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
@@ -75,7 +72,8 @@ def unwrap_atoms(structure_file=None):
     positions = atoms.get_positions()
     weights = []
     min_weight = float('inf')
-    for idx in trange(n_components, desc="Finding fully-connected molecules"):
+    print("Finding fully-connected molecules")
+    for idx in range(n_components):
         weight = 0
         molIdxs = [ i for i in range(len(component_list)) if component_list[i] == idx ]
         for edge in edges:
@@ -87,7 +85,7 @@ def unwrap_atoms(structure_file=None):
 
     # Keep only atoms which belong to molecules which have minimum weight
     keep_idx = []
-    for i, weight in enumerate(tqdm(weights, desc="Discarding non-connected molecules")):
+    for i, weight in enumerate(weights):
         if weight <= min_weight + 1:
             keep_idx.append(i)
     keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in keep_idx ]
@@ -99,7 +97,8 @@ def unwrap_atoms(structure_file=None):
     # Compute centers of mass for remaining molecules
     centers_of_mass = get_centers_of_mass(fully_connected_atoms, n_components, component_list)
     com_edges = {}
-    for i in trange(n_components, desc="Finding 3 closest fully-connected molecules"):
+    print("Finding 3 closest fully-connected molecules")
+    for i in range(n_components):
         node_1 = centers_of_mass[i]
         for j in range(i+1, n_components):
             node_2 = centers_of_mass[j]
@@ -199,7 +198,6 @@ def nersc_bash(name):
                 .format(name, name, name))
     subprocess.run(['sbatch', 'run.py'])
 
-@Halo(text="Running Gaussian calculation", color='red', spinner='dots')
 def get_orbitals(atoms, name, nersc=False):
     if not exists(name + '.pun'):
         calculator = Gaussian(mem='4GB',
@@ -212,6 +210,7 @@ def get_orbitals(atoms, name, nersc=False):
                               pop='full',
                               extra='nosymm punch=mo iop(3/33=1)')
         if nersc:
+            print("Running Gaussian calculation for ", name)
             calculator.initialize(atoms)
             calculator.write_input(atoms)
             nersc_bash(atoms, name)
@@ -221,8 +220,8 @@ def get_orbitals(atoms, name, nersc=False):
             os.rename('fort.7', name + '.pun')
     print(['Simulation {} is done' .format(name)])
 
-@Halo(text="Calculating transfer integral", color='red', spinner='dots')
 def catnip(path1, path2, path3):
+    print("Calculating transfer integral")
     path1 += '.pun'
     path2 += '.pun'
     path3 += '.pun'
