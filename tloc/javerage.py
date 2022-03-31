@@ -196,7 +196,6 @@ def nersc_bash(name):
                 '#SBATCH --output=out.out \n'
                 '#SBATCH --error=err.out \n'
                 '\n'
-                '\n'
                 'srun -n 64 {} < {}.com > {}.log\n'
                 'mv fort.7 {}.pun'
                 .format(name, cmd, name, name, name))
