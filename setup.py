@@ -18,7 +18,7 @@ setup(
     url='https://github.com/lucassamir/TLoc',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['numpy', 'scipy', 'ase', 'tqdm', 'halo'],
+    install_requires=['numpy', 'scipy', 'ase>=3.20.0', 'tqdm', 'halo'],
     extras_require={'docs': ['sphinx', 'sphinxcontrib-programoutput']},
     entry_points='''
         [console_scripts]
