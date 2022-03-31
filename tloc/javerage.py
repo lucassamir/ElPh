@@ -211,9 +211,8 @@ def get_orbitals(atoms, name, nersc=False):
                               extra='nosymm punch=mo iop(3/33=1)')
         if nersc:
             print("Running Gaussian calculation for ", name)
-            calculator.initialize(atoms)
             calculator.write_input(atoms)
-            nersc_bash(atoms, name)
+            nersc_bash(name)
         else:
             atoms.calc = calculator
             atoms.get_potential_energy()
