@@ -181,6 +181,7 @@ def unwrap_atoms(structure_file=None):
     return molecules, pairs
 
 def nersc_bash(name):
+    cmd = os.environ['ASE_GAUSSIAN_COMMAND']
     with open('run.py', 'w') as f:
         f.write('#!/bin/bash \n'
                 '#SBATCH -J {} \n'
@@ -193,9 +194,9 @@ def nersc_bash(name):
                 '#SBATCH --error=err.out \n'
                 '\n'
                 '\n'
-                'shifter gaussian {}.com \n'
+                '{} < {}.com > {}.log\n'
                 'mv fort.7 {}.pun'
-                .format(name, name, name))
+                .format(name, cmd, name, name, name))
     subprocess.run(['sbatch', 'run.py'])
 
 def get_orbitals(atoms, name, nersc=False):
@@ -247,9 +248,13 @@ def get_javerage(pair, nersc=False):
         get_orbitals(atoms, pair[0], nersc)
 
     # Calculate J 
-    j = catnip(paths[0], paths[1], paths[2])
-
-    print('J_{} = {}' .format(pair[0], j))
+    try:
+        j = catnip(paths[0], paths[1], paths[2])
+        print('J_{} = {}' .format(pair[0], j))
+    except:
+        j = 0
+        pass
+    
     return j
 
 def javerage():
