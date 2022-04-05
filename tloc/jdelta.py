@@ -141,9 +141,8 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
     return jdelta
 
 def jdelta():
-    pairs = {'A':[0, 1], 
-             'B':[1, 2],
-             'C':[0, 2]}
+    with open('all_pairs.json', 'r') as json_file:
+        pairs = json.load(json_file)
     
     for pair in pairs.items():
         jdelta = get_jdelta(pair, delta=0.01)
