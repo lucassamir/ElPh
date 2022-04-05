@@ -28,7 +28,7 @@ def get_displacements(atoms, all=True):
     if all:
         latoms = len(atoms)
     else:
-        latoms = len(atoms) / 2
+        latoms = len(atoms) // 2
     for ia in range(latoms):
         for iv in range(3):
             for sign in [-1, 1]:
