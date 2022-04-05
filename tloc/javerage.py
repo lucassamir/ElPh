@@ -203,7 +203,7 @@ def nersc_bash(name):
 
 def get_orbitals(atoms, name):
     if not exists(name + '.pun'):
-        calculator = Gaussian(mem='4GB',
+        calculator = Gaussian(mem='48GB',
                               nprocshared=64,
                               label=name,
                               save=None,
