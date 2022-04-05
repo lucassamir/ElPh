@@ -72,7 +72,7 @@ def get_displacements(atoms, all=True):
     if all:
         latoms = len(atoms)
     else:
-        latoms = len(atoms) / 2
+        latoms = len(atoms) // 2
     for ia in range(latoms):
         for iv in range(3):
             for sign in [-1, 1]:
@@ -125,6 +125,7 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         mol1 = str(int(pair[1][0]) + 1)
         mol2 = str(pair[1][1] + 1)
         molpair = pair[0]
+
         # calculating j for each displacement
         path1 = mol1 + '/' + mol1 + '/displacements/'
         path2 = mol2 + '/' + mol2
