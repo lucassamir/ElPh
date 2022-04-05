@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
-from tloc.javerage import javerage
-from tloc.jdelta import jdelta
+from tloc.javerage import javerage, read_javerage
+from tloc.jdelta import jdelta, read_jdelta
 from tloc.molecules import Molecules
 
 def write_lattice_file():
@@ -94,6 +94,13 @@ def main(args=None):
    parser.add_argument('--javerage', action='store_true' , help=help)
 
    help = """
+   Reads the result of the javerage step and writes the transfer
+   integral of each pair in a JSON file
+
+   """
+   parser.add_argument('--read_javg', action='store_true' , help=help)
+
+   help = """
    Calculate variance of the transfer integral 
    for all unique pairs of molecules
 
@@ -101,6 +108,13 @@ def main(args=None):
 
    """
    parser.add_argument('--jdelta', action='store_true' , help=help)
+
+   help = """
+   Reads the result of the jdelta step and writes the variance 
+   of the transfer integrals of each pair in a JSON file
+
+   """
+   parser.add_argument('--read_jdelta', action='store_true' , help=help)
 
    help = ("Calculate charge mobility")
    parser.add_argument('--mobility', action='store_true' , help=help)
@@ -117,8 +131,14 @@ def main(args=None):
    if args.javerage:
       javerage()
 
+   if args.read_javg:
+      read_javerage()
+
    if args.jdelta:
       jdelta()
+
+   if args.read_jdelta:
+      read_jdelta()
 
    if args.mobility:
       if not Path(args.lattice_file + '.json').is_file():
