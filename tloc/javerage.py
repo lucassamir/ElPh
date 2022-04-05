@@ -252,9 +252,10 @@ def read_javerage():
     with Pool(processes=3) as pool:
         j = pool.map(catnip, zip(p1, p2, pp))
 
-    data = {*zip(pairs.keys(), j)}
-    with open('javerage.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+    for p, jj in zip(pairs.keys(), j):
+        data = {p: jj}
+        with open('J_' + p + '.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
     javerage()
