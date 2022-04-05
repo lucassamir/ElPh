@@ -241,17 +241,23 @@ def read_javerage():
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
 
+    pp = []
+    p1 = []
+    p2 = []
     for pair in pairs.items():
-        pp = pair[0] + '/' + pair[0]
-        p1 = str(int(pair[1][0]) + 1) + '/' + str(int(pair[1][0]) + 1)
-        p2 = str(int(pair[1][0]) + 1) + '/' + str(int(pair[1][1]) + 1)
+        pp.append(pair[0] + '/' + pair[0])
+        p1.append(str(int(pair[1][0]) + 1) + '/' + str(int(pair[1][0]) + 1))
+        p2.append(str(int(pair[1][0]) + 1) + '/' + str(int(pair[1][1]) + 1))
 
-        j = catnip(p1, p2, pp)
-        print('J_{} = {}' .format(pair[0], j))
+    from multiprocessing import Pool
+    with Pool(processes=3) as pool:
+        j = pool.map(catnip, zip(pp, p1, p2))
+        #print('J_{} = {}' .format(pair[0], j))
 
-        data = {pair[0]: j}
-        with open('javerage.json', 'w', encoding='utf-8') as f:
-             json.dump(data, f, ensure_ascii=False, indent=4)
+    #data = {pair[0]: j}
+    data = j
+    with open('javerage.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
     javerage()
