@@ -218,8 +218,11 @@ def get_orbitals(atoms, name):
     else:
         print(['Simulation {} is done' .format(name)])
 
-def catnip(path1, path2, path3):
+def catnip(paths):
     print("Calculating transfer integral")
+    path1 = paths[0]
+    path2 = paths[1]
+    path3 = paths[2]
     path1 += '.pun'
     path2 += '.pun'
     path3 += '.pun'
