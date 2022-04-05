@@ -236,7 +236,7 @@ def javerage():
     for pair in pairs.items():
         j = get_javerage(pair)
         data = {pair[0]: j}
-        with open(pair[0] + '.json', 'w', encoding='utf-8') as f:
+        with open('J_' + pair[0] + '.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
