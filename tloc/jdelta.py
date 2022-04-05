@@ -4,6 +4,7 @@ from shutil import copyfile
 from tloc.javerage import get_orbitals, catnip
 from tloc import chdir, mkdir
 import json
+import os
 
 def load_phonons(file='mesh.yaml'):
     import yaml
@@ -100,11 +101,12 @@ def run_jdelta(pair, delta=0.01):
     # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
     with chdir(mol1):
-        mkdir('displacements')
-        with chdir('displacements'):
-            copyfile('../' + mol1 + '.xyz', 'static.xyz')
-            finite_dif(delta / 2)
-            finite_dif(delta)
+        if not os.path.isdir('displacements'):
+            mkdir('displacements')
+            with chdir('displacements'):
+                copyfile('../' + mol1 + '.xyz', 'static.xyz')
+                finite_dif(delta / 2)
+                finite_dif(delta)
 
     # run Gaussian for displacements of first molecule in the pair
     molpair = str(pair[0])
@@ -115,34 +117,39 @@ def run_jdelta(pair, delta=0.01):
             finite_dif(delta / 2, all=False)
             finite_dif(delta, all=False)
 
-def read_jdelta(phonon_file='mesh.yaml', temp=0.025):
-    jlists = []
-    # calculating j for each displacement
-    path1 = mol1 + '/' + mol1 + 'displacements/'
-    path2 = str(pair[1][0] + 1) + '/' + str(pair[1][0] + 1)
-    path3 = molpair + '/' + molpair + 'displacements/'
+def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
+    with open('all_pairs.json', 'r') as json_file:
+        pairs = json.load(json_file)
 
-    atoms = read(path1 + 'static.xyz')
-    for d in [delta/2, delta]:
-        js = []
-        for ia, iv, sign in get_displacements(atoms, all=all):
-            prefix = 'dj-{}-{}{}{}' .format(int(d * 1000), 
-                                                ia,
-                                                'xyz'[iv],
-                                                ' +-'[sign])
+    for pair in pairs.items():
+        mol1 = str(int(pair[1][0]) + 1)
+        mol2 = str(pair[1][1] + 1)
+        molpair = pair[0]
+        # calculating j for each displacement
+        path1 = mol1 + '/' + mol1 + '/displacements/'
+        path2 = mol2 + '/' + mol2
+        path3 = molpair + '/' + molpair + '/displacements/'
+
+        jlists = []
+        atoms = read(path1 + 'static.xyz')
+        for d in [delta/2, delta]:
+            js = []
+            for ia, iv, sign in get_displacements(atoms, all=all):
+                prefix = 'dj-{}-{}{}{}' .format(int(d * 1000), 
+                                                    ia,
+                                                    'xyz'[iv],
+                                                    ' +-'[sign])
             
-            j = catnip(path1 + prefix + '/' + prefix, path2, path3 + prefix + '/' + prefix)
-            js.append(j)
-        jlists.append(js)
+                j = catnip(path1 + prefix + '/' + prefix, path2, path3 + prefix + '/' + prefix)
+                js.append(j)
+            jlists.append(js)
 
-    # Create GradJ matrix with a atoms and v directions
-    dj_matrix_av = get_dj_matrix(jlists, delta)
+        # Create GradJ matrix with a atoms and v directions
+        dj_matrix_av = get_dj_matrix(jlists, delta)
 
-    # Calculate jdelta
-    jdelta = get_deviation(dj_matrix_av, phonon_file, temp)
-    print('jdelta_{} = {}' .format(pair[0], jdelta))
-
-    return jdelta
+        # Calculate jdelta
+        jdelta = get_deviation(dj_matrix_av, phonon_file, temp)
+        print('jdelta_{} = {}' .format(pair[0], jdelta))
 
 def jdelta():
     with open('all_pairs.json', 'r') as json_file:
