@@ -252,10 +252,8 @@ def read_javerage():
     from multiprocessing import Pool
     with Pool(processes=3) as pool:
         j = pool.map(catnip, zip(p1, p2, pp))
-        #print('J_{} = {}' .format(pair[0], j))
 
-    #data = {pair[0]: j}
-    data = j
+    data = {*zip(pairs.keys(), j)}
     with open('javerage.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
