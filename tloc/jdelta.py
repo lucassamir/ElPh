@@ -123,7 +123,7 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
 
     for pair in pairs.items():
         mol1 = str(int(pair[1][0]) + 1)
-        mol2 = str(pair[1][1] + 1)
+        mol2 = str(int(pair[1][1]) + 1)
         molpair = pair[0]
 
         # calculating j for each displacement
