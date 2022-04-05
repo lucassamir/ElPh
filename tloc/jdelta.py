@@ -24,38 +24,6 @@ def load_phonons(file='mesh.yaml'):
 
     return freqs_e, vecs_eav
 
-def get_displacements(atoms, all=True):
-    if all:
-        latoms = len(atoms)
-    else:
-        latoms = len(atoms) / 2
-    for ia in range(latoms):
-        for iv in range(3):
-            for sign in [-1, 1]:
-                yield (ia, iv, sign)
-
-def displace_atom(atoms, ia, iv, sign, delta):
-    new_atoms = atoms.copy()
-    pos_av = new_atoms.get_positions()
-    pos_av[ia, iv] += sign * delta
-    new_atoms.set_positions(pos_av)
-    return new_atoms
-
-def finite_dif(delta=0.01, all=True, nersc=False):
-    atoms = read('static.xyz')
-    for ia, iv, sign in get_displacements(atoms, all=all):
-        prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
-                                        ia,
-                                        'xyz'[iv],
-                                        ' +-'[sign])
-        new_structure = displace_atom(atoms, ia, iv, sign, delta)
-        if nersc:
-            mkdir(prefix)
-            with chdir(prefix):
-                get_orbitals(new_structure, prefix, nersc=nersc)
-        else:
-            get_orbitals(new_structure, prefix, nersc=nersc)
-
 def derivative(jpp, jp, jm, jmm, delta):
     return (-jpp + 8 * jp - 8 * jm + jmm) / 6 * delta
 
@@ -99,16 +67,44 @@ def get_deviation(dj_av, phonon_file, temp):
 
     return np.sqrt(ssigma)
 
-def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025, nersc=False):
-    jlists = []
+def get_displacements(atoms, all=True):
+    if all:
+        latoms = len(atoms)
+    else:
+        latoms = len(atoms) / 2
+    for ia in range(latoms):
+        for iv in range(3):
+            for sign in [-1, 1]:
+                yield (ia, iv, sign)
+
+def displace_atom(atoms, ia, iv, sign, delta):
+    new_atoms = atoms.copy()
+    pos_av = new_atoms.get_positions()
+    pos_av[ia, iv] += sign * delta
+    new_atoms.set_positions(pos_av)
+    return new_atoms
+
+def finite_dif(delta=0.01, all=True):
+    atoms = read('static.xyz')
+    for ia, iv, sign in get_displacements(atoms, all=all):
+        prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                        ia,
+                                        'xyz'[iv],
+                                        ' +-'[sign])
+        new_structure = displace_atom(atoms, ia, iv, sign, delta)
+        mkdir(prefix)
+        with chdir(prefix):
+            get_orbitals(new_structure, prefix)
+        
+def run_jdelta(pair, delta=0.01):
     # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
     with chdir(mol1):
         mkdir('displacements')
         with chdir('displacements'):
             copyfile('../' + mol1 + '.xyz', 'static.xyz')
-            finite_dif(delta / 2, nersc=nersc)
-            finite_dif(delta, nersc=nersc)
+            finite_dif(delta / 2)
+            finite_dif(delta)
 
     # run Gaussian for displacements of first molecule in the pair
     molpair = str(pair[0])
@@ -116,9 +112,11 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025, nersc=Fals
         mkdir('displacements')
         with chdir('displacements'):
             copyfile('../' + molpair + '.xyz', 'static.xyz')
-            finite_dif(delta / 2, all=False, nersc=nersc)
-            finite_dif(delta, all=False, nersc=nersc)
+            finite_dif(delta / 2, all=False)
+            finite_dif(delta, all=False)
 
+def read_jdelta(phonon_file='mesh.yaml', temp=0.025):
+    jlists = []
     # calculating j for each displacement
     path1 = mol1 + '/' + mol1 + 'displacements/'
     path2 = str(pair[1][0] + 1) + '/' + str(pair[1][0] + 1)
@@ -132,10 +130,8 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025, nersc=Fals
                                                 ia,
                                                 'xyz'[iv],
                                                 ' +-'[sign])
-            if nersc:
-                j = catnip(path1 + prefix + '/' + prefix, path2, path3 + prefix + '/' + prefix)
-            else:
-                j = catnip(path1 + prefix, path2, path3 + prefix)
+            
+            j = catnip(path1 + prefix + '/' + prefix, path2, path3 + prefix + '/' + prefix)
             js.append(j)
         jlists.append(js)
 
@@ -149,12 +145,11 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025, nersc=Fals
     return jdelta
 
 def jdelta():
-    pairs = {'A':[0, 1], 
-             'B':[1, 2],
-             'C':[0, 2]}
+    with open('all_pairs.json', 'r') as json_file:
+        pairs = json.load(json_file)
     
     for pair in pairs.items():
-        jdelta = get_jdelta(pair, delta=0.01, nersc=True)
+        jdelta = run_jdelta(pair, delta=0.01)
         data = {pair[0]: jdelta}
         with open('jdelta.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
