@@ -147,7 +147,7 @@ def jdelta():
     for pair in pairs.items():
         jdelta = get_jdelta(pair, delta=0.01)
         data = {pair[0]: jdelta}
-        with open('jdelta.json', 'w', encoding='utf-8') as f:
+        with open('DeltaJ_' + pair[0] + '.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
