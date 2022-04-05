@@ -151,7 +151,7 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         # Calculate jdelta
         jdelta = get_deviation(dj_matrix_av, phonon_file, temp)
         data = {molpair: jdelta}
-        with open(molpair + '.json', 'w', encoding='utf-8') as f:
+        with open('DeltaJ_' + molpair + '.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
 
 def jdelta():
