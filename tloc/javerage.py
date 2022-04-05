@@ -190,13 +190,14 @@ def nersc_bash(name):
                 '#SBATCH -J {} \n'
                 '#SBATCH -q flex \n'
                 '#SBATCH -N 1 \n'
+                '#SBATCH -c 64 \n'
                 '#SBATCH -t 03:00:00 \n'
                 '#SBATCH --time-min 00:30:00 \n'
                 '#SBATCH -C knl \n'
                 '#SBATCH --output=out.out \n'
                 '#SBATCH --error=err.out \n'
                 '\n'
-                'srun -n 1 {} < {}.com > {}.log\n'
+                'srun {} < {}.com > {}.log\n'
                 'mv fort.7 {}.pun'
                 .format(name, cmd, name, name, name))
     subprocess.run(['sbatch', 'run.py'])
