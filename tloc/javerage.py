@@ -246,7 +246,7 @@ def read_javerage():
     for pair in pairs.items():
         pp.append(pair[0] + '/' + pair[0])
         p1.append(str(int(pair[1][0]) + 1) + '/' + str(int(pair[1][0]) + 1))
-        p2.append(str(int(pair[1][0]) + 1) + '/' + str(int(pair[1][1]) + 1))
+        p2.append(str(int(pair[1][1]) + 1) + '/' + str(int(pair[1][1]) + 1))
 
     from multiprocessing import Pool
     with Pool(processes=3) as pool:
