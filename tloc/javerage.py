@@ -251,7 +251,7 @@ def read_javerage():
 
     from multiprocessing import Pool
     with Pool(processes=3) as pool:
-        j = pool.map(catnip, zip(pp, p1, p2))
+        j = pool.map(catnip, zip(p1, p2, pp))
         #print('J_{} = {}' .format(pair[0], j))
 
     #data = {pair[0]: j}
