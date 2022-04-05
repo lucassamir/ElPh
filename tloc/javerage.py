@@ -190,7 +190,6 @@ def nersc_bash(name):
                 '#SBATCH -J {} \n'
                 '#SBATCH -q flex \n'
                 '#SBATCH -N 1 \n'
-                '#SBATCH -c 64 \n'
                 '#SBATCH -t 03:00:00 \n'
                 '#SBATCH --time-min 00:30:00 \n'
                 '#SBATCH -C knl \n'
