@@ -150,17 +150,16 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
 
         # Calculate jdelta
         jdelta = get_deviation(dj_matrix_av, phonon_file, temp)
-        print('jdelta_{} = {}' .format(pair[0], jdelta))
+        data = {molpair: jdelta}
+        with open(molpair + '.json', 'w', encoding='utf-8') as f:
+             json.dump(data, f, ensure_ascii=False, indent=4)
 
 def jdelta():
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
     for pair in pairs.items():
-        jdelta = run_jdelta(pair, delta=0.01)
-        data = {pair[0]: jdelta}
-        with open('jdelta.json', 'w', encoding='utf-8') as f:
-             json.dump(data, f, ensure_ascii=False, indent=4)
+        run_jdelta(pair, delta=0.01)
 
 if __name__ == '__main__':
     jdelta()
