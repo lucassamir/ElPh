@@ -115,9 +115,9 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
             finite_dif(delta, all=False)
 
     # calculating j for each displacement
-    path1 = mol1 + '/' + mol1 + 'displacements/'
-    path2 = str(pair[1][0] + 1) + '/' + str(pair[1][0] + 1)
-    path3 = molpair + '/' + molpair
+    path1 = mol1 + '/' + mol1 + '/displacements/'
+    path2 = str(pair[1][1] + 1) + '/' + str(pair[1][1] + 1)
+    path3 = molpair + '/' + molpair + '/displacements/'
 
     atoms = read(path1 + 'static.xyz')
     for d in [delta/2, delta]:
