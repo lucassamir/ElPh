@@ -179,7 +179,7 @@ def unwrap_atoms(structure_file=None):
         cycle = [min_cycle[v] for v in value]
         write_structure(key, component_list, cycle, fully_connected_atoms)
 
-    return molecules, pairs
+    return pairs
 
 @Halo(text="Running Gaussian calculation", color='red', spinner='dots')
 def get_orbitals(atoms, name):
@@ -231,12 +231,12 @@ def get_javerage(pair):
     return j
 
 def javerage():
-    molecules, pairs = unwrap_atoms()
+    pairs = unwrap_atoms()
 
     for pair in pairs.items():
         j = get_javerage(pair)
         data = {pair[0]: j}
-        with open('javerage.json', 'w', encoding='utf-8') as f:
+        with open(pair[0] + '.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
