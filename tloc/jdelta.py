@@ -85,18 +85,33 @@ def displace_atom(atoms, ia, iv, sign, delta):
     new_atoms.set_positions(pos_av)
     return new_atoms
 
-def finite_dif(delta=0.01, all=True):
-    atoms = read('static.xyz')
-    for ia, iv, sign in get_displacements(atoms, all=all):
-        prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
-                                        ia,
-                                        'xyz'[iv],
-                                        ' +-'[sign])
-        new_structure = displace_atom(atoms, ia, iv, sign, delta)
-        mkdir(prefix)
-        with chdir(prefix):
-            get_orbitals(new_structure, prefix)
+def finite_dif(delta, atoms, disp):
+    ia = disp[0]
+    iv = disp[1]
+    sign = disp[2]
+    prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                    ia,
+                                    'xyz'[iv],
+                                    ' +-'[sign])
+    new_structure = displace_atom(atoms, ia, iv, sign, delta)
+    mkdir(prefix)
+    with chdir(prefix):
+        get_orbitals(new_structure, prefix)
         
+def multi_finite_dif(delta=0.01, all=True):
+    from multiprocessing import Pool
+    from functools import partial
+
+    atoms = read('static.xyz')
+    command = partial(finite_dif, delta, atoms)
+
+    disps = []
+    for ia, iv, sign in get_displacements(atoms, all=all):
+        disps.append((ia, iv, sign))
+
+    with Pool(processes=64) as pool:
+        pool.map(command, disps)
+
 def run_jdelta(pair, delta=0.01):
     # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
