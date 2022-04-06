@@ -120,8 +120,8 @@ def run_jdelta(pair, delta=0.01):
             mkdir('displacements')
             with chdir('displacements'):
                 copyfile('../' + mol1 + '.xyz', 'static.xyz')
-                finite_dif(delta / 2)
-                finite_dif(delta)
+                multi_finite_dif(delta / 2)
+                multi_finite_dif(delta)
 
     # run Gaussian for displacements of first molecule in the pair
     molpair = str(pair[0])
@@ -129,8 +129,8 @@ def run_jdelta(pair, delta=0.01):
         mkdir('displacements')
         with chdir('displacements'):
             copyfile('../' + molpair + '.xyz', 'static.xyz')
-            finite_dif(delta / 2, all=False)
-            finite_dif(delta, all=False)
+            multi_finite_dif(delta / 2, all=False)
+            multi_finite_dif(delta, all=False)
 
 def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
     with open('all_pairs.json', 'r') as json_file:
