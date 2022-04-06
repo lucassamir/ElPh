@@ -87,6 +87,17 @@ def finite_dif(delta, atoms, disp):
     mkdir(prefix)
     with chdir(prefix):
         get_orbitals(new_structure, prefix)
+
+def read_finite_dif(delta, path1, path2, path3, disp):
+    ia = disp[0]
+    iv = disp[1]
+    sign = disp[2]
+    prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                    ia,
+                                    'xyz'[iv],
+                                    ' +-'[sign])
+    j = catnip(path1 + prefix + '/' + prefix, path2, path3 + prefix + '/' + prefix)
+    return j
         
 def multi_finite_dif(delta=0.01, all=True):
     from multiprocessing import Pool
@@ -131,23 +142,23 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         mol2 = str(int(pair[1][1]) + 1)
         molpair = pair[0]
 
-        # calculating j for each displacement
         path1 = mol1 + '/' + mol1 + '/displacements/'
         path2 = mol2 + '/' + mol2
         path3 = molpair + '/' + molpair + '/displacements/'
 
-        jlists = []
+        from multiprocessing import Pool
+        from functools import partial
+
+        disps = []
         atoms = read(path1 + 'static.xyz')
+        for ia, iv, sign in get_displacements(atoms):
+            disps.append((ia, iv, sign))
+
+        jlists = []
         for d in [delta/2, delta]:
-            js = []
-            for ia, iv, sign in get_displacements(atoms, all=all):
-                prefix = 'dj-{}-{}{}{}' .format(int(d * 1000), 
-                                                    ia,
-                                                    'xyz'[iv],
-                                                    ' +-'[sign])
-            
-                j = catnip(path1 + prefix + '/' + prefix, path2, path3 + prefix + '/' + prefix)
-                js.append(j)
+            command = partial(read_finite_dif, d, path1, path2, path3)
+            with Pool(processes=64) as pool:
+                js = pool.map(command, disps)            
             jlists.append(js)
 
         # Create GradJ matrix with a atoms and v directions
