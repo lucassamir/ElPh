@@ -5,22 +5,12 @@ from tloc.javerage import get_orbitals, catnip
 from tloc import chdir, mkdir
 import json
 
-def load_phonons(file='mesh.yaml'):
-    import yaml
-    from yaml import CLoader as Loader
-
-    freqs = []
-    vecs = []
-    with open(file) as f:
-        data = yaml.load(f, Loader=Loader)
-    for phonon in data['phonon']:
-        for mode in phonon['band']:
-            freqs.append(mode['frequency'])
-            vecs.append(mode['eigenvector'])
+def load_phonons(file='phonon.npz'):
+    phonon = np.load(file)
     
     # e modes, a atoms, v directions
-    freqs_e = np.array(freqs)
-    vecs_eav = np.array(vecs)
+    freqs_e = phonon['freqs'].flatten()
+    vecs_eav = phonon['vecs'].real.reshape(len(freqs_e), -1, 3)
 
     return freqs_e, vecs_eav
 
