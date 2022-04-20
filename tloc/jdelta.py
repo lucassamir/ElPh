@@ -15,37 +15,22 @@ def load_phonons(file='phonon.npz'):
 
     return freqs_e, vecs_eav
 
-def derivative(jpp, jp, jm, jmm, delta):
-    return (-jpp + 8 * jp - 8 * jm + jmm) / 6 * delta
-
 def get_dj_matrix(jlists, delta):
     latoms = len(jlists[0]) / 6
 
-    # array with j + full delta (j plus plus)
-    jpp = np.empty([latoms, 3])
-    jpp[:, 0] = jlists[1][1::6]
-    jpp[:, 1] = jlists[1][3::6]
-    jpp[:, 2] = jlists[1][5::6]
-
-    # array with j + half delta (j plus)
-    jp = np.empty([latoms, 3])
-    jp[:, 0] = jlists[0][1::6]
-    jp[:, 1] = jlists[0][3::6]
-    jp[:, 2] = jlists[0][5::6]
-    
-    # array with j - half delta (j minus)
+    # array with j - delta (j minus)
     jm = np.empty([latoms, 3])
-    jm[:, 0] = jlists[0][0::6]
-    jm[:, 1] = jlists[0][2::6]
-    jm[:, 2] = jlists[0][4::6]
+    jm[:, 0] = jlists[0::6]
+    jm[:, 1] = jlists[2::6]
+    jm[:, 2] = jlists[4::6]
 
-    # array with j - full delta (j minus minus)
-    jmm = np.empty([latoms, 3])
-    jmm[:, 0] = jlists[1][0::6]
-    jmm[:, 1] = jlists[1][2::6]
-    jmm[:, 2] = jlists[1][4::6]
+    # array with j + delta (j plus)
+    jp = np.empty([latoms, 3])
+    jp[:, 0] = jlists[1::6]
+    jp[:, 1] = jlists[3::6]
+    jp[:, 2] = jlists[5::6]
 
-    dj_matrix = derivative(jpp, jp, jm, jmm, delta)
+    dj_matrix = (jp - jm) / (2 * delta)
 
     return dj_matrix
 
@@ -121,7 +106,6 @@ def run_jdelta(pair, delta=0.01):
             mkdir('displacements')
             with chdir('displacements'):
                 copyfile('../' + mol1 + '.xyz', 'static.xyz')
-                multi_finite_dif(delta / 2)
                 multi_finite_dif(delta)
 
     # run Gaussian for displacements of first molecule in the pair
@@ -130,8 +114,7 @@ def run_jdelta(pair, delta=0.01):
         mkdir('displacements')
         with chdir('displacements'):
             copyfile('../' + molpair + '.xyz', 'static.xyz')
-            multi_finite_dif(delta / 2, all=False)
-            multi_finite_dif(delta, all=False)
+            multi_finite_dif(delta)
 
 def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
     with open('all_pairs.json', 'r') as json_file:
@@ -154,12 +137,9 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         for ia, iv, sign in get_displacements(atoms):
             disps.append((ia, iv, sign))
 
-        jlists = []
-        for d in [delta/2, delta]:
-            command = partial(read_finite_dif, d, path1, path2, path3)
-            with Pool(processes=64) as pool:
-                js = pool.map(command, disps)            
-            jlists.append(js)
+        command = partial(read_finite_dif, delta, path1, path2, path3)
+        with Pool(processes=64) as pool:
+            jlists = pool.map(command, disps)            
 
         # Create GradJ matrix with a atoms and v directions
         dj_matrix_av = get_dj_matrix(jlists, delta)
