@@ -3,6 +3,7 @@ from ase.neighborlist import natural_cutoffs, NeighborList
 from scipy import sparse
 import numpy as np
 import os
+from ase import Atoms
 from ase.calculators.gaussian import Gaussian
 from tloc import chdir, mkdir
 import subprocess
@@ -121,8 +122,10 @@ def unwrap_atoms(structure_file=None):
 
     # Keep only these atoms
     keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in min_cycle ]
-    new_atoms = fully_connected_atoms[keep_idxs]
-
+    new_atoms = Atoms()
+    for idx in min_cycle:
+        keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in idx ]
+        new_atoms.extend(fully_connected_atoms[keep_idxs])
     # Center in cell
     new_atoms.center()
     new_atoms.set_pbc([False, False, False])
