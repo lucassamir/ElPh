@@ -43,11 +43,8 @@ def get_deviation(dj_av, phonon_file, temp):
 
     return np.sqrt(ssigma)
 
-def get_displacements(atoms, all=True):
-    if all:
-        latoms = len(atoms)
-    else:
-        latoms = len(atoms) // 2
+def get_displacements(atoms):
+    latoms = len(atoms)
     for ia in range(latoms):
         for iv in range(3):
             for sign in [-1, 1]:
@@ -73,18 +70,35 @@ def finite_dif(delta, atoms, disp):
     with chdir(prefix):
         get_orbitals(new_structure, prefix)
 
-def read_finite_dif(delta, path1, path2, path3, disp):
+def read_finite_dif(delta, path1, path2, path3, disp, offset):
     ia = disp[0]
     iv = disp[1]
     sign = disp[2]
-    prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
-                                    ia,
-                                    'xyz'[iv],
-                                    ' +-'[sign])
-    j = catnip(path1 + prefix + '/' + prefix, path2, path3 + prefix + '/' + prefix)
+    if offset:
+        prefix_mol = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                            ia,
+                                            'xyz'[iv],
+                                            ' +-'[sign])
+        prefix_pair = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                             ia + offset,
+                                             'xyz'[iv],
+                                             ' +-'[sign])
+        j = catnip(path1, 
+                   path2 + prefix_mol + '/' + prefix_mol, 
+                   path3 + prefix_pair + '/' + prefix_pair)
+        print(prefix_mol, prefix_pair, j)
+    else:
+        prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                        ia,
+                                        'xyz'[iv],
+                                        ' +-'[sign])
+        j = catnip(path1 + prefix + '/' + prefix, 
+                   path2, 
+                   path3 + prefix + '/' + prefix)
+        print(prefix, j)
     return j
         
-def multi_finite_dif(delta=0.01, all=True):
+def multi_finite_dif(delta=0.01):
     from multiprocessing import Pool
     from functools import partial
 
@@ -92,7 +106,7 @@ def multi_finite_dif(delta=0.01, all=True):
     command = partial(finite_dif, delta, atoms)
 
     disps = []
-    for ia, iv, sign in get_displacements(atoms, all=all):
+    for ia, iv, sign in get_displacements(atoms):
         disps.append((ia, iv, sign))
 
     with Pool(processes=64) as pool:
@@ -108,7 +122,16 @@ def run_jdelta(pair, delta=0.01):
                 copyfile('../' + mol1 + '.xyz', 'static.xyz')
                 multi_finite_dif(delta)
 
-    # run Gaussian for displacements of first molecule in the pair
+    # run Gaussian for displacements of second molecule
+    mol2 = str(pair[1][1] + 1)
+    with chdir(mol2):
+        if not os.path.isdir('displacements'):
+            mkdir('displacements')
+            with chdir('displacements'):
+                copyfile('../' + mol2 + '.xyz', 'static.xyz')
+                multi_finite_dif(delta)
+
+    # run Gaussian for displacements of the pair
     molpair = str(pair[0])
     with chdir(molpair):
         mkdir('displacements')
@@ -117,6 +140,9 @@ def run_jdelta(pair, delta=0.01):
             multi_finite_dif(delta)
 
 def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
+    from multiprocessing import Pool
+    from functools import partial   
+    
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
 
@@ -125,21 +151,34 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         mol2 = str(int(pair[1][1]) + 1)
         molpair = pair[0]
 
+        # considering displacements of the first molecule
         path1 = mol1 + '/' + mol1 + '/displacements/'
         path2 = mol2 + '/' + mol2
-        path3 = molpair + '/' + molpair + '/displacements/'
-
-        from multiprocessing import Pool
-        from functools import partial
+        path3 = molpair + '/' + molpair + '/displacements/'    
 
         disps = []
         atoms = read(path1 + 'static.xyz')
+        offset = int(len(atoms))
         for ia, iv, sign in get_displacements(atoms):
             disps.append((ia, iv, sign))
 
-        command = partial(read_finite_dif, delta, path1, path2, path3)
+        command = partial(read_finite_dif, delta, path1, path2, path3, None)
         with Pool(processes=64) as pool:
             jlists = pool.map(command, disps)            
+
+        # considering displacements of the second molecule
+        path1 = mol1 + '/' + mol1
+        path2 = mol2 + '/' + mol2 + '/displacements/'
+        path3 = molpair + '/' + molpair + '/displacements/'    
+
+        disps = []
+        atoms = read(path2 + 'static.xyz')
+        for ia, iv, sign in get_displacements(atoms):
+            disps.append((ia, iv, sign))
+
+        command = partial(read_finite_dif, delta, path1, path2, path3, offset)
+        with Pool(processes=64) as pool:
+            jlists += pool.map(command, disps)            
 
         # Create GradJ matrix with a atoms and v directions
         dj_matrix_av = get_dj_matrix(jlists, delta)
