@@ -40,11 +40,14 @@ def get_centers_of_mass(atoms, n_components, component_list):
     return centers_of_mass
 
 def write_structure(label, component_list, molecules, all_atoms):
+    atoms = Atoms()
     if isinstance(molecules, list):
-        idxs = [ i for i in range(len(component_list)) if component_list[i] in molecules ]
+        for molecule in molecules:
+            idxs = [ i for i in range(len(component_list)) if component_list[i] == molecule ]
+            atoms.extend(all_atoms[idxs])
     else:
         idxs = [ i for i in range(len(component_list)) if component_list[i] == molecules ]
-    atoms = all_atoms[idxs]
+        atoms.extend(all_atoms[idxs])
     atoms.set_pbc([False, False, False])
     atoms.set_cell([0, 0, 0])
 
@@ -124,7 +127,7 @@ def unwrap_atoms(structure_file=None):
     keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in min_cycle ]
     new_atoms = Atoms()
     for idx in min_cycle:
-        keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in idx ]
+        keep_idxs = [ i for i in range(len(component_list)) if component_list[i] == idx ]
         new_atoms.extend(fully_connected_atoms[keep_idxs])
     # Center in cell
     new_atoms.center()
