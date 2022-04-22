@@ -42,20 +42,47 @@ def get_centers_of_mass(atoms, n_components, component_list):
         centers_of_mass.append(atoms[molIdxs_i].get_center_of_mass())
     return centers_of_mass
 
+def compute_total_weight(centers_of_mass):
+    
+    total_weight = 0
+    has_dupes = False
+    for i in range(len(centers_of_mass)):
+        for j in range(i+1, len(centers_of_mass)):
+            total_weight +=  np.linalg.norm(centers_of_mass[i] - centers_of_mass[j])
+            if np.linalg.norm(centers_of_mass[i] - centers_of_mass[j]) == 0:
+                has_dupes = True
+    return total_weight, has_dupes
+
 def write_structure(label, component_list, molecules, all_atoms):
     atoms = Atoms()
+    atom_mapping = {}
+    counter = 0
     if isinstance(molecules, list):
         for molecule in molecules:
             idxs = [ i for i in range(len(component_list)) if component_list[i] == molecule ]
+            for idx in idxs:
+                if idx%140 in atom_mapping.keys():
+                    atom_mapping[idx%140].append(counter)
+                else:
+                    atom_mapping[idx%140] = [counter] 
+                counter += 1
             atoms.extend(all_atoms[idxs])
     else:
         idxs = [ i for i in range(len(component_list)) if component_list[i] == molecules ]
+        for idx in idxs:
+            if idx%70 in atom_mapping.keys():
+                atom_mapping[idx%70].append(counter)
+            else:
+                atom_mapping[idx%70] = [counter] 
+            counter += 1
         atoms.extend(all_atoms[idxs])
     atoms.set_pbc([False, False, False])
     atoms.set_cell([0, 0, 0])
 
     mkdir(label)
     atoms.write(label + '/' + label + '.xyz')
+    with open(label + '/' + 'atom_mapping.json', 'w') as f:
+        f.write(json.dumps(atom_mapping))
 
 @Halo(text="Identifying molecules", color='green', spinner='dots')
 def find_neighbors(atoms):
@@ -69,35 +96,111 @@ def find_neighbors(atoms):
 
 def unwrap_atoms(structure_file=None):
     folder = os.getcwd()
-    structure_file = find_structure_file(folder)
+
+    if structure_file:
+        if os.path.exists(folder + '/../' + structure_file):
+            structure_file = folder + '/../' + structure_file
+        else:
+            structure_file = folder + '/' + structure_file
+    else:
+        structure_file = find_structure_file(folder)
+
     atoms = read(structure_file)
-    atoms *= [3, 3, 3]
+    neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
+    neighbor_list.update(atoms)
+    matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
+    n_components, component_list = sparse.csgraph.connected_components(matrix)
+    idx = 0
+    molIdx = component_list[idx]
+    print("There are {} molecules in the system".format(n_components))
+    molIdxs = [ i for i in range(len(component_list)) if component_list[i] == molIdx ]
+    print("The following atoms are part of molecule {}: {}".format(molIdx, molIdxs))
+    edges = list(matrix.keys())
+    max_bond_len = max(natural_cutoffs(atoms))
+    cell = list(atoms.get_cell())
+    cell_array = atoms.get_cell()
+    atoms = read(structure_file)
+    atoms.set_pbc([False,False,False])
+
+    all_positions = atoms.get_positions()
+    is_optimized = False
+    # For each bond, take the lower left and move it upper right until the bond shrinks
+    iterations = 0
+    print("optimizing atoms")
+    while not is_optimized:
+        iterations += 1
+        print("{} iterations".format(iterations))
+        is_optimized = True
+        for i in range(3):
+            for edge in edges:
+                positions = all_positions
+                distance = np.linalg.norm(positions[edge[0]]-positions[edge[1]])
+                if distance > max_bond_len*2:
+                    min_pos = positions[edge[0]] if positions[edge[0],i] < positions[edge[1],i] else positions[edge[1]]
+                    max_pos = positions[edge[0]] if positions[edge[0],i] >= positions[edge[1],i] else positions[edge[1]]
+                    new_pos = min_pos
+                    if np.linalg.norm(max_pos - (min_pos + cell[i])) < distance:
+                        new_pos = min_pos + cell[i]
+                        is_optimized = False
+                    if np.array_equal(min_pos,positions[edge[0]]):
+                        all_positions[edge[0]] = new_pos
+                        all_positions[edge[1]] = max_pos
+                    else:
+                        all_positions[edge[0]] = max_pos
+                        all_positions[edge[1]] = new_pos
+    atoms.set_positions(all_positions)
     
-    n_components, component_list, edges = find_neighbors(atoms)
+    # Construct graph (compute total weight)
+    original_centers_of_mass = get_centers_of_mass(atoms, n_components, component_list)
+    centers_of_mass = np.copy(original_centers_of_mass)
+    weight, has_dupes = compute_total_weight(centers_of_mass)
+    test_dirs = cell
+    test_dirs.extend([-x for x in test_dirs])
 
-    # Compute total weight of each molecule and record minimum weight
-    positions = atoms.get_positions()
-    weights = []
-    min_weight = float('inf')
-    for idx in trange(n_components, desc="Finding fully-connected molecules"):
-        weight = 0
-        molIdxs = [ i for i in range(len(component_list)) if component_list[i] == idx ]
-        for edge in edges:
-            if edge[0] in molIdxs:
-                weight += np.linalg.norm(positions[edge[0]]-positions[edge[1]])
-        weights.append(weight)
-        if weight < min_weight:
-            min_weight = weight
+    is_optimized = False
+    while not is_optimized:
+        is_optimized = True
+        for i in range(n_components):
+            for j in range(6):
+                test_centers_of_mass = np.copy(centers_of_mass)
+                test_centers_of_mass[i] += test_dirs[j]
+                test_weight, has_dupes = compute_total_weight(test_centers_of_mass)
+                if test_weight < weight and not has_dupes:
+                    centers_of_mass = np.copy(test_centers_of_mass)
+                    weight = test_weight
+                    is_optimized = False
+    
+    # Write centers of mass to file
+    translations = np.zeros([len(atoms), 3])
+    
+    for i in range(n_components):
+        molIdx = component_list[i]
+        molIdxs = [ x for x in range(len(component_list)) if component_list[x] == molIdx ]
+        
+        dif = centers_of_mass[i] - original_centers_of_mass[i]
+        translations[molIdxs,:] = dif
 
-    # Keep only atoms which belong to molecules which have minimum weight
-    keep_idx = []
-    for i, weight in enumerate(tqdm(weights, desc="Discarding non-connected molecules")):
-        if weight <= min_weight + 1:
-            keep_idx.append(i)
-    keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in keep_idx ]
-    fully_connected_atoms = atoms[keep_idxs]
+    atoms.translate(translations)
+    atoms.center()
 
-    # Re-compute molecules so that they fall in order
+    new_atoms = Atoms()
+    new_atoms.set_cell(cell_array)
+
+    atom_mapping = {}
+    counter = 0
+    for i in range(n_components):
+        molIdx = i
+        molIdxs = [ x for x in range(len(component_list)) if component_list[x] == molIdx ]
+        for idx in molIdxs:
+            atom_mapping[idx] = counter 
+            counter += 1
+        new_atoms.extend(atoms[molIdxs])
+    
+    with open('atom_mapping.json', 'w') as f:
+        f.write(json.dumps(atom_mapping, sort_keys=True, indent=2))
+
+    fully_connected_atoms = new_atoms*[2, 2, 2]
+
     n_components, component_list, edges = find_neighbors(fully_connected_atoms)
 
     # Compute centers of mass for remaining molecules
