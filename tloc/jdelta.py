@@ -178,7 +178,10 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
 
         command = partial(read_finite_dif, delta, path1, path2, path3, offset)
         with Pool(processes=64) as pool:
-            jlists += pool.map(command, disps)            
+            jlists += pool.map(command, disps)        
+
+        data = {'js': jlists}   
+        np.savez_compressed('disp_js.npz', data)
 
         # Create GradJ matrix with a atoms and v directions
         dj_matrix_av = get_dj_matrix(jlists, delta)
