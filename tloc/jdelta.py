@@ -147,41 +147,45 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         pairs = json.load(json_file)
 
     for pair in pairs.items():
-        mol1 = str(int(pair[1][0]) + 1)
-        mol2 = str(int(pair[1][1]) + 1)
-        molpair = pair[0]
+        if not os.path.exists('disp_js.npz'):
+            mol1 = str(int(pair[1][0]) + 1)
+            mol2 = str(int(pair[1][1]) + 1)
+            molpair = pair[0]
 
-        # considering displacements of the first molecule
-        path1 = mol1 + '/' + mol1 + '/displacements/'
-        path2 = mol2 + '/' + mol2
-        path3 = molpair + '/' + molpair + '/displacements/'    
+            # considering displacements of the first molecule
+            path1 = mol1 + '/' + mol1 + '/displacements/'
+            path2 = mol2 + '/' + mol2
+            path3 = molpair + '/' + molpair + '/displacements/'    
 
-        disps = []
-        atoms = read(path1 + 'static.xyz')
-        offset = int(len(atoms))
-        for ia, iv, sign in get_displacements(atoms):
-            disps.append((ia, iv, sign))
+            disps = []
+            atoms = read(path1 + 'static.xyz')
+            offset = int(len(atoms))
+            for ia, iv, sign in get_displacements(atoms):
+                disps.append((ia, iv, sign))
 
-        command = partial(read_finite_dif, delta, path1, path2, path3, None)
-        with Pool(processes=64) as pool:
-            jlists = pool.map(command, disps)            
+            command = partial(read_finite_dif, delta, path1, path2, path3, None)
+            with Pool(processes=64) as pool:
+                jlists = pool.map(command, disps)            
 
-        # considering displacements of the second molecule
-        path1 = mol1 + '/' + mol1
-        path2 = mol2 + '/' + mol2 + '/displacements/'
-        path3 = molpair + '/' + molpair + '/displacements/'    
+            # considering displacements of the second molecule
+            path1 = mol1 + '/' + mol1
+            path2 = mol2 + '/' + mol2 + '/displacements/'
+            path3 = molpair + '/' + molpair + '/displacements/'    
 
-        disps = []
-        atoms = read(path2 + 'static.xyz')
-        for ia, iv, sign in get_displacements(atoms):
-            disps.append((ia, iv, sign))
+            disps = []
+            atoms = read(path2 + 'static.xyz')
+            for ia, iv, sign in get_displacements(atoms):
+                disps.append((ia, iv, sign))
 
-        command = partial(read_finite_dif, delta, path1, path2, path3, offset)
-        with Pool(processes=64) as pool:
-            jlists += pool.map(command, disps)        
+            command = partial(read_finite_dif, delta, path1, path2, path3, offset)
+            with Pool(processes=64) as pool:
+                jlists += pool.map(command, disps)        
 
-        data = {'js': jlists}   
-        np.savez_compressed('disp_js.npz', data)
+            data = {'js': jlists}   
+            np.savez_compressed('disp_js.npz', data)
+
+        else:
+            jlists = np.load('disp_js.npz')['js']
 
         # Create GradJ matrix with a atoms and v directions
         dj_matrix_av = get_dj_matrix(jlists, delta)
