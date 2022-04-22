@@ -197,7 +197,7 @@ def nersc_bash(name):
                 '#SBATCH -q flex \n'
                 '#SBATCH -N 1 \n'
                 '#SBATCH -t 03:00:00 \n'
-                '#SBATCH --time-min 00:30:00 \n'
+                '#SBATCH --time-min 00:15:00 \n'
                 '#SBATCH -C knl \n'
                 '#SBATCH --output=out.out \n'
                 '#SBATCH --error=err.out \n'
@@ -209,8 +209,8 @@ def nersc_bash(name):
 
 def get_orbitals(atoms, name):
     if not exists(name + '.pun'):
-        calculator = Gaussian(mem='48GB',
-                              nprocshared=64,
+        calculator = Gaussian(mem='4GB',
+                              nprocshared=12,
                               label=name,
                               save=None,
                               method='b3lyp',
