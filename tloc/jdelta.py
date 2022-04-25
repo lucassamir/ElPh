@@ -1,3 +1,4 @@
+from matplotlib import offsetbox
 import numpy as np
 from ase.io import read
 from shutil import copyfile
@@ -73,10 +74,19 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
     jlists = []
     # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
+    offset = len(mol1)
     with chdir(mol1):
         mkdir('displacements')
         with chdir('displacements'):
             copyfile('../' + mol1 + '.xyz', 'static.xyz')
+            finite_dif(delta)
+
+    # run Gaussian for displacements of second molecule
+    mol2 = str(pair[1][1] + 1)
+    with chdir(mol2):
+        mkdir('displacements')
+        with chdir('displacements'):
+            copyfile('../' + mol2 + '.xyz', 'static.xyz')
             finite_dif(delta)
 
     # run Gaussian for displacements of first molecule in the pair
@@ -87,9 +97,9 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
             copyfile('../' + molpair + '.xyz', 'static.xyz')
             finite_dif(delta)
 
-    # calculating j for each displacement
+    # calculating j for each displacement of the first molecule
     path1 = mol1 + '/' + mol1 + '/displacements/'
-    path2 = str(pair[1][1] + 1) + '/' + str(pair[1][1] + 1)
+    path2 = mol2 + '/' + mol2
     path3 = molpair + '/' + molpair + '/displacements/'
 
     atoms = read(path1 + 'static.xyz')
@@ -99,6 +109,24 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
                                             'xyz'[iv],
                                             ' +-'[sign])
         j = catnip(path1 + prefix, path2, path3 + prefix)
+        jlists.append(j)
+
+    # calculating j for each displacement of the second molecule
+    path1 = mol1 + '/' + mol1
+    path2 = mol2 + '/' + mol2 + '/displacements/'
+    path3 = molpair + '/' + molpair + '/displacements/'
+
+    atoms = read(path2 + 'static.xyz')
+    for ia, iv, sign in get_displacements(atoms, all=all):
+        prefix_mol = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                                ia,
+                                                'xyz'[iv],
+                                                ' +-'[sign])
+        prefix_pair = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                                 ia + offset,
+                                                'xyz'[iv],
+                                                ' +-'[sign])
+        j = catnip(path1, path2 + prefix_mol, path3 + prefix_pair)
         jlists.append(j)
 
     # Create GradJ matrix with a atoms and v directions
