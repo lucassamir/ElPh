@@ -147,11 +147,10 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         pairs = json.load(json_file)
 
     for pair in pairs.items():
-        if not os.path.exists('disp_js.npz'):
-            mol1 = str(int(pair[1][0]) + 1)
-            mol2 = str(int(pair[1][1]) + 1)
-            molpair = pair[0]
-
+        mol1 = str(int(pair[1][0]) + 1)
+        mol2 = str(int(pair[1][1]) + 1)
+        molpair = pair[0]
+        if not os.path.exists(molpair + '_disp_js.npz'):
             # considering displacements of the first molecule
             path1 = mol1 + '/' + mol1 + '/displacements/'
             path2 = mol2 + '/' + mol2
@@ -182,10 +181,10 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
                 jlists += pool.map(command, disps)        
 
             data = {'js': jlists}   
-            np.savez_compressed('disp_js.npz', data)
+            np.savez_compressed(molpair + '_disp_js.npz', data)
 
         else:
-            jlists = np.load('disp_js.npz')['js']
+            jlists = np.load(molpair + '_disp_js.npz')['js']
 
         # Create GradJ matrix with a atoms and v directions
         dj_matrix_av = get_dj_matrix(jlists, delta)
