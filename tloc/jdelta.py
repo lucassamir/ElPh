@@ -6,12 +6,21 @@ from tloc import chdir, mkdir
 import json
 import os
 
-def load_phonons(file='phonon.npz'):
-    phonon = np.load(file)
+def load_phonons(phonon_file='phonon.npz', map_file='atom_mapping.json'):
+    # read phonon modes file
+    phonon = np.load(phonon_file)
+
+    # read mapping file
+    with open(map_file, 'r') as json_file:
+        map = json.load(json_file)
     
     # e modes, a atoms, v directions
     freqs_e = phonon['freqs'].flatten()
     vecs_eav = phonon['vecs'].real.reshape(len(freqs_e), -1, 3)
+
+    # use mapping to order the wrapped phonon modes
+    # based on the unwrapped atoms
+    vecs_eav = vecs_eav[:, map, :]
 
     return freqs_e, vecs_eav
 
