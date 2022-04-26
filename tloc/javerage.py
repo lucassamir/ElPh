@@ -203,7 +203,7 @@ def unwrap_atoms(structure_file=None):
     # Compute centers of mass for remaining molecules
     centers_of_mass = get_centers_of_mass(fully_connected_atoms, n_components, component_list)
     com_edges = {}
-    for i in range(n_components, desc="Finding 3 closest fully-connected molecules"):
+    for i in range(n_components):
         node_1 = centers_of_mass[i]
         for j in range(i+1, n_components):
             node_2 = centers_of_mass[j]
