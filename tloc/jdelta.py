@@ -161,9 +161,9 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         molpair = pair[0]
         if not os.path.exists(molpair + '_disp_js.npz'):
             # considering displacements of the first molecule
-            path1 = mol1 + '/' + mol1 + '/displacements/'
+            path1 = mol1 + '/displacements/'
             path2 = mol2 + '/' + mol2
-            path3 = molpair + '/' + molpair + '/displacements/'    
+            path3 = molpair + '/displacements/'    
 
             disps = []
             atoms = read(path1 + 'static.xyz')
@@ -177,8 +177,8 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
 
             # considering displacements of the second molecule
             path1 = mol1 + '/' + mol1
-            path2 = mol2 + '/' + mol2 + '/displacements/'
-            path3 = molpair + '/' + molpair + '/displacements/'    
+            path2 = mol2 + '/displacements/'
+            path3 = molpair + '/displacements/'    
 
             disps = []
             atoms = read(path2 + 'static.xyz')
