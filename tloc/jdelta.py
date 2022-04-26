@@ -1,4 +1,3 @@
-from matplotlib import offsetbox
 import numpy as np
 from ase.io import read
 from shutil import copyfile
