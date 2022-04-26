@@ -15,6 +15,7 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
         map = list(json.load(json_file).values())
     
     # e modes, a atoms, v directions
+    nq = len(phonon['freqs'])
     freqs_e = phonon['freqs'].flatten()
     vecs_eav = phonon['vecs'].real.reshape(len(freqs_e), -1, 3)
 
@@ -31,7 +32,7 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
     # interaction pair of molecules
     vecs_eav = vecs_eav[:, pair_atoms, :]
 
-    return freqs_e, vecs_eav
+    return nq, freqs_e, vecs_eav
 
 def get_dj_matrix(jlists, delta):
     latoms = len(jlists) // 6
@@ -53,10 +54,10 @@ def get_dj_matrix(jlists, delta):
     return dj_matrix
 
 def get_deviation(pair_atoms, dj_av, temp):
-    na = 8 * 8 #len(dj_av)
-    freqs_e, vecs_eav = load_phonons(pair_atoms)
+    nq, freqs_e, vecs_eav = load_phonons(pair_atoms)
+    nq = 8 * 8 * 8
     epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
-    ssigma = (1 / na) * np.sum(epcoup_e**2 / \
+    ssigma = (1 / nq) * np.sum(epcoup_e**2 / \
         (2 * np.tanh(freqs_e / (2 * temp))))
 
     return np.sqrt(ssigma)
