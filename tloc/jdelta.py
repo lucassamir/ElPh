@@ -207,10 +207,11 @@ def read_jdelta(delta=0.01, temp=0.025):
         dj_matrix_av = get_dj_matrix(jlists, delta)
 
         # Calculate jdelta
+        offset = len(dj_matrix_av) // 2
         pair_atoms = np.concatenate([np.arange((int(mol1) - 1) * offset, 
                                                 int(mol1) * offset), 
-                                    np.arange((int(mol2) - 1) * offset, 
-                                               int(mol2) * offset)])
+                                     np.arange((int(mol2) - 1) * offset, 
+                                                int(mol2) * offset)])
         
         jdelta = get_deviation(pair_atoms, dj_matrix_av, temp)
         data = {molpair: jdelta}
