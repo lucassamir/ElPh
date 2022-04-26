@@ -79,7 +79,7 @@ def finite_dif(delta, atoms, disp):
     with chdir(prefix):
         get_orbitals(new_structure, prefix)
 
-def read_finite_dif(delta, path1, path2, path3, disp, offset):
+def read_finite_dif(delta, path1, path2, path3, offset, disp):
     ia = disp[0]
     iv = disp[1]
     sign = disp[2]
