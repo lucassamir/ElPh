@@ -6,13 +6,13 @@ from tloc import chdir, mkdir
 import json
 import os
 
-def load_phonons(phonon_file='phonon.npz', map_file='atom_mapping.json'):
+def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.json'):
     # read phonon modes file
     phonon = np.load(phonon_file)
 
     # read mapping file
     with open(map_file, 'r') as json_file:
-        map = json.load(json_file)
+        map = list(json.load(json_file).values())
     
     # e modes, a atoms, v directions
     freqs_e = phonon['freqs'].flatten()
@@ -22,10 +22,14 @@ def load_phonons(phonon_file='phonon.npz', map_file='atom_mapping.json'):
     # based on the unwrapped atoms
     vecs_eav = vecs_eav[:, map, :]
 
+    # selecting only the phonon modes relevant to the 
+    # interaction pair of molecules
+    vecs_eav = vecs_eav[:, pair_atoms, :]
+
     return freqs_e, vecs_eav
 
 def get_dj_matrix(jlists, delta):
-    latoms = len(jlists[0]) / 6
+    latoms = len(jlists[0]) // 6
 
     # array with j - delta (j minus)
     jm = np.empty([latoms, 3])
@@ -43,9 +47,9 @@ def get_dj_matrix(jlists, delta):
 
     return dj_matrix
 
-def get_deviation(dj_av, phonon_file, temp):
+def get_deviation(pair_atoms, dj_av, temp):
     na = len(dj_av)
-    freqs_e, vecs_eav = load_phonons(phonon_file)
+    freqs_e, vecs_eav = load_phonons(pair_atoms)
     epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
     ssigma = (1 / na) * np.sum(epcoup_e**2 / \
         (2 * np.tanh(freqs_e / (2 * temp))))
@@ -150,7 +154,7 @@ def run_jdelta(pair, delta=0.01):
             copyfile('../' + molpair + '.xyz', 'static.xyz')
             multi_finite_dif(delta)
 
-def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
+def read_jdelta(delta=0.01, temp=0.025):
     from multiprocessing import Pool
     from functools import partial   
     
@@ -203,7 +207,12 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         dj_matrix_av = get_dj_matrix(jlists, delta)
 
         # Calculate jdelta
-        jdelta = get_deviation(dj_matrix_av, phonon_file, temp)
+        pair_atoms = np.concatenate([np.arange((int(mol1) - 1) * offset, 
+                                                int(mol1) * offset), 
+                                    np.arange((int(mol2) - 1) * offset, 
+                                               int(mol2) * offset)])
+        
+        jdelta = get_deviation(pair_atoms, dj_matrix_av, temp)
         data = {molpair: jdelta}
         with open('DeltaJ_' + molpair + '.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
