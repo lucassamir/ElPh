@@ -18,10 +18,11 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
     freqs_e = phonon['freqs'].flatten()
     vecs_eav = phonon['vecs'].real.reshape(len(freqs_e), -1, 3)
 
-    # THz to eV
-    thz2ev = 0.004135667436092515
-    freqs_e *= thz2ev
-    
+    # convertion unit (hbar * THz)
+    hbar = 6.582118985531608e-16 # eV . s
+    thz = 1e12 # 1 / s
+    freqs_e *= hbar * thz # eV
+
     # use mapping to order the wrapped phonon modes
     # based on the unwrapped atoms
     vecs_eav = vecs_eav[:, map, :]
