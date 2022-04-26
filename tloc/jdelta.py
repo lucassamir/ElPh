@@ -29,7 +29,7 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
     return freqs_e, vecs_eav
 
 def get_dj_matrix(jlists, delta):
-    latoms = len(jlists[0]) // 6
+    latoms = len(jlists) // 6
 
     # array with j - delta (j minus)
     jm = np.empty([latoms, 3])
