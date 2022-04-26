@@ -327,7 +327,6 @@ def get_orbitals(atoms, name):
         print(['Simulation {} is done' .format(name)])
 
 def catnip(paths):
-    print("Calculating transfer integral")
     path1 = paths[0]
     path2 = paths[1]
     path3 = paths[2]
@@ -359,6 +358,7 @@ def read_javerage():
         p1.append(str(int(pair[1][0]) + 1) + '/' + str(int(pair[1][0]) + 1))
         p2.append(str(int(pair[1][1]) + 1) + '/' + str(int(pair[1][1]) + 1))
 
+    print("Calculating transfer integrals")
     from multiprocessing import Pool
     with Pool(processes=3) as pool:
         j = pool.map(catnip, zip(p1, p2, pp))

@@ -160,6 +160,8 @@ def read_jdelta(delta=0.01, phonon_file='mesh.yaml', temp=0.025):
         mol2 = str(int(pair[1][1]) + 1)
         molpair = pair[0]
         if not os.path.exists(molpair + '_disp_js.npz'):
+            print("Calculating transfer integrals")
+
             # considering displacements of the first molecule
             path1 = mol1 + '/displacements/'
             path2 = mol2 + '/' + mol2
