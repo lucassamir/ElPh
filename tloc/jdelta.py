@@ -15,14 +15,11 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
         map = list(json.load(json_file).values())
     
     # e modes, a atoms, v directions
-    nq = len(phonon['freqs'])
     freqs_e = phonon['freqs'].flatten()
     vecs_eav = phonon['vecs'].real.reshape(len(freqs_e), -1, 3)
 
-    # convertion unit (hbar * THz)
-    hbar = 6.582118985531608e-16 # eV . s
-    thz = 1e12 # 1 / s
-    freqs_e *= hbar * thz # eV
+    thz2ev = 4.13566733e-3
+    freqs_e *= thz2ev # eV
 
     # use mapping to order the wrapped phonon modes
     # based on the unwrapped atoms
@@ -32,7 +29,7 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
     # interaction pair of molecules
     vecs_eav = vecs_eav[:, pair_atoms, :]
 
-    return nq, freqs_e, vecs_eav
+    return freqs_e, vecs_eav
 
 def get_dj_matrix(jlists, delta):
     latoms = len(jlists) // 6
@@ -54,7 +51,7 @@ def get_dj_matrix(jlists, delta):
     return dj_matrix
 
 def get_deviation(pair_atoms, dj_av, temp):
-    nq, freqs_e, vecs_eav = load_phonons(pair_atoms)
+    freqs_e, vecs_eav = load_phonons(pair_atoms)
     nq = 8 * 8 * 8
     epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
     ssigma = (1 / nq) * np.sum(epcoup_e**2 / \
