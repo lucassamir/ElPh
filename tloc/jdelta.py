@@ -122,6 +122,8 @@ def multi_finite_dif(delta=0.01):
         pool.map(command, disps)
 
 def run_jdelta(pair, delta=0.01):
+    print('Running Gaussian for displacements')
+
     # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
     with chdir(mol1):
