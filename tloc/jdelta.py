@@ -95,7 +95,7 @@ def read_finite_dif(delta, path1, path2, path3, offset, disp):
         j = catnip([path1, 
                     path2 + prefix_mol + '/' + prefix_mol, 
                     path3 + prefix_pair + '/' + prefix_pair])
-        print(prefix_mol, prefix_pair, j)
+        print(prefix_pair, j)
     else:
         prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
                                         ia,
