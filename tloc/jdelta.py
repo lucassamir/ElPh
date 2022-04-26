@@ -198,7 +198,7 @@ def read_jdelta(delta=0.01, temp=0.025):
                 jlists += pool.map(command, disps)        
 
             data = {'js': jlists}   
-            np.savez_compressed(molpair + '_disp_js.npz', data)
+            np.savez_compressed(molpair + '_disp_js.npz', **data)
 
         else:
             jlists = np.load(molpair + '_disp_js.npz')['js']
