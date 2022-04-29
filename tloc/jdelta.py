@@ -13,7 +13,6 @@ def load_phonons(file='phonon.npz'):
 
     Returns:
         tuple: vector of frequencies and eigenvectors
-
     """
     phonon = np.load(file)
     
