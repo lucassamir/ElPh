@@ -5,6 +5,8 @@ from tloc.jdelta import jdelta
 from tloc.molecules import Molecules
 
 def write_lattice_file():
+   """Write the lattice parameters json file
+   """
    lattice = {'nmuc':2,
               'coordmol':[[0.0, 0.0, 0.0], [0.5, 0.5, 0.0]],
               'unitcell':[[1.0, 0.0, 0.0], [0.0, 1.7321, 0.0], [0.0, 0.0, 1000.0]],

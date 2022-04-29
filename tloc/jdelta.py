@@ -6,6 +6,15 @@ from tloc import chdir, mkdir
 import json
 
 def load_phonons(file='phonon.npz'):
+    """Loads phonon modes and returns frequencies and eigenvectors
+
+    Args:
+        file (str, optional): Numpy file with the phonon modes. Defaults to 'phonon.npz'.
+
+    Returns:
+        tuple: vector of frequencies and eigenvectors
+
+    """
     phonon = np.load(file)
     
     # e modes, a atoms, v directions
@@ -25,6 +34,18 @@ def get_displacements(atoms, all=True):
                 yield (ia, iv, sign)
 
 def displace_atom(atoms, ia, iv, sign, delta):
+    """Displace one atomic position in the Atoms object
+
+    Args:
+        atoms (Atoms): Atoms object
+        ia (int): atom index
+        iv (int): direction index
+        sign (str): sign of displacement in each direction
+        delta (float): size of displacement
+
+    Returns:
+        Atoms: Updated Atoms object
+    """
     new_atoms = atoms.copy()
     pos_av = new_atoms.get_positions()
     pos_av[ia, iv] += sign * delta
