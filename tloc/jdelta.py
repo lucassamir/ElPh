@@ -23,6 +23,15 @@ def load_phonons(file='phonon.npz'):
     return freqs_e, vecs_eav
 
 def get_displacements(atoms, all=True):
+    """Returns displacement of each atom in each direction
+
+    Args:
+        atoms (Atoms): Atoms objects
+        all (bool, optional): Determines whether to do 5-point or 2-point. Defaults to True.
+
+    Yields:
+        yield: (atom number, direction, sign)
+    """
     if all:
         latoms = len(atoms)
     else:
@@ -52,6 +61,12 @@ def displace_atom(atoms, ia, iv, sign, delta):
     return new_atoms
 
 def finite_dif(delta=0.01, all=True):
+    """Computing finite difference between displacement and equilibrium positions.
+
+    Args:
+        delta (float, optional): Size of displacement. Defaults to 0.01.
+        all (bool, optional): Determines whether to do 5-point or 2-point. Defaults to True.
+    """
     atoms = read('static.xyz')
     for ia, iv, sign in get_displacements(atoms, all=all):
         prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
@@ -62,6 +77,15 @@ def finite_dif(delta=0.01, all=True):
         get_orbitals(new_structure, prefix)
 
 def get_dj_matrix(jlists, delta):
+    """Matrix containing gradient of j, the transfer integral
+
+    Args:
+        jlists (list): list of transfer integrals
+        delta (float): size of displacement
+
+    Returns:
+        array: matrix containing gradient of j
+    """
     latoms = len(jlists) / 6
 
     # array with j - delta (j minus)
