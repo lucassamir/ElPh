@@ -316,7 +316,7 @@ def get_orbitals(atoms, name):
                               label=name,
                               save=None,
                               method='b3lyp',
-                              basis='6-31G',
+                              basis='3-21G*',
                               scf='tight',
                               pop='full',
                               extra='nosymm punch=mo iop(3/33=1)')
