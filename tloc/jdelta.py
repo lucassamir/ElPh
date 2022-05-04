@@ -14,22 +14,15 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
     with open(map_file, 'r') as json_file:
         map = list(json.load(json_file).values())
     
-    # e modes, a atoms, v directions
-    freqs_e = phonon['freqs'].flatten()
-    vecs_eav = phonon['vecs'].real.reshape(len(freqs_e), -1, 3)
-
-    thz2ev = 4.13566733e-3
-    freqs_e *= thz2ev # eV
-
     # use mapping to order the wrapped phonon modes
     # based on the unwrapped atoms
-    vecs_eav = vecs_eav[:, map, :]
+    vecs_eav = phonon['vecs'][:, map, :]
 
     # selecting only the phonon modes relevant to the 
     # interaction pair of molecules
     vecs_eav = vecs_eav[:, pair_atoms, :]
 
-    return freqs_e, vecs_eav
+    return phonon['freqs'], vecs_eav
 
 def get_dj_matrix(jlists, delta):
     latoms = len(jlists) // 6
@@ -160,6 +153,9 @@ def run_jdelta(pair, delta=0.01):
 def read_jdelta(delta=0.01, temp=0.025):
     from multiprocessing import Pool
     from functools import partial   
+    from tloc.phonons import write_phonons
+
+    write_phonons()
     
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
