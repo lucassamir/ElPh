@@ -17,9 +17,9 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
     # use mapping to order the wrapped phonon modes
     # based on the unwrapped atoms
     if len(map) > len(phonon['vecs'][0]):
-        vecs_eav = np.tile(phonon['vecs'], [1, 2, 1])
-
-    vecs_eav = phonon['vecs'][:, map, :]
+        vecs_eav = np.tile(phonon['vecs'], [1, 2, 1])[:, map, :]
+    else:
+        vecs_eav = phonon['vecs'][:, map, :]
 
     # selecting only the phonon modes relevant to the 
     # interaction pair of molecules
