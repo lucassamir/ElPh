@@ -61,19 +61,19 @@ def write_structure(label, component_list, molecules, all_atoms):
         for molecule in molecules:
             idxs = [ i for i in range(len(component_list)) if component_list[i] == molecule ]
             for idx in idxs:
-                if idx%140 in atom_mapping.keys():
-                    atom_mapping[idx%140].append(counter)
+                if idx%len(idxs) in atom_mapping.keys():
+                    atom_mapping[idx%len(idxs)].append(counter)
                 else:
-                    atom_mapping[idx%140] = [counter] 
+                    atom_mapping[idx%len(idxs)] = [counter] 
                 counter += 1
             atoms.extend(all_atoms[idxs])
     else:
         idxs = [ i for i in range(len(component_list)) if component_list[i] == molecules ]
         for idx in idxs:
-            if idx%70 in atom_mapping.keys():
-                atom_mapping[idx%70].append(counter)
+            if idx%len(idxs) in atom_mapping.keys():
+                atom_mapping[idx%len(idxs)].append(counter)
             else:
-                atom_mapping[idx%70] = [counter] 
+                atom_mapping[idx%len(idxs)] = [counter] 
             counter += 1
         atoms.extend(all_atoms[idxs])
     atoms.set_pbc([False, False, False])
@@ -111,7 +111,7 @@ def unwrap_atoms(structure_file=None):
     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
     n_components, component_list = sparse.csgraph.connected_components(matrix)
     if n_components < 4: 
-        atoms = atoms * [2, 2, 2]
+        atoms = atoms * [2, 1, 1]
         neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
         neighbor_list.update(atoms)
         matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
@@ -125,7 +125,6 @@ def unwrap_atoms(structure_file=None):
     max_bond_len = max(natural_cutoffs(atoms))
     cell = list(atoms.get_cell())
     cell_array = atoms.get_cell()
-    atoms = read(structure_file)
     atoms.set_pbc([False,False,False])
 
     all_positions = atoms.get_positions()
@@ -205,7 +204,7 @@ def unwrap_atoms(structure_file=None):
     with open('atom_mapping.json', 'w') as f:
         f.write(json.dumps(atom_mapping, sort_keys=True, indent=2))
 
-    fully_connected_atoms = new_atoms*[2, 2, 2]
+    fully_connected_atoms = new_atoms*[2, 1, 1]
 
     n_components, component_list, edges = find_neighbors(fully_connected_atoms)
 
