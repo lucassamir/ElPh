@@ -5,8 +5,17 @@ from tloc.javerage import get_orbitals, catnip
 from tloc import chdir, mkdir
 import json
 
+
 def load_phonons(pair_atoms, phonon_file='phonon.npz', 
                  map_file='atom_mapping.json'):
+    """Loads phonon modes and returns frequencies and eigenvectors
+
+    Args:
+        file (str, optional): Numpy file with the phonon modes. Defaults to 'phonon.npz'.
+
+    Returns:
+        tuple: vector of frequencies and eigenvectors
+    """
     # read phonon modes file
     phonon = np.load(phonon_file)
 
@@ -24,7 +33,67 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz',
 
     return phonon['freqs'], vecs_eav
 
+def get_displacements(atoms):
+    """Returns displacement of each atom in each direction
+
+    Args:
+        atoms (Atoms): Atoms objects
+        all (bool, optional): Determines whether to do 5-point or 2-point. Defaults to True.
+
+    Yields:
+        yield: (atom number, direction, sign)
+    """
+    latoms = len(atoms)
+    for ia in range(latoms):
+        for iv in range(3):
+            for sign in [-1, 1]:
+                yield (ia, iv, sign)
+
+def displace_atom(atoms, ia, iv, sign, delta):
+    """Displace one atomic position in the Atoms object
+
+    Args:
+        atoms (Atoms): Atoms object
+        ia (int): atom index
+        iv (int): direction index
+        sign (str): sign of displacement in each direction
+        delta (float): size of displacement
+
+    Returns:
+        Atoms: Updated Atoms object
+    """
+    new_atoms = atoms.copy()
+    pos_av = new_atoms.get_positions()
+    pos_av[ia, iv] += sign * delta
+    new_atoms.set_positions(pos_av)
+    return new_atoms
+
+def finite_dif(delta=0.01):
+    """Computing finite difference between displacement and equilibrium positions.
+
+    Args:
+        delta (float, optional): Size of displacement. Defaults to 0.01.
+        all (bool, optional): Determines whether to do 5-point or 2-point. Defaults to True.
+    """
+    atoms = read('static.xyz')
+    for ia, iv, sign in get_displacements(atoms):
+        prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                        ia,
+                                        'xyz'[iv],
+                                        ' +-'[sign])
+        new_structure = displace_atom(atoms, ia, iv, sign, delta)
+        get_orbitals(new_structure, prefix)
+
 def get_dj_matrix(jlists, delta):
+    """Matrix containing gradient of j, the transfer integral
+
+    Args:
+        jlists (list): list of transfer integrals
+        delta (float): size of displacement
+
+    Returns:
+        array: matrix containing gradient of j
+    """
     latoms = len(jlists) // 6
 
     # array with j - delta (j minus)
@@ -104,9 +173,9 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
             finite_dif(delta)
 
     # calculating j for each displacement of the first molecule
-    path1 = mol1 + '/' + mol1 + '/displacements/'
+    path1 = mol1 + '/displacements/'
     path2 = mol2 + '/' + mol2
-    path3 = molpair + '/' + molpair + '/displacements/'
+    path3 = molpair + '/displacements/'
 
     atoms = read(path1 + 'static.xyz')
     for ia, iv, sign in get_displacements(atoms):
@@ -119,8 +188,8 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
 
     # calculating j for each displacement of the second molecule
     path1 = mol1 + '/' + mol1
-    path2 = mol2 + '/' + mol2 + '/displacements/'
-    path3 = molpair + '/' + molpair + '/displacements/'
+    path2 = mol2 + '/displacements/'
+    path3 = molpair + '/displacements/'
 
     atoms = read(path2 + 'static.xyz')
     for ia, iv, sign in get_displacements(atoms):
@@ -143,7 +212,7 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
                                             int(mol1) * offset), 
                                 np.arange((int(mol2) - 1) * offset, 
                                             int(mol2) * offset)])
-                                            
+
     jdelta = get_deviation(pair_atoms, dj_matrix_av, temp)
     print('jdelta_{} = {}' .format(pair[0], jdelta))
 
