@@ -204,7 +204,7 @@ def unwrap_atoms(structure_file=None):
     with open('atom_mapping.json', 'w') as f:
         f.write(json.dumps(atom_mapping, sort_keys=True, indent=2))
 
-    fully_connected_atoms = new_atoms*[2, 1, 1]
+    fully_connected_atoms = new_atoms*[2, 2, 2]
 
     n_components, component_list, edges = find_neighbors(fully_connected_atoms)
 
