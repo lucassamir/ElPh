@@ -1,4 +1,3 @@
-from matplotlib import offsetbox
 import numpy as np
 from ase.io import read
 from shutil import copyfile
@@ -6,44 +5,27 @@ from tloc.javerage import get_orbitals, catnip
 from tloc import chdir, mkdir
 import json
 
-def load_phonons(file='phonon.npz'):
-    phonon = np.load(file)
+def load_phonons(pair_atoms, phonon_file='phonon.npz', 
+                 map_file='atom_mapping.json'):
+    # read phonon modes file
+    phonon = np.load(phonon_file)
+
+    # read mapping file
+    with open(map_file, 'r') as json_file:
+        map = list(json.load(json_file).values())
     
-    # e modes, a atoms, v directions
-    freqs_e = phonon['freqs'].flatten()
-    vecs_eav = phonon['vecs'].real.reshape(len(freqs_e), -1, 3)
+    # use mapping to order the wrapped phonon modes
+    # based on the unwrapped atoms
+    vecs_eav = phonon['vecs'][:, map, :]
 
-    return freqs_e, vecs_eav
+    # selecting only the phonon modes relevant to the 
+    # interaction pair of molecules
+    vecs_eav = vecs_eav[:, pair_atoms, :]
 
-def get_displacements(atoms, all=True):
-    if all:
-        latoms = len(atoms)
-    else:
-        latoms = len(atoms) // 2
-    for ia in range(latoms):
-        for iv in range(3):
-            for sign in [-1, 1]:
-                yield (ia, iv, sign)
-
-def displace_atom(atoms, ia, iv, sign, delta):
-    new_atoms = atoms.copy()
-    pos_av = new_atoms.get_positions()
-    pos_av[ia, iv] += sign * delta
-    new_atoms.set_positions(pos_av)
-    return new_atoms
-
-def finite_dif(delta=0.01, all=True):
-    atoms = read('static.xyz')
-    for ia, iv, sign in get_displacements(atoms, all=all):
-        prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
-                                        ia,
-                                        'xyz'[iv],
-                                        ' +-'[sign])
-        new_structure = displace_atom(atoms, ia, iv, sign, delta)
-        get_orbitals(new_structure, prefix)
+    return phonon['freqs'], vecs_eav
 
 def get_dj_matrix(jlists, delta):
-    latoms = len(jlists) / 6
+    latoms = len(jlists) // 6
 
     # array with j - delta (j minus)
     jm = np.empty([latoms, 3])
@@ -61,16 +43,40 @@ def get_dj_matrix(jlists, delta):
 
     return dj_matrix
 
-def get_deviation(dj_av, phonon_file, temp):
-    na = len(dj_av)
-    freqs_e, vecs_eav = load_phonons(phonon_file)
+def get_deviation(pair_atoms, dj_av, temp):
+    freqs_e, vecs_eav = load_phonons(pair_atoms)
+    nq = 8 * 8 * 8
     epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
-    ssigma = (1 / na) * np.sum(epcoup_e**2 / \
+    ssigma = (1 / nq) * np.sum(epcoup_e**2 / \
         (2 * np.tanh(freqs_e / (2 * temp))))
 
     return np.sqrt(ssigma)
 
-def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
+def get_displacements(atoms):
+    latoms = len(atoms)
+    for ia in range(latoms):
+        for iv in range(3):
+            for sign in [-1, 1]:
+                yield (ia, iv, sign)
+
+def displace_atom(atoms, ia, iv, sign, delta):
+    new_atoms = atoms.copy()
+    pos_av = new_atoms.get_positions()
+    pos_av[ia, iv] += sign * delta
+    new_atoms.set_positions(pos_av)
+    return new_atoms
+
+def finite_dif(delta=0.01):
+    atoms = read('static.xyz')
+    for ia, iv, sign in get_displacements(atoms):
+        prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                        ia,
+                                        'xyz'[iv],
+                                        ' +-'[sign])
+        new_structure = displace_atom(atoms, ia, iv, sign, delta)
+        get_orbitals(new_structure, prefix)
+
+def get_jdelta(pair, delta=0.01, temp=0.025):
     jlists = []
     # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
@@ -103,7 +109,7 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
     path3 = molpair + '/' + molpair + '/displacements/'
 
     atoms = read(path1 + 'static.xyz')
-    for ia, iv, sign in get_displacements(atoms, all=all):
+    for ia, iv, sign in get_displacements(atoms):
         prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
                                             ia,
                                             'xyz'[iv],
@@ -117,7 +123,7 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
     path3 = molpair + '/' + molpair + '/displacements/'
 
     atoms = read(path2 + 'static.xyz')
-    for ia, iv, sign in get_displacements(atoms, all=all):
+    for ia, iv, sign in get_displacements(atoms):
         prefix_mol = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
                                                 ia,
                                                 'xyz'[iv],
@@ -133,7 +139,12 @@ def get_jdelta(pair, delta=0.01, phonon_file='mesh.yaml', temp=0.025):
     dj_matrix_av = get_dj_matrix(jlists, delta)
 
     # Calculate jdelta
-    jdelta = get_deviation(dj_matrix_av, phonon_file, temp)
+    pair_atoms = np.concatenate([np.arange((int(mol1) - 1) * offset, 
+                                            int(mol1) * offset), 
+                                np.arange((int(mol2) - 1) * offset, 
+                                            int(mol2) * offset)])
+                                            
+    jdelta = get_deviation(pair_atoms, dj_matrix_av, temp)
     print('jdelta_{} = {}' .format(pair[0], jdelta))
 
     return jdelta
