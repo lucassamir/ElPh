@@ -116,7 +116,7 @@ def unwrap_atoms(structure_file=None):
         neighbor_list.update(atoms)
         matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
         n_components, component_list = sparse.csgraph.connected_components(matrix)
-        idx = 0
+    idx = 0
     molIdx = component_list[idx]
     print("There are {} molecules in the system".format(n_components))
     molIdxs = [ i for i in range(len(component_list)) if component_list[i] == molIdx ]
