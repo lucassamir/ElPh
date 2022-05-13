@@ -12,8 +12,8 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     freqs_e = freqs.flatten()
 
     # converting energy unit
-    #thz2ev = 4.13566733e-3 
-    #freqs_e *= thz2ev # eV
+    thz2ev = 4.13566733e-3 
+    freqs_e *= thz2ev # eV
 
     # nqpoints x (natoms x 3 directions) x nbands from phonopy
     vecs = phonon._mesh.eigenvectors
