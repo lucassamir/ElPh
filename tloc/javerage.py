@@ -61,23 +61,20 @@ def write_structure(label, component_list, molecules, all_atoms):
         for molecule in molecules:
             idxs = [ i for i in range(len(component_list)) if component_list[i] == molecule ]
             for idx in idxs:
-                if idx%len(idxs) in atom_mapping.keys():
-                    atom_mapping[idx%len(idxs)].append(counter)
-                else:
-                    atom_mapping[idx%len(idxs)] = [counter] 
+                atom_mapping[idx%len(idxs)] = [counter] 
                 counter += 1
             atoms.extend(all_atoms[idxs])
     else:
         idxs = [ i for i in range(len(component_list)) if component_list[i] == molecules ]
         for idx in idxs:
-            if idx%len(idxs) in atom_mapping.keys():
-                atom_mapping[idx%len(idxs)].append(counter)
-            else:
-                atom_mapping[idx%len(idxs)] = [counter] 
+            atom_mapping[idx%len(idxs)] = [counter] 
             counter += 1
         atoms.extend(all_atoms[idxs])
     atoms.set_pbc([False, False, False])
     atoms.set_cell([0, 0, 0])
+
+    # for key in atom_mapping.keys():
+
 
     mkdir(label)
     atoms.write(label + '/' + label + '.xyz')
