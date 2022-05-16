@@ -1,12 +1,13 @@
 import phonopy
 import numpy as np
 
-def write_phonons(mesh=[1, 1, 1], phonopy_file="phonopy_params.yaml"):
+def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     phonon = phonopy.load(phonopy_file)
     phonon.run_mesh(mesh, with_eigenvectors=True)
 
     # nqpoints x nbands from phonopy
     freqs = phonon._mesh.frequencies
+    nq = len(freqs)
 
     # e modes 
     freqs_e = freqs.flatten()
@@ -34,5 +35,6 @@ def write_phonons(mesh=[1, 1, 1], phonopy_file="phonopy_params.yaml"):
     vecs_eav = vecs_eav[ind]
 
     data = {'freqs': freqs_e,
-            'vecs': vecs_eav}
+            'vecs': vecs_eav,
+            'nq': nq}
     np.savez_compressed('phonon.npz', **data)
