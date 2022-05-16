@@ -28,6 +28,11 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     # mass weighted
     vecs_eav /= np.sqrt(masses)[None, :, None]
 
+    # avoid negative (imaginary) frequencies
+    ind = np.where(freqs_e > 0)
+    freqs_e = freqs[ind]
+    vecs_eav = vecs_eav[ind]
+
     data = {'freqs': freqs_e,
             'vecs': vecs_eav}
     np.savez_compressed('phonon.npz', **data)
