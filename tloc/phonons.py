@@ -23,7 +23,7 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     
     # e modes, a atoms, v directions 
     vecs = np.transpose(vecs, axes=[0, 2, 1])
-    vecs_eav = np.absolute(vecs.reshape(len(freqs_e), -1, 3))
+    vecs_eav = vecs.real.reshape(len(freqs_e), -1, 3)
 
     # mass weighted
     vecs_eav /= np.sqrt(masses)[None, :, None]
