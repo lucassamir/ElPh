@@ -20,7 +20,7 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     
     # e modes, a atoms, v directions 
     vecs = np.transpose(vecs, axes=[0, 2, 1])
-    vecs_eav = vecs.real.reshape(len(freqs_e), -1, 3)
+    vecs_eav = vecs.abs.reshape(len(freqs_e), -1, 3)
 
     data = {'freqs': freqs_e,
             'vecs': vecs_eav}
