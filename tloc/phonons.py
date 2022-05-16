@@ -11,6 +11,9 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     # e modes 
     freqs_e = freqs.flatten()
 
+    # masses
+    masses = phonon._mesh._cell.masses
+
     # converting energy unit
     thz2ev = 4.13566733e-3 
     freqs_e *= thz2ev # eV
@@ -21,6 +24,9 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     # e modes, a atoms, v directions 
     vecs = np.transpose(vecs, axes=[0, 2, 1])
     vecs_eav = vecs.real.reshape(len(freqs_e), -1, 3)
+
+    # mass weighted
+    vecs_eav /= np.sqrt(masses)[None, :, None]
 
     data = {'freqs': freqs_e,
             'vecs': vecs_eav}
