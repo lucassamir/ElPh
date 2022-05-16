@@ -44,7 +44,7 @@ def get_dj_matrix(jlists, delta):
 
     dj_matrix = (np.abs(jp) - np.abs(jm)) / (2 * delta)
 
-    return dj_matrix
+    return np.abs(dj_matrix)
 
 def get_deviation(pair_atoms, dj_av, temp):
     freqs_e, vecs_eav = load_phonons(pair_atoms)
