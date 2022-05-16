@@ -1,7 +1,7 @@
 import phonopy
 import numpy as np
 
-def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
+def write_phonons(mesh=[1, 1, 1], phonopy_file="phonopy_params.yaml"):
     phonon = phonopy.load(phonopy_file)
     phonon.run_mesh(mesh, with_eigenvectors=True)
 
