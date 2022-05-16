@@ -42,7 +42,7 @@ def get_dj_matrix(jlists, delta):
     jp[:, 1] = jlists[3::6]
     jp[:, 2] = jlists[5::6]
 
-    dj_matrix = (np.abs(jp) - np.abs(jm)) / (2 * delta)
+    dj_matrix = (jp - jm) / (2 * delta)
 
     return dj_matrix
 
