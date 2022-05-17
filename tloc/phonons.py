@@ -30,9 +30,9 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     vecs_eav /= np.sqrt(masses)[None, :, None]
 
     # avoid negative (imaginary) frequencies
-    #ind = np.where(freqs_e > 0)
-    #freqs_e = freqs_e[ind]
-    #vecs_eav = vecs_eav[ind]
+    ind = np.where(freqs_e > 0)
+    freqs_e = freqs_e[ind]
+    vecs_eav = vecs_eav[ind]
 
     data = {'freqs': freqs_e,
             'vecs': vecs_eav,
