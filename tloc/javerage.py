@@ -315,13 +315,21 @@ def nersc_bash(name):
     subprocess.run(['sbatch', 'run.py'])
 
 def get_orbitals(atoms, name):
+    if 'GAUSSIAN_CORES' in os.environ:
+        c = os.environ['GAUSSIAN_CORES']
+    else:
+        c = 12
+    if 'GAUSSIAN_BASIS' in os.environ:
+        b = os.environ['GAUSSIAN_BASIS']
+    else:
+        b = '3-21G*'
     if not exists(name + '.pun'):
         calculator = Gaussian(mem='4GB',
-                              nprocshared=48,
+                              nprocshared=c,
                               label=name,
                               save=None,
                               method='b3lyp',
-                              basis='6-31G*',
+                              basis=b,
                               scf='tight',
                               pop='full',
                               extra='nosymm punch=mo iop(3/33=1)')
