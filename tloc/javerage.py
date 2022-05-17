@@ -317,11 +317,11 @@ def nersc_bash(name):
 def get_orbitals(atoms, name):
     if not exists(name + '.pun'):
         calculator = Gaussian(mem='4GB',
-                              nprocshared=12,
+                              nprocshared=48,
                               label=name,
                               save=None,
                               method='b3lyp',
-                              basis='3-21G*',
+                              basis='6-31G*',
                               scf='tight',
                               pop='full',
                               extra='nosymm punch=mo iop(3/33=1)')
