@@ -12,7 +12,7 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
 
     # read mapping file
     with open(map_file, 'r') as json_file:
-        map = list(json.load(json_file).values())
+        map = list(map(int, json.load(json_file).keys()))
     
     # use mapping to order the wrapped phonon modes
     # based on the unwrapped atoms
