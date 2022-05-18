@@ -44,11 +44,10 @@ def get_dj_matrix(jlists, delta):
 
     dj_matrix = (np.abs(jp) - np.abs(jm)) / (2 * delta)
 
-    return -1 * np.absolute(dj_matrix)
+    return dj_matrix
 
 def get_deviation(pair_atoms, dj_av, temp):
     freqs_e, vecs_eav, nq = load_phonons(pair_atoms)
-    nq = len(freqs_e)
     epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
     ssigma = (1 / nq) * np.sum(epcoup_e**2 / \
         (2 * np.tanh(freqs_e / (2 * temp))))
