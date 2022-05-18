@@ -25,7 +25,7 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     qpoints_qv = phonon._mesh.qpoints
 
     # transform eigenvectors to eigendisplacements
-    print(np.dot(fcoords_av[None, :], qpoints_qv[:, :, None]).shape)
+    print(np.dot(fcoords_av, qpoints_qv).shape)
     factor_qa = np.exp(2j * np.pi * np.dot(fcoords_av[None, :], qpoints_qv[:, :, None])) / np.sqrt(masses_a[None, :])
     vecs = np.repeat(factor_qa, 3).reshape(len(qpoints_qv), 3 * len(masses_a))[:, :, None] * vecs
     
