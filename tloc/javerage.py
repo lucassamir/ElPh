@@ -294,6 +294,9 @@ def unwrap_atoms(structure_file=None):
         cycle = [min_cycle[v] for v in value]
         write_structure(key, component_list, cycle, fully_connected_atoms)
 
+    with open('all_pairs.json', 'w', encoding='utf-8') as f:
+        json.dump(pairs, f, ensure_ascii=False, indent=4)
+
     return pairs
 
 @Halo(text="Running Gaussian calculation", color='red', spinner='dots')
