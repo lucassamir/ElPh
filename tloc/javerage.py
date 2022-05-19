@@ -320,7 +320,7 @@ def catnip(path1, path2, path3):
     cmd = os.environ['TLOC_CATNIP_CMD']
     cmd += " -p_1 {} -p_2 {} -p_P {}" .format(path1, path2, path3)
     output = subprocess.check_output(cmd, shell=True)
-    return output.decode('ascii').split()[-2]
+    return output.decode('ascii').split()[-13]
 
 def get_javerage(pair):
     paths = []
