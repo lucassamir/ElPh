@@ -214,6 +214,11 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
                                             int(mol2) * offset)])
 
     jdelta = get_deviation(pair_atoms, dj_matrix_av, temp)
+    data = {molpair: jdelta}
+    with open('DeltaJ_' + molpair + '.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+    
     print('jdelta_{} = {}' .format(pair[0], jdelta))
 
     return jdelta
