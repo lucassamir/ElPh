@@ -300,11 +300,11 @@ def unwrap_atoms(structure_file=None):
 def get_orbitals(atoms, name):
     if not exists(name + '.pun'):
         atoms.calc = Gaussian(mem='4GB',
-                              nprocshared=24,
+                              nprocshared=12,
                               label=name,
                               save=None,
                               method='b3lyp',
-                              basis='6-31G',
+                              basis='3-21G*',
                               scf='tight',
                               pop='full',
                               extra='nosymm punch=mo iop(3/33=1)')
