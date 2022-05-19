@@ -19,8 +19,8 @@ def get_displacements(spod, q, masses, eigvec):
         u.append(eigvec[eig_index : eig_index + 3] * coef)
 
     u = np.array(u) / np.sqrt(len(m))
-    phase_factor = get_phase_factor(u)
-    u *= phase_factor
+    #phase_factor = get_phase_factor(u)
+    #u *= phase_factor
 
     return u
 
