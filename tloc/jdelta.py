@@ -150,7 +150,6 @@ def finite_dif(delta=0.01):
 
 def get_jdelta(pair, delta=0.01, temp=0.025):
     mol1 = str(pair[1][0] + 1)
-    offset = len(mol1)
     mol2 = str(pair[1][1] + 1)
     molpair = str(pair[0])
     if not os.path.exists(molpair + '_disp_js.npz'):
@@ -182,6 +181,7 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
         path3 = molpair + '/displacements/'
 
         atoms = read(path1 + 'static.xyz')
+        offset = len(atoms)
         for ia, iv, sign in get_displacements(atoms):
             prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
                                                 ia,
@@ -220,7 +220,7 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
     # Calculate jdelta
     pair_atoms = np.concatenate([np.arange((int(mol1) - 1) * offset, 
                                             int(mol1) * offset), 
-                                np.arange((int(mol2) - 1) * offset, 
+                                 np.arange((int(mol2) - 1) * offset, 
                                             int(mol2) * offset)])
 
     jdelta = get_deviation(pair_atoms, dj_matrix_av, temp)
