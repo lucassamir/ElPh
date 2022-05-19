@@ -4,7 +4,7 @@ from shutil import copyfile
 from tloc.javerage import get_orbitals, catnip
 from tloc import chdir, mkdir
 import json
-
+import os
 
 def load_phonons(pair_atoms, phonon_file='phonon.npz', 
                  map_file='atom_mapping.json'):
@@ -146,63 +146,70 @@ def finite_dif(delta=0.01):
         get_orbitals(new_structure, prefix)
 
 def get_jdelta(pair, delta=0.01, temp=0.025):
-    jlists = []
-    # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
     offset = len(mol1)
-    with chdir(mol1):
-        mkdir('displacements')
-        with chdir('displacements'):
-            copyfile('../' + mol1 + '.xyz', 'static.xyz')
-            finite_dif(delta)
-
-    # run Gaussian for displacements of second molecule
     mol2 = str(pair[1][1] + 1)
-    with chdir(mol2):
-        mkdir('displacements')
-        with chdir('displacements'):
-            copyfile('../' + mol2 + '.xyz', 'static.xyz')
-            finite_dif(delta)
-
-    # run Gaussian for displacements of the pair
     molpair = str(pair[0])
-    with chdir(molpair):
-        mkdir('displacements')
-        with chdir('displacements'):
-            copyfile('../' + molpair + '.xyz', 'static.xyz')
-            finite_dif(delta)
+    if not os.path.exists(molpair + '_disp_js.npz'):
+        jlists = []
+        # run Gaussian for displacements of first molecule
+        with chdir(mol1):
+            mkdir('displacements')
+            with chdir('displacements'):
+                copyfile('../' + mol1 + '.xyz', 'static.xyz')
+                finite_dif(delta)
 
-    # calculating j for each displacement of the first molecule
-    path1 = mol1 + '/displacements/'
-    path2 = mol2 + '/' + mol2
-    path3 = molpair + '/displacements/'
+        # run Gaussian for displacements of second molecule
+        with chdir(mol2):
+            mkdir('displacements')
+            with chdir('displacements'):
+                copyfile('../' + mol2 + '.xyz', 'static.xyz')
+                finite_dif(delta)
 
-    atoms = read(path1 + 'static.xyz')
-    for ia, iv, sign in get_displacements(atoms):
-        prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
-                                            ia,
-                                            'xyz'[iv],
-                                            ' +-'[sign])
-        j = catnip(path1 + prefix, path2, path3 + prefix)
-        jlists.append(j)
+        # run Gaussian for displacements of the pair
+        with chdir(molpair):
+            mkdir('displacements')
+            with chdir('displacements'):
+                copyfile('../' + molpair + '.xyz', 'static.xyz')
+                finite_dif(delta)
 
-    # calculating j for each displacement of the second molecule
-    path1 = mol1 + '/' + mol1
-    path2 = mol2 + '/displacements/'
-    path3 = molpair + '/displacements/'
+        # calculating j for each displacement of the first molecule
+        path1 = mol1 + '/displacements/'
+        path2 = mol2 + '/' + mol2
+        path3 = molpair + '/displacements/'
 
-    atoms = read(path2 + 'static.xyz')
-    for ia, iv, sign in get_displacements(atoms):
-        prefix_mol = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+        atoms = read(path1 + 'static.xyz')
+        for ia, iv, sign in get_displacements(atoms):
+            prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
                                                 ia,
                                                 'xyz'[iv],
                                                 ' +-'[sign])
-        prefix_pair = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
-                                                 ia + offset,
-                                                'xyz'[iv],
-                                                ' +-'[sign])
-        j = catnip(path1, path2 + prefix_mol, path3 + prefix_pair)
-        jlists.append(j)
+            j = catnip(path1 + prefix, path2, path3 + prefix)
+            jlists.append(j)
+
+        # calculating j for each displacement of the second molecule
+        path1 = mol1 + '/' + mol1
+        path2 = mol2 + '/displacements/'
+        path3 = molpair + '/displacements/'
+
+        atoms = read(path2 + 'static.xyz')
+        for ia, iv, sign in get_displacements(atoms):
+            prefix_mol = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                                    ia,
+                                                    'xyz'[iv],
+                                                    ' +-'[sign])
+            prefix_pair = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
+                                                     ia + offset,
+                                                    'xyz'[iv],
+                                                    ' +-'[sign])
+            j = catnip(path1, path2 + prefix_mol, path3 + prefix_pair)
+            jlists.append(j)
+
+        data = {'js': jlists}   
+        np.savez_compressed(molpair + '_disp_js.npz', **data)
+
+    else:
+        jlists = np.load(molpair + '_disp_js.npz')['js']
 
     # Create GradJ matrix with a atoms and v directions
     dj_matrix_av = get_dj_matrix(jlists, delta)
@@ -215,9 +222,6 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
 
     jdelta = get_deviation(pair_atoms, dj_matrix_av, temp)
     data = {molpair: jdelta}
-    with open('DeltaJ_' + molpair + '.json', 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
-
     
     print('jdelta_{} = {}' .format(pair[0], jdelta))
 
