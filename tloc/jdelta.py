@@ -2,6 +2,7 @@ import numpy as np
 from ase.io import read
 from shutil import copyfile
 from tloc.javerage import get_orbitals, catnip
+from tloc.phonons import write_phonons
 from tloc import chdir, mkdir
 import json
 import os
@@ -228,6 +229,8 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
     return jdelta
 
 def jdelta():
+    write_phonons()
+    
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
