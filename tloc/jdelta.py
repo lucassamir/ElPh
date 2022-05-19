@@ -15,24 +15,27 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz',
         file (str, optional): Numpy file with the phonon modes. Defaults to 'phonon.npz'.
 
     Returns:
-        tuple: vector of frequencies and eigenvectors
+        tuple: vector of frequencies, vector of eigenvectors, and integer of the number of qpoints
     """
     # read phonon modes file
     phonon = np.load(phonon_file)
 
     # read mapping file
     with open(map_file, 'r') as json_file:
-        map = list(json.load(json_file).values())
+        mapping = list(map(int, json.load(json_file).keys()))
     
     # use mapping to order the wrapped phonon modes
     # based on the unwrapped atoms
-    vecs_eav = phonon['vecs'][:, map, :]
+    if len(mapping) > len(phonon['vecs'][0]):
+        vecs_eav = np.tile(phonon['vecs'], [1, 2, 1])[:, mapping, :]
+    else:
+        vecs_eav = phonon['vecs'][:, mapping, :]
 
     # selecting only the phonon modes relevant to the 
     # interaction pair of molecules
     vecs_eav = vecs_eav[:, pair_atoms, :]
 
-    return phonon['freqs'], vecs_eav
+    return phonon['freqs'], vecs_eav, phonon['nq']
 
 def get_displacements(atoms):
     """Returns displacement of each atom in each direction
@@ -114,7 +117,7 @@ def get_dj_matrix(jlists, delta):
     return np.absolute(dj_matrix)
 
 def get_deviation(pair_atoms, dj_av, temp):
-    freqs_e, vecs_eav = load_phonons(pair_atoms)
+    freqs_e, vecs_eav, nq = load_phonons(pair_atoms)
     nq = 8 * 8 * 8
     epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
     ssigma = (1 / nq) * np.sum(epcoup_e**2 / \
@@ -230,7 +233,7 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
 
 def jdelta():
     write_phonons()
-    
+
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
