@@ -164,7 +164,7 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
             copyfile('../' + mol2 + '.xyz', 'static.xyz')
             finite_dif(delta)
 
-    # run Gaussian for displacements of first molecule in the pair
+    # run Gaussian for displacements of the pair
     molpair = str(pair[0])
     with chdir(molpair):
         mkdir('displacements')
