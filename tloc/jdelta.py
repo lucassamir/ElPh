@@ -124,30 +124,6 @@ def get_deviation(pair_atoms, dj_av, temp):
 
     return np.sqrt(ssigma)
 
-def get_displacements(atoms):
-    latoms = len(atoms)
-    for ia in range(latoms):
-        for iv in range(3):
-            for sign in [-1, 1]:
-                yield (ia, iv, sign)
-
-def displace_atom(atoms, ia, iv, sign, delta):
-    new_atoms = atoms.copy()
-    pos_av = new_atoms.get_positions()
-    pos_av[ia, iv] += sign * delta
-    new_atoms.set_positions(pos_av)
-    return new_atoms
-
-def finite_dif(delta=0.01):
-    atoms = read('static.xyz')
-    for ia, iv, sign in get_displacements(atoms):
-        prefix = 'dj-{}-{}{}{}' .format(int(delta * 1000), 
-                                        ia,
-                                        'xyz'[iv],
-                                        ' +-'[sign])
-        new_structure = displace_atom(atoms, ia, iv, sign, delta)
-        get_orbitals(new_structure, prefix)
-
 def get_jdelta(pair, delta=0.01, temp=0.025):
     mol1 = str(pair[1][0] + 1)
     mol2 = str(pair[1][1] + 1)
@@ -218,6 +194,7 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
     dj_matrix_av = get_dj_matrix(jlists, delta)
 
     # Calculate jdelta
+    offset = len(dj_matrix_av) // 2
     pair_atoms = np.concatenate([np.arange((int(mol1) - 1) * offset, 
                                             int(mol1) * offset), 
                                  np.arange((int(mol2) - 1) * offset, 
