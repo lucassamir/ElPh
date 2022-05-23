@@ -129,24 +129,25 @@ def run_jdelta(pair, delta=0.01):
     # run Gaussian for displacements of first molecule
     mol1 = str(pair[1][0] + 1)
     with chdir(mol1):
-        if not os.path.isdir('displacements'):
-            mkdir('displacements')
-            with chdir('displacements'):
-                copyfile('../' + mol1 + '.xyz', 'static.xyz')
-                multi_finite_dif(delta)
+        #if not os.path.isdir('displacements'):
+        mkdir('displacements')
+        with chdir('displacements'):
+            copyfile('../' + mol1 + '.xyz', 'static.xyz')
+            multi_finite_dif(delta)
 
     # run Gaussian for displacements of second molecule
     mol2 = str(pair[1][1] + 1)
     with chdir(mol2):
-        if not os.path.isdir('displacements'):
-            mkdir('displacements')
-            with chdir('displacements'):
-                copyfile('../' + mol2 + '.xyz', 'static.xyz')
-                multi_finite_dif(delta)
+        #if not os.path.isdir('displacements'):
+        mkdir('displacements')
+        with chdir('displacements'):
+            copyfile('../' + mol2 + '.xyz', 'static.xyz')
+            multi_finite_dif(delta)
 
     # run Gaussian for displacements of the pair
     molpair = str(pair[0])
     with chdir(molpair):
+        #if not os.path.isdir('displacements'):
         mkdir('displacements')
         with chdir('displacements'):
             copyfile('../' + molpair + '.xyz', 'static.xyz')
