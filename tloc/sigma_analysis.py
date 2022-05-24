@@ -6,7 +6,6 @@ from tloc.jdelta import load_phonons, get_dj_matrix
 def heat_atoms(molpair, sigma_eav):
     from ase.io import read
     import matplotlib.pyplot as plt
-    import pickle
 
     atoms = read(molpair + '.xyz')
     pos = atoms.get_positions()
