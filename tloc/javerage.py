@@ -291,17 +291,20 @@ def unwrap_atoms(structure_file=None):
         cycle = [min_cycle[v] for v in value]
         write_structure(key, component_list, cycle, fully_connected_atoms)
 
+    with open('all_pairs.json', 'w', encoding='utf-8') as f:
+        json.dump(pairs, f, ensure_ascii=False, indent=4)
+
     return pairs
 
 @Halo(text="Running Gaussian calculation", color='red', spinner='dots')
 def get_orbitals(atoms, name):
     if not exists(name + '.pun'):
         atoms.calc = Gaussian(mem='4GB',
-                              nprocshared=24,
+                              nprocshared=12,
                               label=name,
                               save=None,
                               method='b3lyp',
-                              basis='6-31G',
+                              basis='3-21G*',
                               scf='tight',
                               pop='full',
                               extra='nosymm punch=mo iop(3/33=1)')
@@ -317,7 +320,7 @@ def catnip(path1, path2, path3):
     cmd = os.environ['TLOC_CATNIP_CMD']
     cmd += " -p_1 {} -p_2 {} -p_P {}" .format(path1, path2, path3)
     output = subprocess.check_output(cmd, shell=True)
-    return output.decode('ascii').split()[-2]
+    return output.decode('ascii').split()[-13]
 
 def get_javerage(pair):
     paths = []
