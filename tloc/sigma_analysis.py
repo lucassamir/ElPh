@@ -1,3 +1,4 @@
+from locale import normalize
 from matplotlib.pyplot import tight_layout
 import numpy as np
 import json
@@ -19,14 +20,31 @@ def heat_atoms(molpair, sigma_eav):
     
     plt.show()
 
-#def heat_modes():
+def heat_modes(molpair, sigma_eav, vecs_eav, n):
+    from ase.io import read
+    import matplotlib.pyplot as plt
+
+    atoms = read(molpair + '.xyz')
+    pos = atoms.get_positions()
+    masses = atoms.get_masses()
+    x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
+    sigma = np.sum(np.sum(sigma_eav, axis=-1), axis=-1)
+
+    ind = np.argsort(sigma)[-n:][::-1]
+
+    for i in ind:
+        fig = plt.figure(figsize=(8, 8))
+        ax = fig.add_subplot(projection='3d')
+        ax.quiver(x, y, z, vecs_eav[i, :, 0], vecs_eav[i, :, 1], vecs_eav[i, :, 2], length=2, normalize=True)
+        ax.scatter(x, y, z, s = 20 * masses)
+        plt.show()
 
 def sigma_contribution(pair_atoms, dj_av, temp):
-    freqs_e, vecs_eav, nq = load_phonons(pair_atoms)
+    freqs_e, vecs_eav, _ = load_phonons(pair_atoms)
     epcoup_eav = vecs_eav * dj_av[None, :, :]
     ssigma_eav = epcoup_eav**2 / (2 * np.tanh(freqs_e[:, None, None] / (2 * temp)))
 
-    return np.sqrt(ssigma_eav)
+    return np.sqrt(ssigma_eav), vecs_eav
 
 def get_sigma(pair, delta, temp):
     mol1 = str(int(pair[1][0]) + 1)
@@ -41,8 +59,9 @@ def get_sigma(pair, delta, temp):
                                  np.arange((int(mol2) - 1) * offset, 
                                             int(mol2) * offset)])
 
-    sigma_eav = sigma_contribution(pair_atoms, dj_matrix_av, temp)
-    heat_atoms(molpair, sigma_eav)
+    sigma_eav, vecs_eav = sigma_contribution(pair_atoms, dj_matrix_av, temp)
+    #heat_atoms(molpair, sigma_eav)
+    heat_modes(molpair, sigma_eav, vecs_eav, 3)
 
 def sigma():
     with open('all_pairs.json', 'r') as json_file:
