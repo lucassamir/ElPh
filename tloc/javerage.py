@@ -9,6 +9,7 @@ from tloc import chdir, mkdir
 import subprocess
 from os.path import exists
 import json
+from collections import OrderedDict
 
 
 def find_structure_file(folder):
@@ -59,19 +60,13 @@ def write_structure(label, component_list, molecules, all_atoms):
         for molecule in molecules:
             idxs = [ i for i in range(len(component_list)) if component_list[i] == molecule ]
             for idx in idxs:
-                if idx%len(idxs) in atom_mapping.keys():
-                    atom_mapping[idx%len(idxs)].append(counter)
-                else:
-                    atom_mapping[idx%len(idxs)] = [counter] 
+                atom_mapping[idx%len(idxs)] = counter 
                 counter += 1
             atoms.extend(all_atoms[idxs])
     else:
         idxs = [ i for i in range(len(component_list)) if component_list[i] == molecules ]
         for idx in idxs:
-            if idx%len(idxs) in atom_mapping.keys():
-                atom_mapping[idx%len(idxs)].append(counter)
-            else:
-                atom_mapping[idx%len(idxs)] = [counter] 
+            atom_mapping[idx%len(idxs)] = counter
             counter += 1
         atoms.extend(all_atoms[idxs])
     atoms.set_pbc([False, False, False])
@@ -79,8 +74,8 @@ def write_structure(label, component_list, molecules, all_atoms):
 
     mkdir(label)
     atoms.write(label + '/' + label + '.xyz')
-    with open(label + '/' + 'atom_mapping.json', 'w') as f:
-        f.write(json.dumps(atom_mapping))
+    # with open(label + '/' + 'atom_mapping.json', 'w') as f:
+    #     f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1]))))
 
 def find_neighbors(atoms):
     neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
@@ -199,7 +194,7 @@ def unwrap_atoms(structure_file=None):
         new_atoms.extend(atoms[molIdxs])
     
     with open('atom_mapping.json', 'w') as f:
-        f.write(json.dumps(atom_mapping, sort_keys=True, indent=2))
+        f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1])), indent=2))
 
     fully_connected_atoms = new_atoms*[2, 2, 2]
 
