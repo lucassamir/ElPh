@@ -7,18 +7,35 @@ from tloc.jdelta import load_phonons, get_dj_matrix
 def heat_atoms(molpair, sigma_eav):
     from ase.io import read
     import matplotlib.pyplot as plt
+    import plotly.graph_objects as go
 
-    atoms = read(molpair + '.xyz')
+    atoms = read(molpair + '/' + molpair + '.xyz')
     pos = atoms.get_positions()
     masses = atoms.get_masses()
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
     sigma = np.sum(np.sum(sigma_eav, axis=-1), axis=0)
     
-    fig = plt.figure(figsize=(4, 4))
+    fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
     ax.scatter(x, y, z, s = 20 * masses, c=sigma)
-    
     plt.show()
+
+    # layout = go.Layout(
+    #          scene=dict(
+    #              aspectmode='data'
+    #         ))
+    # fig = go.Figure(data=[go.Scatter3d(x=x, 
+    #                                    y=y, 
+    #                                    z=z, 
+    #                                    mode='markers',
+    #                                    marker=dict(size=10*np.sqrt(masses/np.pi),
+    #                                                color=sigma,
+    #                                                colorscale='Viridis',
+    #                                                opacity=0.8,
+    #                                                ))],
+    #                 layout=layout)
+    # fig.write_html(molpair + '.html')
+    # fig.show()
 
 def heat_modes(molpair, sigma_eav, vecs_eav, n):
     from ase.io import read
@@ -60,8 +77,8 @@ def get_sigma(pair, delta, temp):
                                             int(mol2) * offset)])
 
     sigma_eav, vecs_eav = sigma_contribution(pair_atoms, dj_matrix_av, temp)
-    #heat_atoms(molpair, sigma_eav)
-    heat_modes(molpair, sigma_eav, vecs_eav, 3)
+    heat_atoms(molpair, sigma_eav)
+    #heat_modes(molpair, sigma_eav, vecs_eav, 3)
 
 def sigma():
     with open('all_pairs.json', 'r') as json_file:
