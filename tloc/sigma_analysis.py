@@ -17,7 +17,8 @@ def heat_atoms(molpair, sigma_eav):
     
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
-    ax.scatter(x, y, z, s = 20 * masses, c=sigma)
+    s = ax.scatter(x, y, z, s = 20 * masses, c=sigma)
+    fig.colorbar(s)
     plt.show()
 
     # layout = go.Layout(
