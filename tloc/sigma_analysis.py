@@ -41,7 +41,7 @@ def heat_modes(molpair, sigma_eav, vecs_eav, n):
     from ase.io import read
     import matplotlib.pyplot as plt
 
-    atoms = read(molpair + '.xyz')
+    atoms = read(molpair + '/' + molpair + '.xyz')
     pos = atoms.get_positions()
     masses = atoms.get_masses()
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
@@ -77,8 +77,8 @@ def get_sigma(pair, delta, temp):
                                             int(mol2) * offset)])
 
     sigma_eav, vecs_eav = sigma_contribution(pair_atoms, dj_matrix_av, temp)
-    heat_atoms(molpair, sigma_eav)
-    #heat_modes(molpair, sigma_eav, vecs_eav, 3)
+    #heat_atoms(molpair, sigma_eav)
+    heat_modes(molpair, sigma_eav, vecs_eav, 3)
 
 def sigma():
     with open('all_pairs.json', 'r') as json_file:
