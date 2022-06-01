@@ -23,7 +23,7 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
 
     # transform eigenvectors to eigendisplacements (phonopy modulations)
     factor_qa = (np.exp(2j * np.pi * np.dot(fcoords_av, qpoints_qv.T)) / np.sqrt(masses_a)[:, None]).T
-    vecs = np.repeat(factor_qa, 3).reshape(nq, 3 * len(masses_a))[:, :, None] * vecs
+    vecs = np.repeat(factor_qa, 3).reshape(nq, -1)[:, :, None] * vecs
     # vecs /= np.sqrt(len(masses_a))
         
     # e modes, a atoms, v directions 
