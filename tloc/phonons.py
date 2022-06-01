@@ -6,25 +6,25 @@ def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
     phonon.run_mesh(mesh, with_eigenvectors=True)
     
     # nqpoints x nbands from phonopy to e modes
-    freqs_e = phonon._mesh.frequencies.flatten()
+    freqs_e = phonon.mesh.frequencies.flatten()
 
     # converting energy unit
     thz2ev = 4.13566733e-3 
     freqs_e *= thz2ev # eV
 
     # nqpoints x (natoms x 3 directions) x nbands from phonopy
-    vecs = phonon._mesh.eigenvectors
-    nq = len(vecs)
+    vecs = phonon.mesh.eigenvectors
 
     # masses, frac_coords and qpoints
-    masses_a = phonon._mesh._cell.masses
-    fcoords_av = phonon._mesh._cell.get_scaled_positions()
-    qpoints_qv = phonon._mesh.qpoints
+    masses_a = phonon.mesh._cell.masses
+    fcoords_av = phonon.mesh._cell.get_scaled_positions()
+    qpoints_qv = phonon.mesh.qpoints
+    nq = len(qpoints_qv)
 
     # transform eigenvectors to eigendisplacements (phonopy modulations)
     factor_qa = (np.exp(2j * np.pi * np.dot(fcoords_av, qpoints_qv.T)) / np.sqrt(masses_a)[:, None]).T
     vecs = np.repeat(factor_qa, 3).reshape(nq, 3 * len(masses_a))[:, :, None] * vecs
-    vecs /= np.sqrt(len(masses_a))
+    # vecs /= np.sqrt(len(masses_a))
         
     # e modes, a atoms, v directions 
     vecs = np.transpose(vecs, axes=[0, 2, 1])
