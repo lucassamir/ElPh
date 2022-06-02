@@ -1,5 +1,3 @@
-from locale import normalize
-from matplotlib.pyplot import tight_layout
 import numpy as np
 import json
 from tloc.jdelta import load_phonons, get_dj_matrix
@@ -7,7 +5,7 @@ from tloc.jdelta import load_phonons, get_dj_matrix
 def heat_atoms(molpair, sigma_eav):
     from ase.io import read
     import matplotlib.pyplot as plt
-    import plotly.graph_objects as go
+    # import plotly.graph_objects as go
 
     atoms = read(molpair + '/' + molpair + '.xyz')
     pos = atoms.get_positions()
@@ -64,7 +62,7 @@ def sigma_contribution(pair_atoms, dj_av, temp):
 
     return np.sqrt(ssigma_eav), vecs_eav
 
-def get_sigma(pair, delta, temp):
+def get_sigma(pair, delta, temp, mode, n):
     mol1 = str(int(pair[1][0]) + 1)
     mol2 = str(int(pair[1][1]) + 1)
     molpair = pair[0]
@@ -78,15 +76,21 @@ def get_sigma(pair, delta, temp):
                                             int(mol2) * offset)])
 
     sigma_eav, vecs_eav = sigma_contribution(pair_atoms, dj_matrix_av, temp)
-    #heat_atoms(molpair, sigma_eav)
-    heat_modes(molpair, sigma_eav, vecs_eav, 3)
 
-def sigma():
+    if mode == 'atoms':
+        heat_atoms(molpair, sigma_eav)
+    elif mode == 'modes':
+        heat_modes(molpair, sigma_eav, vecs_eav, n)
+    else:
+        msg = 'The available visualization results are atoms and modes'
+        raise NotImplementedError(msg)
+
+def view(mode='atoms', n=3):
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
     for pair in pairs.items():
-        get_sigma(pair, delta=0.01, temp=0.025)
+        get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=n)
 
 if __name__ == '__main__':
-    sigma()
+    view()
