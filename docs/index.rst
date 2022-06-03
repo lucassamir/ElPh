@@ -9,7 +9,6 @@ A workflow to compute electron phonon coupling in small molecules OSCs.
 
 .. toctree::
    :maxdepth: 5
-   :caption: Contents:
    
    api
 
