@@ -9,10 +9,13 @@ import os
 
 def load_phonons(pair_atoms, phonon_file='phonon.npz', 
                  map_file='atom_mapping.json'):
-    """Loads phonon modes and returns frequencies and eigenvectors
+    """Loads phonon modes and returns frequencies, eigenvectors and number of q points
 
     Args:
-        file (str, optional): Numpy file with the phonon modes. Defaults to 'phonon.npz'.
+        pair_atoms (list): Atomic indices of the interacting pair
+        phonon_file (str, optional): Numpy file with the phonon modes. Defaults to 'phonon.npz'
+        map_file (str, optional): JSON file generate to map atomic indices 
+        of the wraped to the unwraped structure. Defaults to 'atom_mapping.json'
 
     Returns:
         tuple: vector of frequencies, vector of eigenvectors, and integer of the number of qpoints
@@ -42,7 +45,6 @@ def get_displacements(atoms):
 
     Args:
         atoms (Atoms): Atoms objects
-        all (bool, optional): Determines whether to do 5-point or 2-point. Defaults to True.
 
     Yields:
         yield: (atom number, direction, sign)
@@ -73,11 +75,10 @@ def displace_atom(atoms, ia, iv, sign, delta):
     return new_atoms
 
 def finite_dif(delta=0.01):
-    """Computing finite difference between displacement and equilibrium positions.
+    """Compute Gaussian calculation for displaced system
 
     Args:
         delta (float, optional): Size of displacement. Defaults to 0.01.
-        all (bool, optional): Determines whether to do 5-point or 2-point. Defaults to True.
     """
     atoms = read('static.xyz')
     for ia, iv, sign in get_displacements(atoms):
@@ -89,7 +90,7 @@ def finite_dif(delta=0.01):
         get_orbitals(new_structure, prefix)
 
 def get_dj_matrix(jlists, delta):
-    """Matrix containing gradient of j, the transfer integral
+    """Matrix containing gradient of J, the transfer integral
 
     Args:
         jlists (list): list of transfer integrals
@@ -99,7 +100,6 @@ def get_dj_matrix(jlists, delta):
         array: matrix containing gradient of j
     """
     latoms = len(jlists) // 6
-
     # array with j - delta (j minus)
     jm = np.empty([latoms, 3])
     jm[:, 0] = jlists[0::6]
@@ -117,6 +117,16 @@ def get_dj_matrix(jlists, delta):
     return dj_matrix
 
 def get_deviation(pair_atoms, dj_av, temp):
+    """Calculate standard deviation (sigma) of the transfer integral
+
+    Args:
+        pair_atoms (array): Numpy array of atomic indices of interacting pairs
+        dj_av (array): Numpy array of gradient of J for all atoms in the pair for all directions
+        temp (float): Temperature in eV
+
+    Returns:
+        float: standard deviation (sigma) of the transfer integral
+    """
     freqs_e, vecs_eav, nq = load_phonons(pair_atoms)
     epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
     ssigma = (1 / nq) * np.sum(epcoup_e**2 / \
@@ -125,6 +135,16 @@ def get_deviation(pair_atoms, dj_av, temp):
     return np.sqrt(ssigma)
 
 def get_jdelta(pair, delta=0.01, temp=0.025):
+    """Calculate standard deviation of the transfer integral between a molecule pair using finite differences
+
+    Args:
+        pair (tuple): Pair name and molecules indices
+        delta (float, optional): Size of displacement. Defaults to 0.01.
+        temp (float, optional): Temperature in eV. Defaults to 0.025.
+
+    Returns:
+        float: standard deviation of the transfer integral in eV
+    """
     mol1 = str(pair[1][0] + 1)
     mol2 = str(pair[1][1] + 1)
     molpair = str(pair[0])
@@ -208,6 +228,10 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
     return jdelta
 
 def jdelta():
+    """Write phonon modes from phonopy result, 
+    and calculate the standard deviation (sigma)
+    for each pair of molecules. Write sigmas to JSON files
+    """
     write_phonons()
 
     with open('all_pairs.json', 'r') as json_file:
