@@ -15,7 +15,7 @@ setup(
     #long_description_content_type='text/markdown',
     author='Lucas Cavalcante',
     author_email='lsrcavalcante@ucdavis.edu',
-    url='https://github.com/lucassamir/TLoc',
+    url='https://github.com/lucassamir/TLoc/archive/refs/tags/v_0.1.tar.gz',
     packages=find_packages(),
     include_package_data=True,
     install_requires=['numpy', 'scipy', 'ase>=3.20.0', 'tqdm', 'halo'],
