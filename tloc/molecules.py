@@ -3,7 +3,6 @@ import numpy as np
 import json
 from scipy import linalg
 from tqdm.auto import tqdm
-from halo import Halo
 
 class Molecules:
    def __init__(self, nmuc=None, coordmol=None, unitcell=None, 
@@ -196,11 +195,16 @@ class Molecules:
       return energies_m.real, vectors_mm, hamiltonian_mm
 
    def get_squared_length(self):
-      """_summary_
+      """Calculate squared transient localization length using
+      distances, eigenvectors, eigenenergies and hamiltonian:
+
+      L**2 = (1 / Z) ∑_nm exp(β E_n) |<n | j_x(y) | m>|**2 (2 / ((hbar**2 / tau) + (E_m + E_n)**2))
+
+      <n | j_x(y) | m> = i <n | [H, x(y)] | m>
 
       Returns:
           tuple: (sqlx, sqly)
-            ()
+            (squared localization length in the x direction, and y direction)
       """
       nmol, transinter_mm, distx_mm, disty_mm = self.get_interactions()
 
@@ -226,6 +230,14 @@ class Molecules:
       return sqlx, sqly
 
    def get_disorder_avg_sql(self):
+      """Take average of squared localization length considering nrepeat iterations 
+      with different disorder realizations
+
+      Returns:
+          tuple: (dsqlx, dsqly)
+            (disorder-average squared localization length in the x direction, 
+            and y direction)
+      """
       dsqlx, dsqly = 0, 0
       self.results['squared_length_x'] = []
       self.results['squared_length_y'] = []
@@ -256,6 +268,12 @@ class Molecules:
       return dsqlx, dsqly
    
    def get_mobility(self):
+      """Calculate charge mobility in the framework of transient localization theory
+
+      Returns:
+          tuple: (mobx, moby)
+            (mobility in the x direction, and y direction)
+      """
       dsqlx, dsqly = self.get_disorder_avg_sql()
 
       # unit converter unit = ang**2 * e / hbar
