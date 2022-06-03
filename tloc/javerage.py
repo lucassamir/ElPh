@@ -36,6 +36,16 @@ def find_structure_file(folder):
     return structure_file
 
 def get_centers_of_mass(atoms, n_components, component_list):
+    """Gets centers of mass for each molecule
+
+    Args:
+        atoms (Atoms): Atoms in the system
+        n_components (int): Number of molecules in the system
+        component_list (dict): maps each atom number to the molecule it belongs to
+
+    Returns:
+        list: A list containing the centers of mass for each molecule in the system
+    """
     centers_of_mass = []
     for i in range(n_components):
         molIdx_i = i
@@ -44,7 +54,14 @@ def get_centers_of_mass(atoms, n_components, component_list):
     return centers_of_mass
 
 def compute_total_weight(centers_of_mass):
-    
+    """Computes the distances between the centers of mass. We represent the centers of mass as a fully-connected graph with the weight of each edge representing the distance between molecules
+
+    Args:
+        centers_of_mass (list): A list containing the centers of mass of each molecule in the system
+
+    Returns:
+        tuple: total_weight is a float containing the sum of all weights in the graph. has_dupes is a bool indicating whether there are two molecules overlapping.
+    """
     total_weight = 0
     has_dupes = False
     for i in range(len(centers_of_mass)):
@@ -55,6 +72,14 @@ def compute_total_weight(centers_of_mass):
     return total_weight, has_dupes
 
 def write_structure(label, component_list, molecules, all_atoms):
+    """Writes the structure to a file
+
+    Args:
+        label (str): The label to be written. Pairs are A, B, C and molecules are 1, 2, 3
+        component_list (dict): maps the atom number to the molecule it belongs to
+        molecules (list): A list of the molecule numbers to be written
+        all_atoms (Atoms): The Atoms object containing the atoms to be written
+    """
     atoms = Atoms()
     counter = 0
     if isinstance(molecules, list):
@@ -76,6 +101,14 @@ def write_structure(label, component_list, molecules, all_atoms):
 
 @Halo(text="Identifying molecules", color='green', spinner='dots')
 def find_neighbors(atoms):
+    """Identifies molecules by finding neighboring atoms
+
+    Args:
+        atoms (Atoms): Atoms in the system
+
+    Returns:
+        tuple: n_components is the number of molecules, component_list is a dict mapping atom number to molecule number, and edges are the a list containing which atoms are neighbors
+    """
     neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
     neighbor_list.update(atoms)
     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
@@ -85,6 +118,14 @@ def find_neighbors(atoms):
     return n_components, component_list, edges
 
 def unwrap_atoms(structure_file=None):
+    """Unwraps the molecules and identifies pairs based on a structure file.
+
+    Args:
+        structure_file (str, optional): Path to structure file. If none is given, local directory will be automatically searched to find a structure file. Defaults to None.
+
+    Returns:
+        str: json string containing the pair definitions based on molecule number.
+    """
     folder = os.getcwd()
 
     if structure_file:
@@ -291,6 +332,12 @@ def unwrap_atoms(structure_file=None):
 
 @Halo(text="Running Gaussian calculation", color='red', spinner='dots')
 def get_orbitals(atoms, name):
+    """Runs gaussian to compute the orbitals for a system
+
+    Args:
+        atoms (Atoms): Atoms in the system
+        name (str): The name of the system
+    """
     if not exists(name + '.pun'):
         atoms.calc = Gaussian(mem='4GB',
                               nprocshared=12,
@@ -307,6 +354,16 @@ def get_orbitals(atoms, name):
 
 @Halo(text="Calculating transfer integral", color='red', spinner='dots')
 def catnip(path1, path2, path3):
+    """Runs Catnip to determine the transfer integral
+
+    Args:
+        path1 (str): Path to the first Gaussian Result
+        path2 (str): Path to the second Gaussian Result
+        path3 (str): Path to the third Gaussian Result
+
+    Returns:
+        str: the transfer integral for the system
+    """
     path1 += '.pun'
     path2 += '.pun'
     path3 += '.pun'
@@ -316,6 +373,14 @@ def catnip(path1, path2, path3):
     return output.decode('ascii').split()[-13]
 
 def get_javerage(pair):
+    """Computes the transfer integral for a pair of molecules
+
+    Args:
+        pair (list): Contains the molecule numbers in the pair
+
+    Returns:
+        str: The transfer itegral
+    """
     paths = []
 
     # Gaussian run for each molecule
@@ -339,6 +404,8 @@ def get_javerage(pair):
     return j
 
 def javerage():
+    """main function, calls unwrap atoms and get_javerage for each pair in the system.
+    """
     pairs = unwrap_atoms()
 
     for pair in pairs.items():
