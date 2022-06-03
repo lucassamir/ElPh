@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath('..'))
 for x in os.walk('../tloc'):
   sys.path.insert(0, x[0])
 
-autodoc_mock_imports = ['numpy', 'scipy', 'ase>=3.20.0', 'tqdm', 'halo', 'phonopy']
+autodoc_mock_imports = ['numpy', 'scipy', 'ase', 'tqdm', 'halo', 'phonopy']
 
 
 # -- Project information -----------------------------------------------------
