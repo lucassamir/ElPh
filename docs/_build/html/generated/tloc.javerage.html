@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>tloc.javerage &#8212; ElPh 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tloc.jdelta" href="tloc.jdelta.html" />
+    <link rel="prev" title="tloc" href="tloc.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-tloc.javerage">
+<span id="tloc-javerage"></span><h1>tloc.javerage<a class="headerlink" href="#module-tloc.javerage" title="Permalink to this heading">¶</a></h1>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">catnip</span></code>(path1, path2, path3)</p></td>
+<td><p>Runs Catnip to determine the transfer integral</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_total_weight</span></code>(centers_of_mass)</p></td>
+<td><p>Computes the distances between the centers of mass.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_neighbors</span></code>(atoms)</p></td>
+<td><p>Identifies molecules by finding neighboring atoms</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_structure_file</span></code>(folder)</p></td>
+<td><p>Searches the current working directory for the molecular structure file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_centers_of_mass</span></code>(atoms, n_components, ...)</p></td>
+<td><p>Gets centers of mass for each molecule</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_javerage</span></code>(pair)</p></td>
+<td><p>Computes the transfer integral for a pair of molecules</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_orbitals</span></code>(atoms, name)</p></td>
+<td><p>Runs gaussian to compute the orbitals for a system</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">javerage</span></code>()</p></td>
+<td><p>main function, calls unwrap atoms and get_javerage for each pair in the system.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unwrap_atoms</span></code>([structure_file])</p></td>
+<td><p>Unwraps the molecules and identifies pairs based on a structure file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_structure</span></code>(label, component_list, ...)</p></td>
+<td><p>Writes the structure to a file</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">ElPh</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tloc.html">tloc</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">tloc.javerage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tloc.jdelta.html">tloc.jdelta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tloc.main.html">tloc.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tloc.molecules.html">tloc.molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tloc.phonons.html">tloc.phonons</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">API</a><ul>
+      <li>Previous: <a href="tloc.html" title="previous chapter">tloc</a></li>
+      <li>Next: <a href="tloc.jdelta.html" title="next chapter">tloc.jdelta</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Lucas S. R. Cavalcante, Makena A. Dettmann, Corina A. Magdaleno.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/generated/tloc.javerage.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
