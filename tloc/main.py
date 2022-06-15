@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from tloc.javerage import javerage
 from tloc.jdelta import jdelta
+from tloc.visualization import view
 from tloc.molecules import Molecules
 
 def write_lattice_file():
@@ -104,6 +105,15 @@ def main(args=None):
    """
    parser.add_argument('--jdelta', action='store_true' , help=help)
 
+   help = """
+   Visualization tool of sigma
+
+   [atoms] View the total sigma contribution for each atom
+   [modes] [[n]] View the n phonon modes with the highest sigma contribution
+
+   """
+   parser.add_argument('--view', nargs=2, default=['atoms', None], type=str, help=help)
+
    help = ("Calculate charge mobility")
    parser.add_argument('--mobility', action='store_true' , help=help)
 
@@ -121,6 +131,9 @@ def main(args=None):
 
    if args.jdelta:
       jdelta()
+
+   if args.view:
+      view(*args.view)
 
    if args.mobility:
       if not Path(args.lattice_file + '.json').is_file():
