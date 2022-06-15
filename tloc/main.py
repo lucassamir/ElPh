@@ -112,7 +112,7 @@ def main(args=None):
    [modes] [[n]] View the n phonon modes with the highest sigma contribution
 
    """
-   parser.add_argument('--view', nargs=2, default=['atoms', None], type=str, help=help)
+   parser.add_argument('--view', nargs=2, default=['atoms', 1], type=str, help=help)
 
    help = ("Calculate charge mobility")
    parser.add_argument('--mobility', action='store_true' , help=help)
