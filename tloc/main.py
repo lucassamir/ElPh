@@ -124,7 +124,7 @@ def main(args=None):
    [modes] [[n]] View the n phonon modes with the highest sigma contribution
 
    """
-   parser.add_argument('--view', type=str, help=help)
+   parser.add_argument('--view', nargs=2, default=['atoms', None], type=str, help=help)
 
    help = ("Calculate charge mobility")
    parser.add_argument('--mobility', action='store_true' , help=help)
@@ -151,7 +151,7 @@ def main(args=None):
       read_jdelta()
 
    if args.view:
-      view(args.view)
+      view(*args.view)
 
    if args.mobility:
       if not Path(args.lattice_file + '.json').is_file():

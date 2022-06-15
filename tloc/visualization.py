@@ -90,7 +90,7 @@ def view(mode='atoms', n=3):
         pairs = json.load(json_file)
     
     for pair in pairs.items():
-        get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=n)
+        get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
 
 if __name__ == '__main__':
     view()
