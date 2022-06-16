@@ -11,7 +11,7 @@ A workflow to compute electron phonon coupling in small molecules OSCs.
    :maxdepth: 5
    
    api
-
+   install
 
 Indices and tables
 ==================
