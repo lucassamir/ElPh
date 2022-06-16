@@ -19,6 +19,14 @@ def heat_atoms(molpair, sigma_eav):
     fig.colorbar(s)
     plt.show()
 
+    data = {'x': x,
+            'y': y,
+            'z': z,
+            'size': 20 * masses,
+            'sigma': sigma}
+
+    np.savez_compressed('view_atoms_' + molpair + '.npz', **data)
+
     # layout = go.Layout(
     #          scene=dict(
     #              aspectmode='data'
@@ -48,12 +56,25 @@ def heat_modes(molpair, sigma_eav, vecs_eav, n):
 
     ind = np.argsort(sigma)[-n:][::-1]
 
+    data = {'x': x,
+            'y': y,
+            'z': z,
+            'size': 20 * masses}
+
     for i in ind:
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(projection='3d')
-        ax.quiver(x, y, z, vecs_eav[i, :, 0], vecs_eav[i, :, 1], vecs_eav[i, :, 2], length=2, normalize=True)
+        u = vecs_eav[i, :, 0]
+        v = vecs_eav[i, :, 1]
+        w = vecs_eav[i, :, 2]
+        data['u'] = u
+        data['v'] = v
+        data['w'] = w
+        ax.quiver(x, y, z, u, v, w, length=2, normalize=True)
         ax.scatter(x, y, z, s = 20 * masses)
         plt.show()
+
+        np.savez_compressed('view_modes_' + molpair + '_' + '{}' .format(i) + '_' + '.npz', **data)
 
 def sigma_contribution(pair_atoms, dj_av, temp):
     freqs_e, vecs_eav, _ = load_phonons(pair_atoms)
