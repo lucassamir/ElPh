@@ -7,6 +7,17 @@ import json
 import os
 
 def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.json'):
+    """Loads phonon modes and returns frequencies, eigenvectors and number of q points
+
+    Args:
+        pair_atoms (list): Atomic indices of the interacting pair
+        phonon_file (str, optional): Numpy file with the phonon modes. Defaults to 'phonon.npz'
+        map_file (str, optional): JSON file generate to map atomic indices 
+        of the wraped to the unwraped structure. Defaults to 'atom_mapping.json'
+
+    Returns:
+        tuple: vector of frequencies, vector of eigenvectors, and integer of the number of qpoints
+    """
     # read phonon modes file
     phonon = np.load(phonon_file)
 
@@ -28,6 +39,15 @@ def load_phonons(pair_atoms, phonon_file='phonon.npz', map_file='atom_mapping.js
     return phonon['freqs'], vecs_eav, phonon['nq']
 
 def get_dj_matrix(jlists, delta):
+    """Matrix containing gradient of J, the transfer integral
+
+    Args:
+        jlists (list): list of transfer integrals
+        delta (float): size of displacement
+
+    Returns:
+        array: matrix containing gradient of j
+    """
     latoms = len(jlists) // 6
 
     # array with j - delta (j minus)
@@ -47,6 +67,16 @@ def get_dj_matrix(jlists, delta):
     return dj_matrix
 
 def get_deviation(pair_atoms, dj_av, temp):
+    """Calculate standard deviation (sigma) of the transfer integral
+
+    Args:
+        pair_atoms (array): Numpy array of atomic indices of interacting pairs
+        dj_av (array): Numpy array of gradient of J for all atoms in the pair for all directions
+        temp (float): Temperature in eV
+
+    Returns:
+        float: standard deviation (sigma) of the transfer integral
+    """
     freqs_e, vecs_eav, nq = load_phonons(pair_atoms)
     epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
     ssigma = (1 / nq) * np.sum(epcoup_e**2 / \
@@ -55,6 +85,14 @@ def get_deviation(pair_atoms, dj_av, temp):
     return np.sqrt(ssigma)
 
 def get_displacements(atoms):
+    """Returns displacement of each atom in each direction
+
+    Args:
+        atoms (Atoms): Atoms objects
+
+    Yields:
+        yield: (atom number, direction, sign)
+    """
     latoms = len(atoms)
     for ia in range(latoms):
         for iv in range(3):
@@ -62,6 +100,18 @@ def get_displacements(atoms):
                 yield (ia, iv, sign)
 
 def displace_atom(atoms, ia, iv, sign, delta):
+    """Displace one atomic position in the Atoms object
+
+    Args:
+        atoms (Atoms): Atoms object
+        ia (int): atom index
+        iv (int): direction index
+        sign (str): sign of displacement in each direction
+        delta (float): size of displacement
+
+    Returns:
+        Atoms: Updated Atoms object
+    """
     new_atoms = atoms.copy()
     pos_av = new_atoms.get_positions()
     pos_av[ia, iv] += sign * delta
@@ -69,6 +119,13 @@ def displace_atom(atoms, ia, iv, sign, delta):
     return new_atoms
 
 def finite_dif(delta, atoms, disp):
+    """Compute Gaussian calculation for displaced system
+
+    Args:
+        delta (float): Size of displacement
+        atoms (Atoms): Atoms object
+        disp (tuple): (atom index, direction and sign)
+    """
     ia = disp[0]
     iv = disp[1]
     sign = disp[2]
@@ -82,6 +139,19 @@ def finite_dif(delta, atoms, disp):
         get_orbitals(new_structure, prefix)
 
 def read_finite_dif(delta, path1, path2, path3, offset, disp):
+    """Calculate transfer integral for displaced system
+
+    Args:
+        delta (float): Size of displacement
+        path1 (str): Path of first molecule
+        path2 (str): Path of second molecule
+        path3 (str): Path of pair of molecules
+        offset (int): Number of atoms in the first molecule
+        disp (tuple): (atom index, direction and sign)
+
+    Returns:
+        float: Calculated transfer integral
+    """
     ia = disp[0]
     iv = disp[1]
     sign = disp[2]
@@ -110,6 +180,11 @@ def read_finite_dif(delta, path1, path2, path3, offset, disp):
     return j
         
 def multi_finite_dif(delta=0.01):
+    """Multiprocessing to submit jobs in parallel
+
+    Args:
+        delta (float, optional): Size of displacement. Defaults to 0.01.
+    """
     from multiprocessing import Pool
     from functools import partial
 
@@ -124,6 +199,14 @@ def multi_finite_dif(delta=0.01):
         pool.map(command, disps)
 
 def run_sigma(pair, delta=0.01):
+    """Using the finite differences methods, 
+    create folder for each displace atom,
+    and calculate transfer integral.
+
+    Args:
+        pair (tuple): Pair name and molecules indices
+        delta (float): Size of displacement. Defaults to 0.01.
+    """
     print('Running Gaussian for displacements')
 
     # run Gaussian for displacements of first molecule
@@ -154,6 +237,14 @@ def run_sigma(pair, delta=0.01):
                 multi_finite_dif(delta)
 
 def read_sigma(delta=0.01, temp=0.025):
+    """Write phonon modes from phonopy result, 
+    read transfer integrals of finite differences of one pair,
+    and calculate standard deviation (sigma) of all pairs
+
+    Args:
+        delta (float, optional): Size of displacement. Defaults to 0.01.
+        temp (float, optional): Temperature in eV. Defaults to 0.025.
+    """
     from multiprocessing import Pool
     from functools import partial   
     from elph.phonons import write_phonons
@@ -221,6 +312,9 @@ def read_sigma(delta=0.01, temp=0.025):
              json.dump(data, f, ensure_ascii=False, indent=4)
 
 def sigma():
+    """Calculate the standard deviation (sigma)
+    for each pair of molecules. Write sigmas to JSON files
+    """
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
