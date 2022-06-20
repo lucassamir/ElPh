@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 class Molecules:
    def __init__(self, nmuc=None, coordmol=None, unitcell=None, 
    supercell=None, unique=None, uniqinter=None,
-   javg=None, jdelta=None, nrepeat=None,
+   javg=None, sigma=None, nrepeat=None,
    iseed=None, invtau=None, temp=None, 
    lattice_file=None, params_file=None, results={}):
 
@@ -31,14 +31,14 @@ class Molecules:
          with open(params_file + '.json', 'r') as json_file:
             par_dic = json.load(json_file)
          self.javg = np.array(par_dic['javg'])
-         self.jdelta = np.array(par_dic['jdelta'])
+         self.sigma = np.array(par_dic['sigma'])
          self.nrepeat = par_dic['nrepeat']
          self.iseed = par_dic['iseed']
          self.invtau = par_dic['invtau']
          self.temp = par_dic['temp']
       else:
          self.javg = np.array(javg )
-         self.jdelta = np.array(jdelta)
+         self.sigma = np.array(sigma)
          self.nrepeat = nrepeat
          self.iseed = iseed
          self.invtau = invtau
@@ -48,7 +48,7 @@ class Molecules:
 
       # addind 0 for the case that molecules dont interact
       self.javg = np.insert(self.javg, 0, 0)
-      self.jdelta = np.insert(self.jdelta, 0, 0)
+      self.sigma = np.insert(self.sigma, 0, 0)
 
       # making random numbers predictable
       np.random.seed(self.iseed)
@@ -119,7 +119,7 @@ class Molecules:
       rnd_mm = np.random.normal(0, 1, size=(nmol, nmol))
       rnd_mm = np.tril(rnd_mm) + np.tril(rnd_mm, -1).T
 
-      hamiltonian_mm = self.javg[transinter_mm] + self.jdelta[transinter_mm] * rnd_mm
+      hamiltonian_mm = self.javg[transinter_mm] + self.sigma[transinter_mm] * rnd_mm
     
       return hamiltonian_mm
 

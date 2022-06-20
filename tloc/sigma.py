@@ -123,7 +123,7 @@ def multi_finite_dif(delta=0.01):
     with Pool(processes=64) as pool:
         pool.map(command, disps)
 
-def run_jdelta(pair, delta=0.01):
+def run_sigma(pair, delta=0.01):
     print('Running Gaussian for displacements')
 
     # run Gaussian for displacements of first molecule
@@ -153,7 +153,7 @@ def run_jdelta(pair, delta=0.01):
                 copyfile('../' + molpair + '.xyz', 'static.xyz')
                 multi_finite_dif(delta)
 
-def read_jdelta(delta=0.01, temp=0.025):
+def read_sigma(delta=0.01, temp=0.025):
     from multiprocessing import Pool
     from functools import partial   
     from tloc.phonons import write_phonons
@@ -208,24 +208,24 @@ def read_jdelta(delta=0.01, temp=0.025):
         # Create GradJ matrix with a atoms and v directions
         dj_matrix_av = get_dj_matrix(jlists, delta)
 
-        # Calculate jdelta
+        # Calculate sigma
         offset = len(dj_matrix_av) // 2
         pair_atoms = np.concatenate([np.arange((int(mol1) - 1) * offset, 
                                                 int(mol1) * offset), 
                                      np.arange((int(mol2) - 1) * offset, 
                                                 int(mol2) * offset)])
         
-        jdelta = get_deviation(pair_atoms, dj_matrix_av, temp)
-        data = {molpair: jdelta}
-        with open('DeltaJ_' + molpair + '.json', 'w', encoding='utf-8') as f:
+        sigma = get_deviation(pair_atoms, dj_matrix_av, temp)
+        data = {molpair: sigma}
+        with open('Sigma_' + molpair + '.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
 
-def jdelta():
+def sigma():
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
     for pair in pairs.items():
-        run_jdelta(pair, delta=0.01)
+        run_sigma(pair, delta=0.01)
 
 if __name__ == '__main__':
-    jdelta()
+    sigma()

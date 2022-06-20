@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from tloc.javerage import javerage, read_javerage
-from tloc.jdelta import jdelta, read_jdelta
+from tloc.sigma import sigma, read_sigma
 from tloc.visualization import view
 from tloc.molecules import Molecules
 
@@ -23,7 +23,7 @@ def write_lattice_file():
 
 def write_params_file():
    params = {'javg':[0.058, 0.058, 0.058],
-             'jdelta':[0.029, 0.029, 0.029],
+             'sigma':[0.029, 0.029, 0.029],
              'nrepeat':50,
              "iseed":3987187,
              'invtau':0.005,
@@ -71,7 +71,7 @@ def main(args=None):
 
    params.json:
       javg: 
-      jdelta: 
+      sigma: 
       nrepeat:
       iseed: 
       invtau:
@@ -108,14 +108,14 @@ def main(args=None):
    Javerage step and phonon modes (mesh.yaml) are required
 
    """
-   parser.add_argument('--jdelta', action='store_true' , help=help)
+   parser.add_argument('--sigma', action='store_true' , help=help)
 
    help = """
-   Reads the result of the jdelta step and writes the variance 
+   Reads the result of the sigma step and writes the variance 
    of the transfer integrals of each pair in a JSON file
 
    """
-   parser.add_argument('--read_jdelta', action='store_true' , help=help)
+   parser.add_argument('--read_sigma', action='store_true' , help=help)
 
    help = """
    Visualization tool of sigma
@@ -144,11 +144,11 @@ def main(args=None):
    if args.read_javg:
       read_javerage()
 
-   if args.jdelta:
-      jdelta()
+   if args.sigma:
+      sigma()
 
-   if args.read_jdelta:
-      read_jdelta()
+   if args.read_sigma:
+      read_sigma()
 
    if args.view:
       view(*args.view)
