@@ -1,5 +1,5 @@
 __version__ = '0.1'
-name = 'tloc'
+name = 'elph'
 
 import os
 import errno

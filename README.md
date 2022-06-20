@@ -1,6 +1,6 @@
-# TLoc
+# ElPh
 
-Transient Localization Theory in Python
+Electron Phonon coupling within Transient Localization Theory in Python
 
 # Flowchart
 

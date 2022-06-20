@@ -1,8 +1,8 @@
 import numpy as np
 from ase.io import read
 from shutil import copyfile
-from tloc.javerage import get_orbitals, catnip
-from tloc import chdir, mkdir
+from elph.javerage import get_orbitals, catnip
+from elph import chdir, mkdir
 import json
 import os
 
@@ -156,7 +156,7 @@ def run_sigma(pair, delta=0.01):
 def read_sigma(delta=0.01, temp=0.025):
     from multiprocessing import Pool
     from functools import partial   
-    from tloc.phonons import write_phonons
+    from elph.phonons import write_phonons
 
     write_phonons()
     

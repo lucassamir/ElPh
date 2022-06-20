@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
-from tloc.javerage import javerage, read_javerage
-from tloc.sigma import sigma, read_sigma
-from tloc.visualization import view
-from tloc.molecules import Molecules
+from elph.javerage import javerage, read_javerage
+from elph.sigma import sigma, read_sigma
+from elph.visualization import view
+from elph.molecules import Molecules
 
 def write_lattice_file():
    lattice = {'nmuc':2,
@@ -35,13 +35,13 @@ def write_params_file():
 def main(args=None):
    import argparse
 
-   description = "Transient Localization Theory command line interface"
+   description = "Electron Phonon coupling within the Transient Localization Theory command line interface"
 
    example_text = """
    examples:
 
    Calculate charge mobility with:
-      tloc --mobility
+      elph --mobility
    """
 
    formatter = argparse.RawDescriptionHelpFormatter
@@ -136,7 +136,7 @@ def main(args=None):
       write_params_file()
       return
 
-   print('Initializing TLOC')
+   print('Initializing ElPh')
 
    if args.javerage:
       javerage()
