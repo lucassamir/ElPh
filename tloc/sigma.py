@@ -134,7 +134,7 @@ def get_deviation(pair_atoms, dj_av, temp):
 
     return np.sqrt(ssigma)
 
-def get_jdelta(pair, delta=0.01, temp=0.025):
+def get_sigma(pair, delta=0.01, temp=0.025):
     """Calculate standard deviation of the transfer integral between a molecule pair using finite differences
 
     Args:
@@ -213,21 +213,21 @@ def get_jdelta(pair, delta=0.01, temp=0.025):
     # Create GradJ matrix with a atoms and v directions
     dj_matrix_av = get_dj_matrix(jlists, delta)
 
-    # Calculate jdelta
+    # Calculate sigma
     offset = len(dj_matrix_av) // 2
     pair_atoms = np.concatenate([np.arange((int(mol1) - 1) * offset, 
                                             int(mol1) * offset), 
                                  np.arange((int(mol2) - 1) * offset, 
                                             int(mol2) * offset)])
 
-    jdelta = get_deviation(pair_atoms, dj_matrix_av, temp)
-    data = {molpair: jdelta}
+    sigma = get_deviation(pair_atoms, dj_matrix_av, temp)
+    data = {molpair: sigma}
     
-    print('jdelta_{} = {}' .format(pair[0], jdelta))
+    print('Sigma_{} = {}' .format(pair[0], sigma))
 
-    return jdelta
+    return sigma
 
-def jdelta():
+def sigma():
     """Write phonon modes from phonopy result, 
     and calculate the standard deviation (sigma)
     for each pair of molecules. Write sigmas to JSON files
@@ -238,10 +238,10 @@ def jdelta():
         pairs = json.load(json_file)
     
     for pair in pairs.items():
-        jdelta = get_jdelta(pair, delta=0.01)
-        data = {pair[0]: jdelta}
-        with open('DeltaJ_' + pair[0] + '.json', 'w', encoding='utf-8') as f:
+        sigma = get_sigma(pair, delta=0.01)
+        data = {pair[0]: sigma}
+        with open('Sigma_' + pair[0] + '.json', 'w', encoding='utf-8') as f:
              json.dump(data, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
-    jdelta()
+    sigma()

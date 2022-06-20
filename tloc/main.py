@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from tloc.javerage import javerage
-from tloc.jdelta import jdelta
+from tloc.sigma import sigma
 from tloc.visualization import view
 from tloc.molecules import Molecules
 
@@ -25,7 +25,7 @@ def write_lattice_file():
 
 def write_params_file():
    params = {'javg':[0.058, 0.058, 0.058],
-             'jdelta':[0.029, 0.029, 0.029],
+             'sigma':[0.029, 0.029, 0.029],
              'nrepeat':50,
              "iseed":3987187,
              'invtau':0.005,
@@ -73,7 +73,7 @@ def main(args=None):
 
    params.json:
       javg: 
-      jdelta: 
+      sigma: 
       nrepeat:
       iseed: 
       invtau:
@@ -103,7 +103,7 @@ def main(args=None):
    Javerage step and phonon modes (mesh.yaml) are required
 
    """
-   parser.add_argument('--jdelta', action='store_true' , help=help)
+   parser.add_argument('--sigma', action='store_true' , help=help)
 
    help = """
    Visualization tool of sigma
@@ -129,8 +129,8 @@ def main(args=None):
    if args.javerage:
       javerage()
 
-   if args.jdelta:
-      jdelta()
+   if args.sigma:
+      sigma()
 
    if args.view:
       view(*args.view)
