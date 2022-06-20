@@ -333,6 +333,11 @@ def unwrap_atoms(structure_file=None):
     return list(molecules) + list(pairs)
 
 def nersc_bash(name):
+    """Write bash file and submit job
+
+    Args:
+        name (str): name of the job
+    """
     cmd = os.environ['ASE_GAUSSIAN_COMMAND']
     with open('run.py', 'w') as f:
         f.write('#!/bin/bash \n'
