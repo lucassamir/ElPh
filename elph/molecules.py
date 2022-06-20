@@ -9,6 +9,38 @@ class Molecules:
    javg=None, sigma=None, nrepeat=None,
    iseed=None, invtau=None, temp=None, 
    lattice_file=None, params_file=None, results={}):
+      """
+      The molecules object represent a group of molecules. It has the relevant information regarding 
+      the calculation of charge mobility such as the transfer integral of the pairs, the standard 
+      deviation and structural information about the system.
+
+      Args:
+          nmuc (int, optional): Number of molcules in the unit cell. Defaults to None.
+          coordmol (list, optional): Coordinate of the molecules in the unit cell. Defaults to None.
+          unitcell (list, optional): The lattice parameters of the unitcell. Defaults to None.
+          supercell (list, optional): Dimensions of the supercell. Defaults to None.
+          unique (int, optional): Number of unique interactions. Defaults to None.
+          uniqinter (list, optional): Description of each unique interaction. Defaults to None.
+            This list contains six entries. 
+            The first two entries describe the type of each molecule in the interaction.
+            (Example: [1,1] represents the interaction between similar molecules.)
+            The following three are the direction of interaction.
+            (Example: [1,0,0] is an interaction in the x-direction)
+            The last entry is the direction of the transfer integral.
+            (Example: [1] uses the first value of the javg list.)
+          javg (list, optional): Transfer integrals for all the pairs in eV. Defaults to None.
+          sigma (list, optional): Standard deviation of the transfer integrals of 
+            all the pairs in eV. Defaults to None.
+          nrepeat (int, optional): Number of iterations with different realizations of 
+            disorder. Defaults to None.
+          iseed (int, optional): Index of random seed. Defaults to None.
+          invtau (int, optional): Characteristic localization time. Defaults to None.
+          temp (int, optional): Temperature in eV. Defaults to None.
+          lattice_file (json, optional): The structural parameters json file. Defaults to None.
+          params_file (json, optional): Parameters for the calculation of mobility. Defaults to None.
+          results (dict, optional): Dictionary with resulting localization length 
+            and mobilty. Defaults to {}.
+      """
 
       if lattice_file:
          with open(lattice_file + '.json', 'r') as json_file:
@@ -54,6 +86,16 @@ class Molecules:
       np.random.seed(self.iseed)
 
    def get_interactions(self):
+      """Calculate all the possible interactions in the supercell by translating the unit cell
+      interactions and calculating the distance between molecules.
+
+      Returns:
+          tuple : (nmol, transinter_mm, distx_mm, disty_mm)
+            (Number of molecules in super cell, 
+            Translated interaction between a pair of molecules (Matrix size: [nmol, nmol]),
+            Distances between all molecules THAT INTERACT with enforced PBC in x-direction,
+            Distances between all molecules THAT INTERACT with enforced PBC in y-direction)
+      """
       # nmol number of molecules in the supercell
       nmol = self.nmuc * self.supercell[0] * self.supercell[1] * \
          self.supercell[2]
@@ -116,6 +158,16 @@ class Molecules:
       return nmol, transinter_mm, distx_mm, disty_mm
 
    def get_hamiltonian(self, nmol, transinter_mm):
+      """Calculating Hamiltonian
+
+      Args:
+          nmol (int): Number of molecules in supercell.
+          transinter_mm (array): Translated interactions between a pair of molecules 
+            (Matrix size: [nmol, nmol])
+
+      Returns:
+          array: Hamiltonian
+      """
       rnd_mm = np.random.normal(0, 1, size=(nmol, nmol))
       rnd_mm = np.tril(rnd_mm) + np.tril(rnd_mm, -1).T
 
@@ -124,6 +176,17 @@ class Molecules:
       return hamiltonian_mm
 
    def get_energies(self, nmol, transinter_mm):
+      """Calculate energies by solving Hamiltonian
+
+      Args:
+          nmol (int): Number of molecules in supercell.
+          transinter_mm (array): Translated interactions between a pair of molecules 
+            (Matrix size: [nmol, nmol])
+
+      Returns:
+          tuple: (energies_m.real, vectors_mm, hamiltonian_mm)
+            (Real part of eigen values, Eigen vectors, Hamiltonian)
+      """
       hamiltonian_mm = self.get_hamiltonian(nmol, transinter_mm)
 
       energies_m, vectors_mm = linalg.eigh(hamiltonian_mm)
@@ -131,6 +194,17 @@ class Molecules:
       return energies_m.real, vectors_mm, hamiltonian_mm
 
    def get_squared_length(self):
+      """Calculate squared transient localization length using
+      distances, eigenvectors, eigenenergies and hamiltonian:
+
+      L**2 = (1 / Z) ∑_nm exp(β E_n) |<n | j_x(y) | m>|**2 (2 / ((hbar**2 / tau) + (E_m + E_n)**2))
+
+      <n | j_x(y) | m> = i <n | [H, x(y)] | m>
+
+      Returns:
+          tuple: (sqlx, sqly)
+            (squared localization length in the x direction, and y direction)
+      """
       nmol, transinter_mm, distx_mm, disty_mm = self.get_interactions()
 
       energies_m, vectors_mm, hamiltonian_mm = self.get_energies(nmol, transinter_mm)
@@ -155,6 +229,14 @@ class Molecules:
       return sqlx, sqly
 
    def get_disorder_avg_sql(self):
+      """Take average of squared localization length considering nrepeat iterations 
+      with different disorder realizations
+
+      Returns:
+          tuple: (dsqlx, dsqly)
+            (disorder-average squared localization length in the x direction, 
+            and y direction)
+      """
       dsqlx, dsqly = 0, 0
       self.results['squared_length_x'] = []
       self.results['squared_length_y'] = []
@@ -185,6 +267,12 @@ class Molecules:
       return dsqlx, dsqly
    
    def get_mobility(self):
+      """Calculate charge mobility in the framework of transient localization theory
+
+      Returns:
+          tuple: (mobx, moby)
+            (mobility in the x direction, and y direction)
+      """
       dsqlx, dsqly = self.get_disorder_avg_sql()
 
       # unit converter unit = ang**2 * e / hbar
