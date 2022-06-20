@@ -2,6 +2,14 @@ import phonopy
 import numpy as np
 
 def write_phonons(mesh=[8, 8, 8], phonopy_file="phonopy_params.yaml"):
+    """Calculate phonon modes based on the force constants from phonopy and write 
+    phonon frequencies, displacements, and number of q points to numpy file.
+    It requires the FORCE_SETS file.
+
+    Args:
+        mesh (list, optional): Sampling of the q space. Defaults to [8, 8, 8].
+        phonopy_file (str, optional): Params file of phonopy. Defaults to "phonopy_params.yaml".
+    """
     phonon = phonopy.load(phonopy_file)
     phonon.run_mesh(mesh, with_eigenvectors=True)
     
