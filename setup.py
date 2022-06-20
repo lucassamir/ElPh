@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from setuptools import setup, find_packages
 
-txt = Path('tloc/__init__.py').read_text()
+txt = Path('elph/__init__.py').read_text()
 version = re.search("__version__ = '(.*)'", txt).group(1)
 
 long_description = Path('README.md').read_text()
@@ -15,14 +15,14 @@ setup(
     #long_description_content_type='text/markdown',
     author='Lucas Cavalcante',
     author_email='lsrcavalcante@ucdavis.edu',
-    url='https://github.com/lucassamir/TLoc',
+    url='https://github.com/lucassamir/ElPh',
     packages=find_packages(),
     include_package_data=True,
     install_requires=['numpy', 'scipy', 'ase>=3.20.0', 'tqdm', 'halo', 'phonopy', 'sphinx_rtd_theme'],
     extras_require={'docs': ['sphinx', 'sphinxcontrib-programoutput']},
     entry_points='''
         [console_scripts]
-        tloc=tloc.main:main
+        elph=elph.main:main
     ''',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

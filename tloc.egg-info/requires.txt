@@ -1,7 +1,0 @@
-ase>=3.20.0
-numpy
-scipy
-
-[docs]
-sphinx
-sphinxcontrib-programoutput
