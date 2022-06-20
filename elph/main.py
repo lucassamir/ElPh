@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
-from tloc.javerage import javerage
-from tloc.sigma import sigma
-from tloc.visualization import view
-from tloc.molecules import Molecules
+from elph.javerage import javerage
+from elph.sigma import sigma
+from elph.visualization import view
+from elph.molecules import Molecules
 
 def write_lattice_file():
    """Write the lattice parameters json file
@@ -43,7 +43,7 @@ def main(args=None):
    examples:
 
    Calculate charge mobility with:
-      tloc --mobility
+      elph --mobility
    """
 
    formatter = argparse.RawDescriptionHelpFormatter
@@ -124,7 +124,7 @@ def main(args=None):
       write_params_file()
       return
 
-   print('Initializing TLOC')
+   print('Initializing ElPh')
 
    if args.javerage:
       javerage()

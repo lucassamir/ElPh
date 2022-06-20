@@ -1,0 +1,18 @@
+Metadata-Version: 2.1
+Name: tloc
+Version: 0.1
+Summary: Transient Localization Theory
+Home-page: https://github.com/lucassamir/TLoc
+Author: Lucas Cavalcante
+Author-email: lsrcavalcante@ucdavis.edu
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Environment :: Console
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: Operating System :: Unix
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Topic :: Scientific/Engineering :: Physics
+Provides-Extra: docs

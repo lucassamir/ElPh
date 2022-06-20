@@ -1,9 +1,9 @@
 import numpy as np
 from ase.io import read
 from shutil import copyfile
-from tloc.javerage import get_orbitals, catnip
-from tloc.phonons import write_phonons
-from tloc import chdir, mkdir
+from elph.javerage import get_orbitals, catnip
+from elph.phonons import write_phonons
+from elph import chdir, mkdir
 import json
 import os
 

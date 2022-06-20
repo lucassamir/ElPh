@@ -1,0 +1,4 @@
+
+        [console_scripts]
+        tloc=tloc.main:main
+    

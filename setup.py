@@ -8,9 +8,9 @@ version = re.search("__version__ = '(.*)'", txt).group(1)
 long_description = Path('README.md').read_text()
 
 setup(
-    name='tloc',
+    name='elph',
     version=version,
-    description='Transient Localization Theory',
+    description='Electron Phonon coupling within the Transient Localization Theory',
     #long_description=long_description,
     #long_description_content_type='text/markdown',
     author='Lucas Cavalcante',

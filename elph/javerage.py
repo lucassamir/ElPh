@@ -7,7 +7,7 @@ from tqdm.auto import trange, tqdm
 from halo import Halo
 from ase import Atoms
 from ase.calculators.gaussian import Gaussian
-from tloc import chdir, mkdir
+from elph import chdir, mkdir
 import subprocess
 from os.path import exists
 import json
@@ -367,7 +367,7 @@ def catnip(path1, path2, path3):
     path1 += '.pun'
     path2 += '.pun'
     path3 += '.pun'
-    cmd = os.environ['TLOC_CATNIP_CMD']
+    cmd = os.environ['ELPH_CATNIP_CMD']
     cmd += " -p_1 {} -p_2 {} -p_P {}" .format(path1, path2, path3)
     output = subprocess.check_output(cmd, shell=True)
     return output.decode('ascii').split()[-13]

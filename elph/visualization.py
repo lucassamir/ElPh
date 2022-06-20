@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from tloc.sigma import load_phonons, get_dj_matrix
+from elph.sigma import load_phonons, get_dj_matrix
 
 def heat_atoms(molpair, sigma_eav):
     """Scatter plot of atoms with heat indicating 
