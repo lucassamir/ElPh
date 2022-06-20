@@ -34,6 +34,16 @@ def find_structure_file(folder):
     return structure_file
 
 def get_centers_of_mass(atoms, n_components, component_list):
+    """Gets centers of mass for each molecule
+
+    Args:
+        atoms (Atoms): Atoms in the system
+        n_components (int): Number of molecules in the system
+        component_list (dict): maps each atom number to the molecule it belongs to
+
+    Returns:
+        list: A list containing the centers of mass for each molecule in the system
+    """
     centers_of_mass = []
     for i in range(n_components):
         molIdx_i = i
@@ -42,7 +52,14 @@ def get_centers_of_mass(atoms, n_components, component_list):
     return centers_of_mass
 
 def compute_total_weight(centers_of_mass):
-    
+    """Computes the distances between the centers of mass. We represent the centers of mass as a fully-connected graph with the weight of each edge representing the distance between molecules
+
+    Args:
+        centers_of_mass (list): A list containing the centers of mass of each molecule in the system
+
+    Returns:
+        tuple: total_weight is a float containing the sum of all weights in the graph. has_dupes is a bool indicating whether there are two molecules overlapping.
+    """
     total_weight = 0
     has_dupes = False
     for i in range(len(centers_of_mass)):
@@ -53,6 +70,14 @@ def compute_total_weight(centers_of_mass):
     return total_weight, has_dupes
 
 def write_structure(label, component_list, molecules, all_atoms):
+    """Writes the structure to a file
+
+    Args:
+        label (str): The label to be written. Pairs are A, B, C and molecules are 1, 2, 3
+        component_list (dict): maps the atom number to the molecule it belongs to
+        molecules (list): A list of the molecule numbers to be written
+        all_atoms (Atoms): The Atoms object containing the atoms to be written
+    """
     atoms = Atoms()
     atom_mapping = {}
     counter = 0
@@ -78,6 +103,14 @@ def write_structure(label, component_list, molecules, all_atoms):
     #     f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1]))))
 
 def find_neighbors(atoms):
+    """Identifies molecules by finding neighboring atoms
+
+    Args:
+        atoms (Atoms): Atoms in the system
+
+    Returns:
+        tuple: n_components is the number of molecules, component_list is a dict mapping atom number to molecule number, and edges are the a list containing which atoms are neighbors
+    """
     neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
     neighbor_list.update(atoms)
     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
@@ -87,6 +120,14 @@ def find_neighbors(atoms):
     return n_components, component_list, edges
 
 def unwrap_atoms(structure_file=None):
+    """Unwraps the molecules and identifies pairs based on a structure file.
+
+    Args:
+        structure_file (str, optional): Path to structure file. If none is given, local directory will be automatically searched to find a structure file. Defaults to None.
+
+    Returns:
+        str: json string containing the pair definitions based on molecule number.
+    """
     folder = os.getcwd()
 
     if structure_file:
@@ -310,6 +351,12 @@ def nersc_bash(name):
     subprocess.run(['sbatch', 'run.py'])
 
 def get_orbitals(atoms, name):
+    """Runs gaussian to compute the orbitals for a system
+
+    Args:
+        atoms (Atoms): Atoms in the system
+        name (str): The name of the system
+    """
     if 'GAUSSIAN_CORES' in os.environ:
         c = os.environ['GAUSSIAN_CORES']
     else:
@@ -335,6 +382,14 @@ def get_orbitals(atoms, name):
         print(['Simulation {} is done' .format(name)])
 
 def catnip(paths):
+    """Runs Catnip to determine the transfer integral
+
+    Args:
+        paths (str): Paths to the first, second and pair Gaussian Result
+
+    Returns:
+        str: the transfer integral for the system
+    """
     path1 = paths[0]
     path2 = paths[1]
     path3 = paths[2]
@@ -347,6 +402,8 @@ def catnip(paths):
     return output.decode('ascii').split()[-13]
 
 def javerage():
+    """Computes the transfer integral for all types of molecules (single or pairs)
+    """
     folders = unwrap_atoms()
 
     for name in folders:
@@ -355,6 +412,8 @@ def javerage():
             get_orbitals(atoms, name)
 
 def read_javerage():
+    """Reads the transfer integral for all pairs of molecules
+    """
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
 
