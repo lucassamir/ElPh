@@ -143,13 +143,13 @@ def unwrap_atoms(structure_file=None):
     neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
     neighbor_list.update(atoms)
     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
-    n_components, component_list = sparse.csgraph.connected_components(matrix)
+    n_components, component_list_unitcell = sparse.csgraph.connected_components(matrix)
     small_structure_flag = n_components < 3
 
     idx = 0
-    molIdx = component_list[idx]
+    molIdx = component_list_unitcell[idx]
     print("There are {} molecules in the system".format(n_components))
-    molIdxs = [ i for i in range(len(component_list)) if component_list[i] == molIdx ]
+    molIdxs = [ i for i in range(len(component_list_unitcell)) if component_list_unitcell[i] == molIdx ]
     edges = list(matrix.keys())
     max_bond_len = max(natural_cutoffs(atoms))
     cell = list(atoms.get_cell())
@@ -185,7 +185,7 @@ def unwrap_atoms(structure_file=None):
     atoms.set_positions(all_positions)
     
     # Construct graph (compute total weight)
-    original_centers_of_mass = get_centers_of_mass(atoms, n_components, component_list)
+    original_centers_of_mass = get_centers_of_mass(atoms, n_components, component_list_unitcell)
     centers_of_mass = np.copy(original_centers_of_mass)
     weight, has_dupes = compute_total_weight(centers_of_mass)
     test_dirs = cell
@@ -208,8 +208,8 @@ def unwrap_atoms(structure_file=None):
     translations = np.zeros([len(atoms), 3])
     
     for i in range(n_components):
-        molIdx = component_list[i]
-        molIdxs = [ x for x in range(len(component_list)) if component_list[x] == molIdx ]
+        molIdx = component_list_unitcell[i]
+        molIdxs = [ x for x in range(len(component_list_unitcell)) if component_list_unitcell[x] == molIdx ]
         
         dif = centers_of_mass[i] - original_centers_of_mass[i]
         translations[molIdxs,:] = dif
@@ -224,7 +224,7 @@ def unwrap_atoms(structure_file=None):
     counter = 0
     for i in range(n_components):
         molIdx = i
-        molIdxs = [ x for x in range(len(component_list)) if component_list[x] == molIdx ]
+        molIdxs = [ x for x in range(len(component_list_unitcell)) if component_list_unitcell[x] == molIdx ]
         for idx in molIdxs:
             atom_mapping[idx] = counter 
             counter += 1
@@ -289,7 +289,7 @@ def unwrap_atoms(structure_file=None):
                 min_dist = np.linalg.norm(dist2 - vec)
         # Add to atom_mapping so it includes the new molecule.
         molIdx = copy_of
-        molIdxs = [ x for x in range(len(component_list)) if component_list[x] == molIdx ]
+        molIdxs = [ x for x in range(len(component_list_unitcell)) if component_list_unitcell[x] == molIdx ]
         for idx in molIdxs:
             atom_mapping[idx + num_atoms_original_structure] = counter 
             counter += 1
