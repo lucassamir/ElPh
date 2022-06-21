@@ -42,7 +42,7 @@ Add these lines to your configuration file (.bashrc). The following code uses ex
 
 .. code-block::
 
-   export TLOC_CATNIP_CMD='docker run -i --rm -v $(pwd):/projects -u $(id -u):$(id -g) madettmann/tloc'
+   export ELPH_CATNIP_CMD='docker run -i --rm -v $(pwd):/projects -u $(id -u):$(id -g) madettmann/tloc'
    export ASE_GAUSSIAN_COMMAND='Your Gaussian Command Here < PREFIX.com > PREFIX.log'
 
 
