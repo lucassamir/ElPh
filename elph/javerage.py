@@ -79,28 +79,18 @@ def write_structure(label, component_list, molecules, all_atoms):
         all_atoms (Atoms): The Atoms object containing the atoms to be written
     """
     atoms = Atoms()
-    atom_mapping = {}
-    counter = 0
     if isinstance(molecules, list):
         for molecule in molecules:
             idxs = [ i for i in range(len(component_list)) if component_list[i] == molecule ]
-            for idx in idxs:
-                atom_mapping[idx%len(idxs)] = counter 
-                counter += 1
             atoms.extend(all_atoms[idxs])
     else:
         idxs = [ i for i in range(len(component_list)) if component_list[i] == molecules ]
-        for idx in idxs:
-            atom_mapping[idx%len(idxs)] = counter
-            counter += 1
         atoms.extend(all_atoms[idxs])
     atoms.set_pbc([False, False, False])
     atoms.set_cell([0, 0, 0])
 
     mkdir(label)
     atoms.write(label + '/' + label + '.xyz')
-    # with open(label + '/' + 'atom_mapping.json', 'w') as f:
-    #     f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1]))))
 
 def find_neighbors(atoms):
     """Identifies molecules by finding neighboring atoms
