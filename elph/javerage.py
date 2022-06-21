@@ -81,17 +81,12 @@ def write_structure(label, component_list, molecules, all_atoms):
         all_atoms (Atoms): The Atoms object containing the atoms to be written
     """
     atoms = Atoms()
-    counter = 0
     if isinstance(molecules, list):
         for molecule in molecules:
             idxs = [ i for i in range(len(component_list)) if component_list[i] == molecule ]
-            for idx in idxs:
-                counter += 1
             atoms.extend(all_atoms[idxs])
     else:
         idxs = [ i for i in range(len(component_list)) if component_list[i] == molecules ]
-        for idx in idxs:
-            counter += 1
         atoms.extend(all_atoms[idxs])
     atoms.set_pbc([False, False, False])
     atoms.set_cell([0, 0, 0])
