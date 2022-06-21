@@ -279,8 +279,8 @@ def unwrap_atoms(structure_file=None):
         # If dist2 is a lattice vector, 3 is a copy of 2.
         dist1 = min_cycle_coms[2] - min_cycle_coms[0]
         dist2 = min_cycle_coms[2] - min_cycle_coms[1]
+        min_dist = np.inf
         for vec in cell:
-            min_dist = np.inf
             if np.linalg.norm(dist1 - vec) < min_dist:
                 copy_of = 0
                 min_dist = np.linalg.norm(dist1 - vec)
