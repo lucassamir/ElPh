@@ -139,21 +139,17 @@ def unwrap_atoms(structure_file=None):
         structure_file = find_structure_file(folder)
 
     atoms = read(structure_file)
+    num_atoms_original_structure = len(atoms)
     neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
     neighbor_list.update(atoms)
     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
     n_components, component_list = sparse.csgraph.connected_components(matrix)
-    # if n_components < 4: 
-    #     atoms = atoms * [2, 1, 1]
-    #     neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
-    #     neighbor_list.update(atoms)
-    #     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
-    #     n_components, component_list = sparse.csgraph.connected_components(matrix)
+    small_structure_flag = n_components < 4
+
     idx = 0
     molIdx = component_list[idx]
     print("There are {} molecules in the system".format(n_components))
     molIdxs = [ i for i in range(len(component_list)) if component_list[i] == molIdx ]
-    print("The following atoms are part of molecule {}: {}".format(molIdx, molIdxs))
     edges = list(matrix.keys())
     max_bond_len = max(natural_cutoffs(atoms))
     cell = list(atoms.get_cell())
@@ -234,8 +230,7 @@ def unwrap_atoms(structure_file=None):
             counter += 1
         new_atoms.extend(atoms[molIdxs])
     
-    with open('atom_mapping.json', 'w') as f:
-        f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1])), indent=2))
+    
 
     fully_connected_atoms = new_atoms*[2, 2, 2]
 
@@ -256,7 +251,6 @@ def unwrap_atoms(structure_file=None):
     for i in range(len(centers_of_mass)):
         for j in range(i+1, len(centers_of_mass)):
             for k in range(j+1, len(centers_of_mass)):
-                # TODO: Impose triangle condition
                 cycle_length = com_edges[(i,j)] + com_edges[(j,k)] + com_edges[(i,k)]
                 is_triangle = com_edges[(i,j)] < com_edges[(j,k)] + com_edges[(i,k)] and \
                                 com_edges[(j,k)] < com_edges[(i,k)] + com_edges[(i,j)] and \
@@ -277,7 +271,30 @@ def unwrap_atoms(structure_file=None):
     new_atoms.set_pbc([False, False, False])
     new_atoms.set_cell([0, 0, 0])
     new_atoms.write('all_pairs.xyz')
-
+    
+    # If original structre contained only 2 molecules, need to finish mapping.
+    if small_structure_flag:
+        min_cycle_coms = [centers_of_mass[i] for i in min_cycle]
+        # Compute distance between 3rd molecule and first 2. If dist1 is a lattice vector, 3 is a copy of 1. 
+        # If dist2 is a lattice vector, 3 is a copy of 2.
+        dist1 = min_cycle_coms[2] - min_cycle_coms[0]
+        dist2 = min_cycle_coms[2] - min_cycle_coms[1]
+        for vec in cell:
+            min_dist = np.inf
+            if np.linalg.norm(dist1 - vec) < min_dist:
+                copy_of = 0
+                min_dist = np.linalg.norm(dist1 - vec)
+            if np.linalg.norm(dist2 - vec) < min_dist:
+                copy_of = 1
+                min_dist = np.linalg.norm(dist2 - vec)
+        # Add to atom_mapping so it includes the new molecule.
+        molIdx = copy_of
+        molIdxs = [ x for x in range(len(component_list)) if component_list[x] == molIdx ]
+        for idx in molIdxs:
+            atom_mapping[idx + num_atoms_original_structure] = counter 
+            counter += 1
+    with open('atom_mapping.json', 'w') as f:
+        f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1])), indent=2))
     # Create structures with each pair of atoms
     """
     Directory structure will be as follows:
