@@ -144,7 +144,7 @@ def unwrap_atoms(structure_file=None):
     neighbor_list.update(atoms)
     matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
     n_components, component_list = sparse.csgraph.connected_components(matrix)
-    small_structure_flag = n_components < 4
+    small_structure_flag = n_components < 3
 
     idx = 0
     molIdx = component_list[idx]
