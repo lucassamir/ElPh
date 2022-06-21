@@ -228,9 +228,7 @@ def unwrap_atoms(structure_file=None):
         for idx in molIdxs:
             atom_mapping[idx] = counter 
             counter += 1
-        new_atoms.extend(atoms[molIdxs])
-    
-    
+        new_atoms.extend(atoms[molIdxs]) 
 
     fully_connected_atoms = new_atoms*[2, 2, 2]
 
@@ -295,6 +293,7 @@ def unwrap_atoms(structure_file=None):
             counter += 1
     with open('atom_mapping.json', 'w') as f:
         f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1])), indent=2))
+        
     # Create structures with each pair of atoms
     """
     Directory structure will be as follows:
