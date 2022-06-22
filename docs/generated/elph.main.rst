@@ -1,7 +1,7 @@
-﻿tloc.main
+﻿elph.main
 =========
 
-.. automodule:: tloc.main
+.. automodule:: elph.main
 
    
    

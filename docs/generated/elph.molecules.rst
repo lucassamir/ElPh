@@ -1,7 +1,7 @@
-﻿tloc.molecules
+﻿elph.molecules
 ==============
 
-.. automodule:: tloc.molecules
+.. automodule:: elph.molecules
 
    
    

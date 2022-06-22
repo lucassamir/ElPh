@@ -1,7 +1,7 @@
-﻿tloc.phonons
-============
+﻿elph.main
+=========
 
-.. automodule:: tloc.phonons
+.. automodule:: elph.main
 
    
    
@@ -13,7 +13,9 @@
 
    .. autosummary::
    
-      write_phonons
+      main
+      write_lattice_file
+      write_params_file
    
    
 

@@ -4,9 +4,10 @@ API
 .. autosummary::
    :toctree: generated
 
-   tloc
-   tloc.javerage
-   tloc.jdelta
-   tloc.main
-   tloc.molecules
-   tloc.phonons
+   elph
+   elph.javerage
+   elph.sigma
+   elph.main
+   elph.molecules
+   elph.phonons
+   elph.visualization

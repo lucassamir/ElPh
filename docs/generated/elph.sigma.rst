@@ -1,7 +1,7 @@
-﻿tloc.jdelta
-===========
+﻿elph.sigma
+==========
 
-.. automodule:: tloc.jdelta
+.. automodule:: elph.sigma
 
    
    
@@ -18,9 +18,9 @@
       get_deviation
       get_displacements
       get_dj_matrix
-      get_jdelta
-      jdelta
+      get_sigma
       load_phonons
+      sigma
    
    
 

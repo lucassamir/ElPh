@@ -1,7 +1,7 @@
-﻿tloc.javerage
+﻿elph.javerage
 =============
 
-.. automodule:: tloc.javerage
+.. automodule:: elph.javerage
 
    
    
