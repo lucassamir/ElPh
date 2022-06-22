@@ -225,6 +225,7 @@ def unwrap_atoms(structure_file=None):
             atom_mapping[idx] = counter 
             counter += 1
 
+
     with open('atom_mapping.json', 'w') as f:
         f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1])), indent=2))
 
