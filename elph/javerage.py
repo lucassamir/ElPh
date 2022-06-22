@@ -65,7 +65,7 @@ def compute_total_weight(centers_of_mass):
     for i in range(len(centers_of_mass)):
         for j in range(i+1, len(centers_of_mass)):
             total_weight +=  np.linalg.norm(centers_of_mass[i] - centers_of_mass[j])
-            if np.linalg.norm(centers_of_mass[i] - centers_of_mass[j]) == 0:
+            if np.linalg.norm(centers_of_mass[i] - centers_of_mass[j]) < 0.1:
                 has_dupes = True
     return total_weight, has_dupes
 
@@ -214,6 +214,7 @@ def unwrap_atoms(structure_file=None):
     while n_components < 3:
         atoms = atoms * [2, 1, 1]
         n_components, component_list, edges = find_neighbors(atoms)
+
     new_atoms = Atoms()
     new_atoms.set_cell(atoms.get_cell())
     counter = 0
@@ -230,6 +231,7 @@ def unwrap_atoms(structure_file=None):
         f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1])), indent=2))
 
     n_components, component_list, edges = find_neighbors(new_atoms)
+    
     coms = get_centers_of_mass(new_atoms, n_components, component_list)
     weight, has_dupes = compute_total_weight(coms)
 
