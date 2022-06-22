@@ -229,14 +229,12 @@ def unwrap_atoms(structure_file=None):
     with open('atom_mapping.json', 'w') as f:
         f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1])), indent=2))
 
-    cell_array = atoms.get_cell()
     n_components, component_list, edges = find_neighbors(new_atoms)
     coms = get_centers_of_mass(new_atoms, n_components, component_list)
     weight, has_dupes = compute_total_weight(coms)
 
-    print(test_dirs)
+
     states = [-1,0,1]
-    tf = [True, False]
 
     best_weight = weight
     best_coms = np.copy(coms)
