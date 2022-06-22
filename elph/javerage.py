@@ -253,7 +253,6 @@ def unwrap_atoms(structure_file=None):
                     min_cycle = [i, j, k]
 
     # Keep only these atoms
-    keep_idxs = [ i for i in range(len(component_list)) if component_list[i] in min_cycle ]
     new_atoms = Atoms()
     for idx in min_cycle:
         keep_idxs = [ i for i in range(len(component_list)) if component_list[i] == idx ]
