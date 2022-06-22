@@ -115,6 +115,7 @@ def is_triangle(centers_of_mass):
     l3 = np.linalg.norm(centers_of_mass[2] - centers_of_mass[1])
     return (l1 < l2 + l3) and (l2 < l1 + l3) and (l3 < l1 + l2)
 
+
 def unwrap_atoms(structure_file=None):
     """Unwraps the molecules and identifies pairs based on a structure file.
 
@@ -228,27 +229,33 @@ def unwrap_atoms(structure_file=None):
     with open('atom_mapping.json', 'w') as f:
         f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1])), indent=2))
 
-    test_dirs = atoms.get_cell()
+    cell_array = atoms.get_cell()
     n_components, component_list, edges = find_neighbors(new_atoms)
     coms = get_centers_of_mass(new_atoms, n_components, component_list)
     weight, has_dupes = compute_total_weight(coms)
 
+    print(test_dirs)
+    states = [-1,0,1]
+    tf = [True, False]
+
     best_weight = weight
     best_coms = np.copy(coms)
-    old_weight = 0
-    while old_weight != best_weight:
-        old_weight = best_weight
+    same_state_count = 0
+    while same_state_count < 3:
+        same_state_count += 1
         for molecule_num in range(3):
-            for test_dir in test_dirs:
-                for sign in [-1, 1]:
-                    vec = sign*test_dir
-                    test_coms = np.copy(coms)
-                    test_coms[molecule_num] += vec
-                    weight, has_dupes = compute_total_weight(test_coms)
-                    if not has_dupes and is_triangle(test_coms):
-                        if weight < best_weight:
-                            best_weight = weight
-                            best_coms = np.copy(test_coms)
+            for i in states:
+                for j in states:
+                    for k in states:
+                        vec = i*test_dirs[0] + j*test_dirs[1] + k*test_dirs[2]
+                        test_coms = np.copy(coms)
+                        test_coms[molecule_num] += vec
+                        weight, has_dupes = compute_total_weight(test_coms)
+                        if not has_dupes and is_triangle(test_coms):
+                            if weight < best_weight:
+                                best_weight = weight
+                                best_coms = np.copy(test_coms)
+                                same_state_count = 0
     translations = np.zeros([len(new_atoms), 3])
     displacements = best_coms - coms
     for i in range(3):
