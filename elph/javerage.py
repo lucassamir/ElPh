@@ -211,16 +211,22 @@ def unwrap_atoms(structure_file=None):
 
     atoms.translate(translations)
     atoms.center()
-    while n_components < 3:
-        atoms = atoms * [2, 1, 1]
-        n_components, component_list, edges = find_neighbors(atoms)
+
+    original_components = n_components
+    atoms = atoms * [2,1,1]
+    n_components, component_list, edges = find_neighbors(atoms)
+
 
     new_atoms = Atoms()
     new_atoms.set_cell(atoms.get_cell())
     counter = 0
     atom_mapping = {}
     for i in range(3):
-        molIdxs = [ j for j in range(len(component_list)) if component_list[j] == i ]
+        if i == 2 and original_components >= 3:
+            idx = original_components
+        else:
+            idx = i
+        molIdxs = [ j for j in range(len(component_list)) if component_list[j] == idx ]
         new_atoms.extend(atoms[molIdxs])
         for idx in molIdxs:
             atom_mapping[idx] = counter 
@@ -234,7 +240,6 @@ def unwrap_atoms(structure_file=None):
     
     coms = get_centers_of_mass(new_atoms, n_components, component_list)
     weight, has_dupes = compute_total_weight(coms)
-
 
     states = [-1,0,1]
 
