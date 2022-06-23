@@ -12,6 +12,7 @@ A workflow to compute electron phonon coupling in small molecules OSCs.
    
    api
    install
+   examples
 
 Indices and tables
 ==================
