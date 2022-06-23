@@ -45,7 +45,8 @@ Installation on local machine
 Installation on NERSC
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Add these lines to your configuration file (.bashrc) in your NERSC home folder.
+There is no need to install the ElPh package and its dependencies. 
+Just these lines to your configuration file (.bashrc) in your NERSC home folder.
 
 .. code-block::
 
