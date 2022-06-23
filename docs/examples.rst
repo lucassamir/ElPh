@@ -2,7 +2,7 @@ Examples
 ====================================
 
 Example 1: Workflow on local machine
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following example shows the complete workflow run on a local machine.
 
@@ -15,13 +15,13 @@ In the Anthracene folder, unwrap the structure to whole molecules,
 and calculate the transfer integral between each unique pair of molecules in the system, 
 using the following command.
 
-.. code-block::
+.. code-block:: console
 
    elph --javerage
 
 Once the job has completed, the following files and folders can be found in the Anthracene folder.
 
-.. code-block::
+.. code-block:: console
 
    1/    A/    950158.cif        atom_mapping.json    J_C.json
    2/    B/    all_pairs.json    J_A.json
@@ -38,19 +38,19 @@ calculates the phonon modes as the second part of its own workflow (2-phonons).
 
 Copy the following files to the Anthracene folder
 
-.. code-block::
+.. code-block:: console
 
    FORCE_SETS    phonopy_params.yaml
 
 Calculate the variance (Sigma) within the finite differences method using the command
   
-.. code-block::
+.. code-block:: console
 
    elph --sigma
 
 After the job is done, the following files and folders will be written in the Anthracene folder.
 
-.. code-block::
+.. code-block:: console
 
    1/displacements/...    A/displacements/...    A_disp_js.npz    Sigma_A.json    phonon.npz
    2/displacements/...    B/displacements/...    B_disp_js.npz    Sigma_B.json
@@ -63,7 +63,7 @@ in meV of each pair
 
 Create the lattice and parameters files, ``lattice.json``\ and ``params.json``\, with the command
 
-.. code-block::
+.. code-block:: console
 
    elph --write_files
 
@@ -71,7 +71,8 @@ Edit the files to match the following values
 
 lattice.json: 
 
-.. code-block::
+.. code-block:: json
+
    {
       "nmuc": 2,
       "coordmol": [
@@ -97,7 +98,8 @@ lattice.json:
 
 params.json: 
 
-.. code-block::
+.. code-block:: json
+
    {
       "javg": [0.058, 0.058, 0.058],
       "sigma": [0.029, 0.029, 0.029],
@@ -109,24 +111,27 @@ params.json:
 
 Use the following command to calculate the mobility (in cm:sub:`2`/(V . s))
 
-.. code-block::
+.. code-block:: console
+
    elph --mobility
 
 * Visualize Sigma
 
 In order to visualize the atomic contributions to Sigma, run
 
-.. code-block::
+.. code-block:: console
+   
    elph --view atoms
 
 Or to visualize the 3 highest contributing phonon modes to Sigma, used
 
-.. code-block::
+.. code-block:: console
+
    elph --view modes 3
 
 
 Example 2: Workflow on NERSC
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following example shows the complete workflow run on the NERSC supercomputer.
 
@@ -135,7 +140,8 @@ The following example shows the complete workflow run on the NERSC supercomputer
 Upload the Anthracene folder to NERSC using a file transfer software like Globus. 
 The folder should contain the .cif file and the following run script (run.py)
 
-.. code-block::
+.. code-block:: bash
+
    #!/bin/bash         
    #SBATCH -J anthracene
    #SBATCH -q debug
@@ -158,27 +164,27 @@ Unwrap the structure to whole molecules, and submit the jobs to
 calculate the transfer integral between each unique pair of molecules in the system, 
 by submitting the run script.
 
-.. code-block::
+.. code-block:: console
 
    sbatch run.py
 
 The script will submit a job for each molecule and pair of molecules (1, 2, 3, A, B, C).
 Check the progress of the submitted jobs using
 
-.. code-block::
+.. code-block:: console
 
    sqs
 
 Once all the jobs are done, read the calculated transfer integrals submitting 
 the same run script changing the last line to
 
-.. code-block::
+.. code-block:: console
 
    eval $'elph --read_javg'
 
 After this, the following files and folders can be found in the Anthracene folder.
 
-.. code-block::
+.. code-block:: console
 
    1/    A/    950158.cif        J_A.json    atom_mapping.json
    2/    B/    all_pairs.json    J_B.json    err.out
@@ -195,7 +201,7 @@ calculates the phonon modes as the second part of its own workflow (2-phonons).
 
 Upload the following files to the Anthracene folder
 
-.. code-block::
+.. code-block:: console
 
    FORCE_SETS    phonopy_params.yaml
 
@@ -204,20 +210,20 @@ run script with the updated command
 (depending on the size of the system 30 minutes in the debug queue is not enough to submit all the jobs,
 consider using -q as 'regular' and -t 01:00:00 or more)
 
-.. code-block::
+.. code-block:: console
 
    eval $'elph --sigma'
 
 A job for each displaced atom will be submitted. After all jobs are done, read the result 
 submitting the run script with (this takes less than 10 minutes)
 
-.. code-block::
+.. code-block:: console
 
    eval $'elph --read_sigma'
 
 The following files and folders will be written in the Anthracene folder.
 
-.. code-block::
+.. code-block:: console
 
    1/displacements/...    A/displacements/...    A_disp_js.npz    Sigma_A.json    phonon.npz
    2/displacements/...    B/displacements/...    B_disp_js.npz    Sigma_B.json
@@ -230,7 +236,7 @@ in meV of each pair.
 
 Create the lattice and parameters files, ``lattice.json``\ and ``params.json``\, with the command
 
-.. code-block::
+.. code-block:: console
 
    elph --write_files
 
@@ -238,7 +244,8 @@ Edit the files to match the following values
 
 lattice.json: 
 
-.. code-block::
+.. code-block:: json
+
    {
       "nmuc": 2,
       "coordmol": [
@@ -264,7 +271,8 @@ lattice.json:
 
 params.json: 
 
-.. code-block::
+.. code-block:: json
+
    {
       "javg": [0.058, 0.058, 0.058],
       "sigma": [0.029, 0.029, 0.029],
@@ -277,5 +285,6 @@ params.json:
 Submit the run script to calculate the mobility (in cm:sub:`2`/(V . s))
 by updating the command to
 
-.. code-block::
+.. code-block:: console 
+
    eval $'elph --mobility'

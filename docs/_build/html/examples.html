@@ -1,18 +1,21 @@
 <!DOCTYPE html>
-<html class="writer-html4" lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Examples &mdash; ElPh 1.0.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <title>Examples &mdash; ElPh 1.0.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -68,92 +71,244 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="examples">
-<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline"></a></h1>
-<div class="section" id="example-1-workflow-on-local-machine">
-<h2>Example 1: Workflow on local machine<a class="headerlink" href="#example-1-workflow-on-local-machine" title="Permalink to this headline"></a></h2>
+  <section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h1>
+<section id="example-1-workflow-on-local-machine">
+<h2>Example 1: Workflow on local machine<a class="headerlink" href="#example-1-workflow-on-local-machine" title="Permalink to this heading"></a></h2>
 <p>The following example shows the complete workflow run on a local machine.</p>
 <ul class="simple">
-<li>Calculate transfer integral between pairs of molecules (J:sub:<cite>average</cite>):</li>
+<li><p>Calculate transfer integral between pairs of molecules (J:sub:<cite>average</cite>):</p></li>
 </ul>
 <p>First, create a folder containing the geometry file (.cif, .gen, .sdf, or .xyz).
 The folder used in this example, named Anthracene, can be downloaded from the Uploads Folder.</p>
 <p>In the Anthracene folder, unwrap the structure to whole molecules,
 and calculate the transfer integral between each unique pair of molecules in the system,
 using the following command.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">elph --javerage</span>
+</pre></div>
+</div>
 <p>Once the job has completed, the following files and folders can be found in the Anthracene folder.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1/    A/    950158.cif        atom_mapping.json    J_C.json</span>
+<span class="go">2/    B/    all_pairs.json    J_A.json</span>
+<span class="go">3/    C/    all_pairs.xyz     J_B.json</span>
+</pre></div>
+</div>
 <p>The J files (J_A.json, J_B.json, J_C.json) present the transfer integral in meV
 of each pair described in all_pairs.json.</p>
 <ul class="simple">
-<li>Calculate the variance of transfer integrals (Sigma):</li>
+<li><p>Calculate the variance of transfer integrals (Sigma):</p></li>
 </ul>
 <p>Before calculating Sigma, which is the variance of the transfer integral due to vibrations in the system,
 the phonons have to be computed. <a class="reference external" href="https://dcs-flow.readthedocs.io/en/master/index.html">DCS-Flow</a>
 calculates the phonon modes as the second part of its own workflow (2-phonons).</p>
 <p>Copy the following files to the Anthracene folder</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">FORCE_SETS    phonopy_params.yaml</span>
+</pre></div>
+</div>
 <p>Calculate the variance (Sigma) within the finite differences method using the command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">elph --sigma</span>
+</pre></div>
+</div>
 <p>After the job is done, the following files and folders will be written in the Anthracene folder.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1/displacements/...    A/displacements/...    A_disp_js.npz    Sigma_A.json    phonon.npz</span>
+<span class="go">2/displacements/...    B/displacements/...    B_disp_js.npz    Sigma_B.json</span>
+<span class="go">3/displacements/...    C/displacements/...    C_disp_js.npz    Sigma_A.json</span>
+</pre></div>
+</div>
 <p>The Sigma files (Sigma_A.json, Sigma_B.json, Sigma_C.json) present the variance of the transfer integral
 in meV of each pair</p>
 <ul class="simple">
-<li>Calculate the mobility</li>
+<li><p>Calculate the mobility</p></li>
 </ul>
 <p>Create the lattice and parameters files, <code class="docutils literal notranslate"><span class="pre">lattice.json</span></code>and <code class="docutils literal notranslate"><span class="pre">params.json</span></code>, with the command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">elph --write_files</span>
+</pre></div>
+</div>
 <p>Edit the files to match the following values</p>
 <p>lattice.json:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="nt">&quot;nmuc&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+   <span class="nt">&quot;coordmol&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+      <span class="p">],</span>
+   <span class="nt">&quot;unitcell&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.7321</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">]</span>
+   <span class="p">],</span>
+   <span class="nt">&quot;supercell&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+   <span class="nt">&quot;unique&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+   <span class="nt">&quot;uniqinter&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <p>params.json:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="nt">&quot;javg&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.058</span><span class="p">,</span> <span class="mf">0.058</span><span class="p">,</span> <span class="mf">0.058</span><span class="p">],</span>
+   <span class="nt">&quot;sigma&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.029</span><span class="p">,</span> <span class="mf">0.029</span><span class="p">,</span> <span class="mf">0.029</span><span class="p">],</span>
+   <span class="nt">&quot;nrepeat&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+   <span class="nt">&quot;iseed&quot;</span><span class="p">:</span> <span class="mi">3987187</span><span class="p">,</span>
+   <span class="nt">&quot;invtau&quot;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>
+   <span class="nt">&quot;temp&quot;</span><span class="p">:</span> <span class="mf">0.025</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <p>Use the following command to calculate the mobility (in cm:sub:<cite>2</cite>/(V . s))</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">elph --mobility</span>
+</pre></div>
+</div>
 <ul class="simple">
-<li>Visualize Sigma</li>
+<li><p>Visualize Sigma</p></li>
 </ul>
 <p>In order to visualize the atomic contributions to Sigma, run</p>
-<p>Or to visualize the 3 highest contributing phonon modes to Sigma, used</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">elph --view atoms</span>
+</pre></div>
 </div>
-<div class="section" id="example-2-workflow-on-nersc">
-<h2>Example 2: Workflow on NERSC<a class="headerlink" href="#example-2-workflow-on-nersc" title="Permalink to this headline"></a></h2>
+<p>Or to visualize the 3 highest contributing phonon modes to Sigma, used</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">elph --view modes 3</span>
+</pre></div>
+</div>
+</section>
+<section id="example-2-workflow-on-nersc">
+<h2>Example 2: Workflow on NERSC<a class="headerlink" href="#example-2-workflow-on-nersc" title="Permalink to this heading"></a></h2>
 <p>The following example shows the complete workflow run on the NERSC supercomputer.</p>
 <ul class="simple">
-<li>Calculate transfer integral between pairs of molecules (J:sub:<cite>average</cite>):</li>
+<li><p>Calculate transfer integral between pairs of molecules (J:sub:<cite>average</cite>):</p></li>
 </ul>
 <p>Upload the Anthracene folder to NERSC using a file transfer software like Globus.
 The folder should contain the .cif file and the following run script (run.py)</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1">#SBATCH -J anthracene</span>
+<span class="c1">#SBATCH -q debug</span>
+<span class="c1">#SBATCH -N 1</span>
+<span class="c1">#SBATCH -t 00:30:00</span>
+<span class="c1">#SBATCH -C knl</span>
+<span class="c1">#SBATCH --output=out.out</span>
+<span class="c1">#SBATCH --error=err.out</span>
+<span class="c1">#SBATCH --open-mode=append</span>
+
+<span class="c1">#Print output before end of run</span>
+<span class="nb">export</span> <span class="nv">PYTHONUNBUFFERED</span><span class="o">=</span><span class="m">1</span>
+<span class="nb">export</span> <span class="nv">GAUSSIAN_BASIS</span><span class="o">=</span><span class="s1">&#39;3-21G*&#39;</span>
+<span class="nb">export</span> <span class="nv">GAUSSIAN_CORES</span><span class="o">=</span><span class="m">12</span>
+
+<span class="c1">#run the application:</span>
+<span class="nb">eval</span> <span class="s1">$&#39;elph --javerage&#39;</span>
+</pre></div>
+</div>
 <p>Unwrap the structure to whole molecules, and submit the jobs to
 calculate the transfer integral between each unique pair of molecules in the system,
 by submitting the run script.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sbatch run.py</span>
+</pre></div>
+</div>
 <p>The script will submit a job for each molecule and pair of molecules (1, 2, 3, A, B, C).
 Check the progress of the submitted jobs using</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">sqs</span>
+</pre></div>
+</div>
 <p>Once all the jobs are done, read the calculated transfer integrals submitting
 the same run script changing the last line to</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">eval $&#39;elph --read_javg&#39;</span>
+</pre></div>
+</div>
 <p>After this, the following files and folders can be found in the Anthracene folder.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1/    A/    950158.cif        J_A.json    atom_mapping.json</span>
+<span class="go">2/    B/    all_pairs.json    J_B.json    err.out</span>
+<span class="go">3/    C/    all_pairs.xyz     J_C.json    out.out</span>
+</pre></div>
+</div>
 <p>The J files (J_A.json, J_B.json, J_C.json) present the transfer integral in meV
 of each pair described in all_pairs.json.</p>
 <ul class="simple">
-<li>Calculate the variance of transfer integrals (Sigma):</li>
+<li><p>Calculate the variance of transfer integrals (Sigma):</p></li>
 </ul>
 <p>The phonons in the system have to be precomputed.
 <a class="reference external" href="https://dcs-flow.readthedocs.io/en/master/index.html">DCS-Flow</a>
 calculates the phonon modes as the second part of its own workflow (2-phonons).</p>
 <p>Upload the following files to the Anthracene folder</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">FORCE_SETS    phonopy_params.yaml</span>
+</pre></div>
+</div>
 <p>Calculate the variance (Sigma) within the finite differences method submitting the
 run script with the updated command
 (depending on the size of the system 30 minutes in the debug queue is not enough to submit all the jobs,
 consider using -q as ‘regular’ and -t 01:00:00 or more)</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">eval $&#39;elph --sigma&#39;</span>
+</pre></div>
+</div>
 <p>A job for each displaced atom will be submitted. After all jobs are done, read the result
 submitting the run script with (this takes less than 10 minutes)</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">eval $&#39;elph --read_sigma&#39;</span>
+</pre></div>
+</div>
 <p>The following files and folders will be written in the Anthracene folder.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">1/displacements/...    A/displacements/...    A_disp_js.npz    Sigma_A.json    phonon.npz</span>
+<span class="go">2/displacements/...    B/displacements/...    B_disp_js.npz    Sigma_B.json</span>
+<span class="go">3/displacements/...    C/displacements/...    C_disp_js.npz    Sigma_A.json</span>
+</pre></div>
+</div>
 <p>The Sigma files (Sigma_A.json, Sigma_B.json, Sigma_C.json) present the variance of the transfer integral
 in meV of each pair.</p>
 <ul class="simple">
-<li>Calculate the mobility</li>
+<li><p>Calculate the mobility</p></li>
 </ul>
 <p>Create the lattice and parameters files, <code class="docutils literal notranslate"><span class="pre">lattice.json</span></code>and <code class="docutils literal notranslate"><span class="pre">params.json</span></code>, with the command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">elph --write_files</span>
+</pre></div>
+</div>
 <p>Edit the files to match the following values</p>
 <p>lattice.json:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="nt">&quot;nmuc&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+   <span class="nt">&quot;coordmol&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+      <span class="p">],</span>
+   <span class="nt">&quot;unitcell&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.7321</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+      <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">]</span>
+   <span class="p">],</span>
+   <span class="nt">&quot;supercell&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+   <span class="nt">&quot;unique&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+   <span class="nt">&quot;uniqinter&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+      <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <p>params.json:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="nt">&quot;javg&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.058</span><span class="p">,</span> <span class="mf">0.058</span><span class="p">,</span> <span class="mf">0.058</span><span class="p">],</span>
+   <span class="nt">&quot;sigma&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.029</span><span class="p">,</span> <span class="mf">0.029</span><span class="p">,</span> <span class="mf">0.029</span><span class="p">],</span>
+   <span class="nt">&quot;nrepeat&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+   <span class="nt">&quot;iseed&quot;</span><span class="p">:</span> <span class="mi">3987187</span><span class="p">,</span>
+   <span class="nt">&quot;invtau&quot;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>
+   <span class="nt">&quot;temp&quot;</span><span class="p">:</span> <span class="mf">0.025</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <p>Submit the run script to calculate the mobility (in cm:sub:<cite>2</cite>/(V . s))
 by updating the command to</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">eval $&#39;elph --mobility&#39;</span>
+</pre></div>
 </div>
-</div>
+</section>
+</section>
 
 
            </div>
