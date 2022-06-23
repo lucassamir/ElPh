@@ -77,7 +77,7 @@
 <h2>Example 1: Workflow on local machine<a class="headerlink" href="#example-1-workflow-on-local-machine" title="Permalink to this heading"></a></h2>
 <p>The following example shows the complete workflow run on a local machine.</p>
 <ul class="simple">
-<li><p>Calculate transfer integral between pairs of molecules (J:sub:<cite>average</cite>):</p></li>
+<li><p>Calculate transfer integral between pairs of molecules (J<sub>average</sub>):</p></li>
 </ul>
 <p>First, create a folder containing the geometry file (.cif, .gen, .sdf, or .xyz).
 The folder used in this example, named Anthracene, can be downloaded from the Uploads Folder.</p>
@@ -161,7 +161,7 @@ in meV of each pair</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Use the following command to calculate the mobility (in cm:sub:<cite>2</cite>/(V . s))</p>
+<p>Use the following command to calculate the mobility (in cm<sup>2</sup>/(V . s))</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">elph --mobility</span>
 </pre></div>
 </div>
@@ -181,7 +181,7 @@ in meV of each pair</p>
 <h2>Example 2: Workflow on NERSC<a class="headerlink" href="#example-2-workflow-on-nersc" title="Permalink to this heading"></a></h2>
 <p>The following example shows the complete workflow run on the NERSC supercomputer.</p>
 <ul class="simple">
-<li><p>Calculate transfer integral between pairs of molecules (J:sub:<cite>average</cite>):</p></li>
+<li><p>Calculate transfer integral between pairs of molecules (J<sub>average</sub>):</p></li>
 </ul>
 <p>Upload the Anthracene folder to NERSC using a file transfer software like Globus.
 The folder should contain the .cif file and the following run script (run.py)</p>
@@ -302,7 +302,7 @@ in meV of each pair.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Submit the run script to calculate the mobility (in cm:sub:<cite>2</cite>/(V . s))
+<p>Submit the run script to calculate the mobility (in cm<sup>2</sup>/(V . s))
 by updating the command to</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">eval $&#39;elph --mobility&#39;</span>
 </pre></div>

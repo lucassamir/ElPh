@@ -6,7 +6,7 @@ Example 1: Workflow on local machine
 
 The following example shows the complete workflow run on a local machine.
 
-* Calculate transfer integral between pairs of molecules (J:sub:`average`):
+* Calculate transfer integral between pairs of molecules (J\ :sub:`average`):
 
 First, create a folder containing the geometry file (.cif, .gen, .sdf, or .xyz). 
 The folder used in this example, named Anthracene, can be downloaded from the Uploads Folder.
@@ -109,7 +109,7 @@ params.json:
       "temp": 0.025
    }
 
-Use the following command to calculate the mobility (in cm:sub:`2`/(V . s))
+Use the following command to calculate the mobility (in cm\ :sup:`2`\ /(V . s))
 
 .. code-block:: console
 
@@ -120,7 +120,7 @@ Use the following command to calculate the mobility (in cm:sub:`2`/(V . s))
 In order to visualize the atomic contributions to Sigma, run
 
 .. code-block:: console
-   
+
    elph --view atoms
 
 Or to visualize the 3 highest contributing phonon modes to Sigma, used
@@ -135,7 +135,7 @@ Example 2: Workflow on NERSC
 
 The following example shows the complete workflow run on the NERSC supercomputer.
 
-* Calculate transfer integral between pairs of molecules (J:sub:`average`):
+* Calculate transfer integral between pairs of molecules (J\ :sub:`average`):
 
 Upload the Anthracene folder to NERSC using a file transfer software like Globus. 
 The folder should contain the .cif file and the following run script (run.py)
@@ -282,7 +282,7 @@ params.json:
       "temp": 0.025
    }
 
-Submit the run script to calculate the mobility (in cm:sub:`2`/(V . s))
+Submit the run script to calculate the mobility (in cm\ :sup:`2`\ /(V . s))
 by updating the command to
 
 .. code-block:: console 
