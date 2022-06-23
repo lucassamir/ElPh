@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Python Module Index &mdash; ElPh 1.0.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Examples &mdash; ElPh 1.0.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -15,10 +15,7 @@
         <script type="text/javascript" src="_static/language_data.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
- 
-
-
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -55,8 +52,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Python Module Index</li>
+      <li>Examples</li>
       <li class="wy-breadcrumbs-aside">
+            <a href="_sources/examples.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -64,54 +62,48 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-
-   <h1>Python Module Index</h1>
-
-   <div class="modindex-jumpbox">
-   <a href="#cap-e"><strong>e</strong></a>
-   </div>
-
-   <table class="indextable modindextable">
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-e"><td></td><td>
-       <strong>e</strong></td><td></td></tr>
-     <tr>
-       <td><img src="_static/minus.png" class="toggler"
-              id="toggle-1" style="display: none" alt="-" /></td>
-       <td>
-       <a href="generated/elph.html#module-elph"><code class="xref">elph</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="generated/elph.javerage.html#module-elph.javerage"><code class="xref">elph.javerage</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="generated/elph.main.html#module-elph.main"><code class="xref">elph.main</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="generated/elph.molecules.html#module-elph.molecules"><code class="xref">elph.molecules</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="generated/elph.phonons.html#module-elph.phonons"><code class="xref">elph.phonons</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="generated/elph.sigma.html#module-elph.sigma"><code class="xref">elph.sigma</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="generated/elph.visualization.html#module-elph.visualization"><code class="xref">elph.visualization</code></a></td><td>
-       <em></em></td></tr>
-   </table>
+  <div class="section" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline"></a></h1>
+<div class="section" id="example-1-workflow-on-local-machine">
+<h2>Example 1: Workflow on local machine<a class="headerlink" href="#example-1-workflow-on-local-machine" title="Permalink to this headline"></a></h2>
+<p>The following example shows the complete workflow run on a local machine.</p>
+<ul class="simple">
+<li>Calculate transfer integral between pairs of molecules (J <sub>average</sub>):</li>
+</ul>
+<p>First, create a folder containing the geometry file (.cif, .gen, .sdf, or .xyz).
+The folder used in this example, named Anthracene, can be downloaded from the Uploads Folder.</p>
+<p>In the Anthracene folder, unwrap the structure to whole molecules,
+and calculate the transfer integral between each unique pair of molecules in the system,
+using the following command.</p>
+<p>Once the job has completed, the following files and folders can be found in the Anthracene folder.</p>
+<p>The J files (J_A.json, J_B.json, J_C.json) present the transfer integral in meV
+of each pair described in all_pairs.json.</p>
+<ul class="simple">
+<li>Calculate the variance of transfer integrals (Sigma):</li>
+</ul>
+<p>Before calculating Sigma, which is the variance of the transfer integral due to vibrations in the system,
+the phonons have to be precomputed. <a class="reference external" href="https://dcs-flow.readthedocs.io/en/master/index.html">DCS-Flow</a>
+calculates the phonon modes as the second part of its own workflow (2-phonons).</p>
+<p>Copy the following files to the Anthracene folder</p>
+<p>Calculate the variance (Sigma) within the finite differences method using the command</p>
+<p>After the job is done, the following files and folders will be written in the Anthracene folder.</p>
+<p>The Sigma files (Sigma_A.json, Sigma_B.json, Sigma_C.json) present the variance of the transfer integral
+in meV of each pair</p>
+<ul class="simple">
+<li>Calculate the mobility</li>
+</ul>
+<p>Create the lattice and parameters files, <code class="docutils literal notranslate"><span class="pre">lattice.json</span></code>and <code class="docutils literal notranslate"><span class="pre">params.json</span></code>, with the command</p>
+<p>Edit the files to match the following values</p>
+<p>lattice.json:</p>
+<p>params.json:</p>
+<p>Use the following command to calculate the mobility (in cm:sub:<cite>2</cite>/(V . s))</p>
+<ul class="simple">
+<li>Visualize Sigma</li>
+</ul>
+<p>In order to visualize the atomic contributions to Sigma, run</p>
+<p>Or to visualize the 3 highest contributing phonon modes to Sigma, used</p>
+</div>
+</div>
 
 
            </div>
