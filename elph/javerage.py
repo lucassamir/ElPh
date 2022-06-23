@@ -154,11 +154,8 @@ def unwrap_atoms(structure_file=None):
     # For each bond, take the lower left and move it upper right until the bond shrinks
     all_positions = atoms.get_positions()
     is_optimized = False
-    iterations = 0
     print("optimizing atoms")
     while not is_optimized:
-        iterations += 1
-        print("{} iterations".format(iterations))
         is_optimized = True
         for i in range(3):
             for edge in edges:
