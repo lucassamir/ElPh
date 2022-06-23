@@ -112,6 +112,18 @@ def find_neighbors(atoms):
 
     return n_components, component_list, edges
 
+def is_triangle(centers_of_mass):
+    """Checks whether centers of mass form a triangle and not a line
+    Args:
+        centers_of_mass (np.ndarray): An array containing the centers of mass of each molecule
+    Returns:
+        Bool: Whether the centers of mass form a triangle or not
+    """
+    l1 = np.linalg.norm(centers_of_mass[1] - centers_of_mass[0])
+    l2 = np.linalg.norm(centers_of_mass[2] - centers_of_mass[0])
+    l3 = np.linalg.norm(centers_of_mass[2] - centers_of_mass[1])
+    return (l1 < l2 + l3) and (l2 < l1 + l3) and (l3 < l1 + l2)
+
 def unwrap_atoms(structure_file=None):
     """Unwraps the molecules and identifies pairs based on a structure file.
 
@@ -132,27 +144,16 @@ def unwrap_atoms(structure_file=None):
         structure_file = find_structure_file(folder)
 
     atoms = read(structure_file)
-    num_atoms_original_structure = len(atoms)
-    neighbor_list = NeighborList(natural_cutoffs(atoms), self_interaction=False, bothways=True)
-    neighbor_list.update(atoms)
-    matrix = neighbor_list.get_connectivity_matrix(neighbor_list.nl)
-    n_components, component_list_unitcell = sparse.csgraph.connected_components(matrix)
-    small_structure_flag = n_components < 3
-    
-    idx = 0
-    molIdx = component_list_unitcell[idx]
-    print("There are {} molecules in the system".format(n_components))
-    molIdxs = [ i for i in range(len(component_list_unitcell)) if component_list_unitcell[i] == molIdx ]
-    print("The following atoms are part of molecule {}: {}".format(molIdx, molIdxs))
-    edges = list(matrix.keys())
+
+    n_components, component_list, edges = find_neighbors(atoms)
+
     max_bond_len = max(natural_cutoffs(atoms))
     cell = list(atoms.get_cell())
-    cell_array = atoms.get_cell()
     atoms.set_pbc([False,False,False])
-
+    
+    # For each bond, take the lower left and move it upper right until the bond shrinks
     all_positions = atoms.get_positions()
     is_optimized = False
-    # For each bond, take the lower left and move it upper right until the bond shrinks
     iterations = 0
     print("optimizing atoms")
     while not is_optimized:
@@ -179,12 +180,13 @@ def unwrap_atoms(structure_file=None):
     atoms.set_positions(all_positions)
     
     # Construct graph (compute total weight)
-    original_centers_of_mass = get_centers_of_mass(atoms, n_components, component_list_unitcell)
+    original_centers_of_mass = get_centers_of_mass(atoms, n_components, component_list)
     centers_of_mass = np.copy(original_centers_of_mass)
     weight, has_dupes = compute_total_weight(centers_of_mass)
     test_dirs = cell
     test_dirs.extend([-x for x in test_dirs])
 
+    # Move molecules toward each other
     is_optimized = False
     while not is_optimized:
         is_optimized = True
@@ -197,13 +199,11 @@ def unwrap_atoms(structure_file=None):
                     centers_of_mass = np.copy(test_centers_of_mass)
                     weight = test_weight
                     is_optimized = False
-    
-    # Write centers of mass to file
+
     translations = np.zeros([len(atoms), 3])
-    
     for i in range(n_components):
-        molIdx = component_list_unitcell[i]
-        molIdxs = [ x for x in range(len(component_list_unitcell)) if component_list_unitcell[x] == molIdx ]
+        molIdx = component_list[i]
+        molIdxs = [ x for x in range(len(component_list)) if component_list[x] == molIdx ]
         
         dif = centers_of_mass[i] - original_centers_of_mass[i]
         translations[molIdxs,:] = dif
@@ -211,82 +211,79 @@ def unwrap_atoms(structure_file=None):
     atoms.translate(translations)
     atoms.center()
 
-    new_atoms = Atoms()
-    new_atoms.set_cell(cell_array)
+     # Construct 3 closest molecules which will form 3 pairs
+    original_n_components = n_components
 
-    atom_mapping = {}
+    # If 2 molecules per unit cell, we start with A and B type molecules only
+    # If 4 molecules per unit cell, we start with A, B, C, and D molecules
+    # For both cases, the high-mobility plane, which we're interested in, consists of A and B molecules only
+    # Therefore, we need another copy in both cases
+    atoms = atoms * [2,1,1]
+    n_components, component_list, edges = find_neighbors(atoms)
+
+    new_atoms = Atoms()
+    new_atoms.set_cell(atoms.get_cell())
     counter = 0
-    for i in range(n_components):
-        molIdx = i
-        molIdxs = [ x for x in range(len(component_list_unitcell)) if component_list_unitcell[x] == molIdx ]
+    atom_mapping = {}
+    for i in range(3):
+        # Gives us another A-type molecule for 4-molecule systems
+        if i == 2 and original_n_components >= 3:
+            idx = original_n_components
+        else:
+            idx = i
+        molIdxs = [ j for j in range(len(component_list)) if component_list[j] == idx ]
+        new_atoms.extend(atoms[molIdxs])
         for idx in molIdxs:
             atom_mapping[idx] = counter 
             counter += 1
-        new_atoms.extend(atoms[molIdxs])
 
-    fully_connected_atoms = new_atoms*[2, 2, 2]
-
-    n_components, component_list, edges = find_neighbors(fully_connected_atoms)
-
-    # Compute centers of mass for remaining molecules
-    centers_of_mass = get_centers_of_mass(fully_connected_atoms, n_components, component_list)
-    com_edges = {}
-    for i in trange(n_components, desc="Finding 3 closest fully-connected molecules"):
-        node_1 = centers_of_mass[i]
-        for j in range(i+1, n_components):
-            node_2 = centers_of_mass[j]
-            com_edges[(i,j)] = np.linalg.norm(node_1 - node_2)
-            
-    # Identify 3 nearest centers of mass to each other Floyd Warshall is best, but it is already N^3. Just do brute force
-    min_cycle_length = float('inf')
-    min_cycle = [None, None, None]
-    for i in range(len(centers_of_mass)):
-        for j in range(i+1, len(centers_of_mass)):
-            for k in range(j+1, len(centers_of_mass)):
-                # TODO: Impose triangle condition
-                cycle_length = com_edges[(i,j)] + com_edges[(j,k)] + com_edges[(i,k)]
-                is_triangle = com_edges[(i,j)] < com_edges[(j,k)] + com_edges[(i,k)] and \
-                                com_edges[(j,k)] < com_edges[(i,k)] + com_edges[(i,j)] and \
-                                com_edges[(i,k)] < com_edges[(i,j)] + com_edges[(j,k)]
-                if cycle_length < min_cycle_length and is_triangle:
-                    min_cycle_length = cycle_length
-                    min_cycle = [i, j, k]
-
-    # Keep only these atoms
-    new_atoms = Atoms()
-    for idx in min_cycle:
-        keep_idxs = [ i for i in range(len(component_list)) if component_list[i] == idx ]
-        new_atoms.extend(fully_connected_atoms[keep_idxs])
-
-    # Center in cell
-    new_atoms.center()
-    new_atoms.set_pbc([False, False, False])
-    new_atoms.set_cell([0, 0, 0])
-    new_atoms.write('all_pairs.xyz')
-
-    # If original structre contained only 2 molecules, need to finish mapping.
-    if small_structure_flag:
-        min_cycle_coms = [centers_of_mass[i] for i in min_cycle]
-        # Compute distance between 3rd molecule and first 2. If dist1 is a lattice vector, 3 is a copy of 1. 
-        # If dist2 is a lattice vector, 3 is a copy of 2.
-        dist1 = min_cycle_coms[2] - min_cycle_coms[0]
-        dist2 = min_cycle_coms[2] - min_cycle_coms[1]
-        min_dist = np.inf
-        for vec in cell:
-            if np.linalg.norm(dist1 - vec) < min_dist:
-                copy_of = 0
-                min_dist = np.linalg.norm(dist1 - vec)
-            if np.linalg.norm(dist2 - vec) < min_dist:
-                copy_of = 1
-                min_dist = np.linalg.norm(dist2 - vec)
-        # Add to atom_mapping so it includes the new molecule.
-        molIdx = copy_of
-        molIdxs = [ x for x in range(len(component_list_unitcell)) if component_list_unitcell[x] == molIdx ]
-        for idx in molIdxs:
-            atom_mapping[idx + num_atoms_original_structure] = counter 
-            counter += 1
+    # Write atom mapping which will be used later to match phonons to grad J
     with open('atom_mapping.json', 'w') as f:
         f.write(json.dumps(OrderedDict(sorted(atom_mapping.items(), key=lambda t: t[1])), indent=2))
+
+    # Move 3 molecules as close together as possible
+    n_components, component_list, edges = find_neighbors(new_atoms)
+    coms = get_centers_of_mass(new_atoms, n_components, component_list)
+    weight, has_dupes = compute_total_weight(coms)
+    
+    states = [-3,-2,-1,0,1,2,3]
+    best_weight = weight
+    best_coms = np.copy(coms)
+    same_state_count = 0
+    while same_state_count < 3:
+        same_state_count += 1
+        for molecule_num in range(3):
+            for i in states:
+                for j in states:
+                    for k in states:
+                        vec = i*test_dirs[0] + j*test_dirs[1] + k*test_dirs[2]
+                        test_coms = np.copy(coms)
+                        test_coms[molecule_num] += vec
+                        weight, has_dupes = compute_total_weight(test_coms)
+                        if not has_dupes and is_triangle(test_coms):
+                            if weight < best_weight:
+                                best_weight = weight
+                                best_coms = np.copy(test_coms)
+                                same_state_count = 0
+
+    translations = np.zeros([len(new_atoms), 3])
+    displacements = best_coms - coms
+    for i in range(3):
+        molIdxs = [ j for j in range(len(component_list)) if component_list[j] == i ]
+        translations[molIdxs] = displacements[i]
+    new_atoms.translate(translations)
+
+    final_atoms = Atoms()
+    for i in range(3):
+        molIdxs = [ j for j in range(len(component_list)) if component_list[j] == i ]
+        final_atoms.extend(new_atoms[molIdxs])
+        
+    final_atoms.center()
+    final_atoms.set_pbc([False, False, False])
+    final_atoms.set_cell([0, 0, 0])
+    n_components, component_list, edges = find_neighbors(final_atoms)
+    final_atoms.write('all_pairs.xyz')
+
 
     # Create structures with each pair of atoms
     """
@@ -327,15 +324,15 @@ def unwrap_atoms(structure_file=None):
                  '3':2}
 
     for key, value in molecules.items():
-        write_structure(key, component_list, min_cycle[value], fully_connected_atoms)
+        write_structure(key, component_list, value, final_atoms)
 
     pairs = {'A':[0, 1], 
              'B':[1, 2],
              'C':[0, 2]}
 
     for key, value in pairs.items():
-        cycle = [min_cycle[v] for v in value]
-        write_structure(key, component_list, cycle, fully_connected_atoms)
+        cycle = value
+        write_structure(key, component_list, cycle, final_atoms)
 
     with open('all_pairs.json', 'w', encoding='utf-8') as f:
         json.dump(pairs, f, ensure_ascii=False, indent=4)
