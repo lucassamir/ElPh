@@ -77,16 +77,31 @@ Usage
        elph --sigma
 
 #. 
-   Run mobility / visualization       
+   Compute mobility
 
-   To compute the mobility:
+   Write input files and define correct parameters for the specific system
+
+   .. code-block::
+
+       elph --write_files
+
+   Run mobility
 
    .. code-block::
 
        elph --mobility
 
-   To generate the visualization:
+#. 
+   Visualize sigma contribution per atom/mode
+
+   To generate the visualization per atom:
 
    .. code-block::
 
-       elph --view
+       elph --view atoms
+
+   To generate the visualization per mode (n highest modes):
+
+   .. code-block::
+
+       elph --view modes 3
