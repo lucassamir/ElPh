@@ -8,8 +8,8 @@ ElPh Requirements
 * `Gaussian <https://gaussian.com/>`_
 * `Catnip <https://hub.docker.com/r/madettmann/catnip>`_
 
-Installation
-^^^^^^^^^^^^^^^^^^^^^
+Installation on local machine
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * Install ElPh:
@@ -21,7 +21,6 @@ Installation
 
 * Install gaussian:
 
-  #. 
      Gaussian installation will vary group to group.
 
   
@@ -33,12 +32,9 @@ Installation
 
    docker pull madettmann/catnip
 
+* Set environment variables
 
-
-Set environment variables
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Add these lines to your configuration file (.bashrc). The following code uses example paths and must be edited according to your system.
+   Add these lines to your configuration file (.bashrc). The following code uses example paths and must be edited according to your system.
 
 .. code-block::
 
@@ -46,10 +42,22 @@ Add these lines to your configuration file (.bashrc). The following code uses ex
    export ASE_GAUSSIAN_COMMAND='Your Gaussian Command Here < PREFIX.com > PREFIX.log'
 
 
+Installation on NERSC
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There is no need to install the ElPh package and its dependencies. 
+Just these lines to your configuration file (.bashrc) in your NERSC home folder.
+
+.. code-block::
+
+   module use /global/common/software/m2734/ElPh/modulefiles
+   module load elph
+
+
 Usage
 ^^^^^
 
-
+* Local machine
 
 #. 
    Add cif file to current working directory
@@ -105,3 +113,20 @@ Usage
    .. code-block::
 
        elph --view modes 3
+
+* NERSC
+
+The step-by-step is basically the same as in a local machine, 
+however add these commands to the following steps
+
+2. Once all the jobs submited by the Javerage command are done, run
+
+   .. code-block::
+
+       elph --read_javg
+
+4. After all the jobs submited by the Sigma command are finished, use
+
+   .. code-block::
+
+       elph --read_sigma

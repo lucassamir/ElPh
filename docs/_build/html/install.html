@@ -16,6 +16,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples.html" />
     <link rel="prev" title="elph.visualization" href="generated/elph.visualization.html" /> 
 </head>
 
@@ -38,11 +39,12 @@
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Install</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#elph-requirements">ElPh Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#set-environment-variables">Set environment variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-on-local-machine">Installation on local machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-on-nersc">Installation on NERSC</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
 </ul>
 
         </div>
@@ -78,16 +80,16 @@
 <li><a class="reference external" href="https://hub.docker.com/r/madettmann/catnip">Catnip</a></li>
 </ul>
 </div>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h2>
+<div class="section" id="installation-on-local-machine">
+<h2>Installation on local machine<a class="headerlink" href="#installation-on-local-machine" title="Permalink to this headline"></a></h2>
 <ul class="simple">
 <li>Install ElPh:</li>
 </ul>
 <ul>
 <li><p class="first">Install gaussian:</p>
-<ol class="arabic simple">
-<li>Gaussian installation will vary group to group.</li>
-</ol>
+<blockquote>
+<div><p>Gaussian installation will vary group to group.</p>
+</div></blockquote>
 </li>
 <li><p class="first">Installing Catnip</p>
 <blockquote>
@@ -95,13 +97,24 @@
 </div></blockquote>
 </li>
 </ul>
+<ul>
+<li><p class="first">Set environment variables</p>
+<blockquote>
+<div><p>Add these lines to your configuration file (.bashrc). The following code uses example paths and must be edited according to your system.</p>
+</div></blockquote>
+</li>
+</ul>
 </div>
-<div class="section" id="set-environment-variables">
-<h2>Set environment variables<a class="headerlink" href="#set-environment-variables" title="Permalink to this headline"></a></h2>
-<p>Add these lines to your configuration file (.bashrc). The following code uses example paths and must be edited according to your system.</p>
+<div class="section" id="installation-on-nersc">
+<h2>Installation on NERSC<a class="headerlink" href="#installation-on-nersc" title="Permalink to this headline"></a></h2>
+<p>There is no need to install the ElPh package and its dependencies.
+Just these lines to your configuration file (.bashrc) in your NERSC home folder.</p>
 </div>
 <div class="section" id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li>Local machine</li>
+</ul>
 <ol class="arabic">
 <li><p class="first">Add cif file to current working directory</p>
 </li>
@@ -124,6 +137,17 @@
 <p>To generate the visualization per mode (n highest modes):</p>
 </li>
 </ol>
+<ul class="simple">
+<li>NERSC</li>
+</ul>
+<p>The step-by-step is basically the same as in a local machine,
+however add these commands to the following steps</p>
+<ol class="arabic simple" start="2">
+<li>Once all the jobs submited by the Javerage command are done, run</li>
+</ol>
+<ol class="arabic simple" start="4">
+<li>After all the jobs submited by the Sigma command are finished, use</li>
+</ol>
 </div>
 </div>
 
@@ -132,6 +156,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="generated/elph.visualization.html" class="btn btn-neutral float-left" title="elph.visualization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

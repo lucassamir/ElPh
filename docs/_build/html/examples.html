@@ -15,7 +15,8 @@
         <script type="text/javascript" src="_static/language_data.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Install" href="install.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -33,9 +34,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Install</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example-1-workflow-on-local-machine">Example 1: Workflow on local machine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-2-workflow-on-nersc">Example 2: Workflow on NERSC</a></li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -68,7 +74,7 @@
 <h2>Example 1: Workflow on local machine<a class="headerlink" href="#example-1-workflow-on-local-machine" title="Permalink to this headline"></a></h2>
 <p>The following example shows the complete workflow run on a local machine.</p>
 <ul class="simple">
-<li>Calculate transfer integral between pairs of molecules (J <sub>average</sub>):</li>
+<li>Calculate transfer integral between pairs of molecules (J:sub:<cite>average</cite>):</li>
 </ul>
 <p>First, create a folder containing the geometry file (.cif, .gen, .sdf, or .xyz).
 The folder used in this example, named Anthracene, can be downloaded from the Uploads Folder.</p>
@@ -82,7 +88,7 @@ of each pair described in all_pairs.json.</p>
 <li>Calculate the variance of transfer integrals (Sigma):</li>
 </ul>
 <p>Before calculating Sigma, which is the variance of the transfer integral due to vibrations in the system,
-the phonons have to be precomputed. <a class="reference external" href="https://dcs-flow.readthedocs.io/en/master/index.html">DCS-Flow</a>
+the phonons have to be computed. <a class="reference external" href="https://dcs-flow.readthedocs.io/en/master/index.html">DCS-Flow</a>
 calculates the phonon modes as the second part of its own workflow (2-phonons).</p>
 <p>Copy the following files to the Anthracene folder</p>
 <p>Calculate the variance (Sigma) within the finite differences method using the command</p>
@@ -103,12 +109,58 @@ in meV of each pair</p>
 <p>In order to visualize the atomic contributions to Sigma, run</p>
 <p>Or to visualize the 3 highest contributing phonon modes to Sigma, used</p>
 </div>
+<div class="section" id="example-2-workflow-on-nersc">
+<h2>Example 2: Workflow on NERSC<a class="headerlink" href="#example-2-workflow-on-nersc" title="Permalink to this headline"></a></h2>
+<p>The following example shows the complete workflow run on the NERSC supercomputer.</p>
+<ul class="simple">
+<li>Calculate transfer integral between pairs of molecules (J:sub:<cite>average</cite>):</li>
+</ul>
+<p>Upload the Anthracene folder to NERSC using a file transfer software like Globus.
+The folder should contain the .cif file and the following run script (run.py)</p>
+<p>Unwrap the structure to whole molecules, and submit the jobs to
+calculate the transfer integral between each unique pair of molecules in the system,
+by submitting the run script.</p>
+<p>The script will submit a job for each molecule and pair of molecules (1, 2, 3, A, B, C).
+Check the progress of the submitted jobs using</p>
+<p>Once all the jobs are done, read the calculated transfer integrals submitting
+the same run script changing the last line to</p>
+<p>After this, the following files and folders can be found in the Anthracene folder.</p>
+<p>The J files (J_A.json, J_B.json, J_C.json) present the transfer integral in meV
+of each pair described in all_pairs.json.</p>
+<ul class="simple">
+<li>Calculate the variance of transfer integrals (Sigma):</li>
+</ul>
+<p>The phonons in the system have to be precomputed.
+<a class="reference external" href="https://dcs-flow.readthedocs.io/en/master/index.html">DCS-Flow</a>
+calculates the phonon modes as the second part of its own workflow (2-phonons).</p>
+<p>Upload the following files to the Anthracene folder</p>
+<p>Calculate the variance (Sigma) within the finite differences method submitting the
+run script with the updated command
+(depending on the size of the system 30 minutes in the debug queue is not enough to submit all the jobs,
+consider using -q as ‘regular’ and -t 01:00:00 or more)</p>
+<p>A job for each displaced atom will be submitted. After all jobs are done, read the result
+submitting the run script with (this takes less than 10 minutes)</p>
+<p>The following files and folders will be written in the Anthracene folder.</p>
+<p>The Sigma files (Sigma_A.json, Sigma_B.json, Sigma_C.json) present the variance of the transfer integral
+in meV of each pair.</p>
+<ul class="simple">
+<li>Calculate the mobility</li>
+</ul>
+<p>Create the lattice and parameters files, <code class="docutils literal notranslate"><span class="pre">lattice.json</span></code>and <code class="docutils literal notranslate"><span class="pre">params.json</span></code>, with the command</p>
+<p>Edit the files to match the following values</p>
+<p>lattice.json:</p>
+<p>params.json:</p>
+<p>Submit the run script to calculate the mobility (in cm:sub:<cite>2</cite>/(V . s))
+by updating the command to</p>
+</div>
 </div>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install.html" class="btn btn-neutral float-left" title="Install" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
 
   <hr/>
 
