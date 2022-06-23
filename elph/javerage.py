@@ -67,7 +67,7 @@ def compute_total_weight(centers_of_mass):
     for i in range(len(centers_of_mass)):
         for j in range(i+1, len(centers_of_mass)):
             total_weight +=  np.linalg.norm(centers_of_mass[i] - centers_of_mass[j])
-            if np.linalg.norm(centers_of_mass[i] - centers_of_mass[j]) == 0:
+            if np.linalg.norm(centers_of_mass[i] - centers_of_mass[j]) < 0.1:
                 has_dupes = True
     return total_weight, has_dupes
 
