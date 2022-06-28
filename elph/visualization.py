@@ -14,6 +14,7 @@ def heat_atoms(molpair, ssigma_eav):
     """
     from ase.io import read
     import matplotlib.pyplot as plt
+    from matplotlib import cm
     # import plotly.graph_objects as go
 
     atoms = read(molpair + '/' + molpair + '.xyz')
@@ -27,7 +28,7 @@ def heat_atoms(molpair, ssigma_eav):
     
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
-    s = ax.scatter(x, y, z, s = 20 * masses, c=ssigma / j**2)
+    s = ax.scatter(x, y, z, s = 20 * masses, c=ssigma / j**2, vmin=0, vmax=1.0, cmap=cm.jet)
     nmax = max(max(x), max(y), max(z))
     nmin = min(min(x), min(y), min(z))
     ax.set_xlim3d(nmin, nmax)
