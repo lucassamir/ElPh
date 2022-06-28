@@ -288,5 +288,6 @@ class Molecules:
       print('Calculating charge mobility')
       print('mu_x = ', mobx)
       print('mu_y = ', moby)
+      print('mu_avg = ', (mobx + moby) / 2)
 
       return mobx, moby
