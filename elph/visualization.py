@@ -40,7 +40,7 @@ def heat_atoms(molpair, ssigma_eav):
             'y': y,
             'z': z,
             'size': 20 * masses,
-            'sigma': ssigma}
+            'sigma': ssigma / j**2}
 
     np.savez_compressed('view_atoms_' + molpair + '.npz', **data)
 
