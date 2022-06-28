@@ -2,7 +2,7 @@ import numpy as np
 import json
 from elph.sigma import load_phonons, get_dj_matrix
 
-def heat_atoms(molpair, sigma_eav):
+def heat_atoms(molpair, ssigma_eav):
     """Scatter plot of atoms with heat indicating 
     the highest contributions to sigma. Save plot data 
     (atomic positions, atomic sizes and sigma contribution) 
@@ -10,7 +10,7 @@ def heat_atoms(molpair, sigma_eav):
 
     Args:
         molpair (str): Molecular pair label
-        sigma_eav (array): Sigma array of sizes modes, atoms and directions
+        ssigma_eav (array): Squared sigma array of sizes modes, atoms and directions
     """
     from ase.io import read
     import matplotlib.pyplot as plt
@@ -20,11 +20,19 @@ def heat_atoms(molpair, sigma_eav):
     pos = atoms.get_positions()
     masses = atoms.get_masses()
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
-    sigma = np.sum(np.sum(sigma_eav, axis=-1), axis=0)
+    ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=0)
+
+    with open('J_' + molpair + '.json', 'r') as json_file:
+        j = np.abs(np.float(json.load(json_file)[molpair]))
     
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
-    s = ax.scatter(x, y, z, s = 20 * masses, c=sigma)
+    s = ax.scatter(x, y, z, s = 20 * masses, c=ssigma / j**2)
+    nmax = max(max(x), max(y), max(z))
+    nmin = min(min(x), min(y), min(z))
+    ax.set_xlim3d(nmin, nmax)
+    ax.set_ylim3d(nmin, nmax)
+    ax.set_zlim3d(nmin, nmax)
     fig.colorbar(s)
     plt.show()
 
@@ -32,7 +40,7 @@ def heat_atoms(molpair, sigma_eav):
             'y': y,
             'z': z,
             'size': 20 * masses,
-            'sigma': sigma}
+            'sigma': ssigma}
 
     np.savez_compressed('view_atoms_' + molpair + '.npz', **data)
 
@@ -53,7 +61,7 @@ def heat_atoms(molpair, sigma_eav):
     # fig.write_html(molpair + '.html')
     # fig.show()
 
-def heat_modes(molpair, sigma_eav, vecs_eav, n):
+def heat_modes(molpair, ssigma_eav, vecs_eav, n):
     """Scatter plot of atoms with arrows indicating
     phonon displacements of n phonons modes with the 
     highest sigma contributions. Save plot data 
@@ -62,7 +70,7 @@ def heat_modes(molpair, sigma_eav, vecs_eav, n):
 
     Args:
         molpair (str): Molecular pair label
-        sigma_eav (array): Sigma array of sizes modes, atoms and directions
+        ssigma_eav (array): Squared sigma array of sizes modes, atoms and directions
         vecs_eav (array): Array of phonon eigendisplacements of size modes, atoms and directions
         n (int): Top n phonon modes with highest sigma contribution
     """
@@ -73,9 +81,9 @@ def heat_modes(molpair, sigma_eav, vecs_eav, n):
     pos = atoms.get_positions()
     masses = atoms.get_masses()
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
-    sigma = np.sum(np.sum(sigma_eav, axis=-1), axis=-1)
+    ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=-1)
 
-    ind = np.argsort(sigma)[-n:][::-1]
+    ind = np.argsort(ssigma)[-n:][::-1]
 
     data = {'x': x,
             'y': y,
@@ -109,11 +117,11 @@ def sigma_contribution(pair_atoms, dj_av, temp):
     Returns:
         typle: sigma and eigendisplacements in function of modes, atoms and directions
     """
-    freqs_e, vecs_eav, _ = load_phonons(pair_atoms)
+    freqs_e, vecs_eav, nq = load_phonons(pair_atoms)
     epcoup_eav = vecs_eav * dj_av[None, :, :]
-    ssigma_eav = epcoup_eav**2 / (2 * np.tanh(freqs_e[:, None, None] / (2 * temp)))
+    ssigma_eav = (1 / nq) * (epcoup_eav**2 / (2 * np.tanh(freqs_e[:, None, None] / (2 * temp))))
 
-    return np.sqrt(ssigma_eav), vecs_eav
+    return ssigma_eav, vecs_eav
 
 def get_sigma(pair, delta, temp, mode, n):
     """Read transfer integrals of displacements systems and calculate sigma
@@ -140,12 +148,12 @@ def get_sigma(pair, delta, temp, mode, n):
                                  np.arange((int(mol2) - 1) * offset, 
                                             int(mol2) * offset)])
 
-    sigma_eav, vecs_eav = sigma_contribution(pair_atoms, dj_matrix_av, temp)
+    ssigma_eav, vecs_eav = sigma_contribution(pair_atoms, dj_matrix_av, temp)
 
     if mode == 'atoms':
-        heat_atoms(molpair, sigma_eav)
+        heat_atoms(molpair, ssigma_eav)
     elif mode == 'modes':
-        heat_modes(molpair, sigma_eav, vecs_eav, n)
+        heat_modes(molpair, ssigma_eav, vecs_eav, n)
     else:
         msg = 'The available visualization results are atoms and modes'
         raise NotImplementedError(msg)
