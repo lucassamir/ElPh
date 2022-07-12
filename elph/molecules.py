@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 class Molecules:
    def __init__(self, nmuc=None, coordmol=None, unitcell=None, 
    supercell=None, unique=None, uniqinter=None,
-   javg=None, sigma=None, nrepeat=None,
+   javg=None, sigma=None, f=None, eps=None, nrepeat=None,
    iseed=None, invtau=None, temp=None, 
    lattice_file=None, params_file=None, results={}):
       """
@@ -32,6 +32,8 @@ class Molecules:
           javg (list, optional): Transfer integrals for all the pairs in eV. Defaults to None.
           sigma (list, optional): Standard deviation of the transfer integrals of 
             all the pairs in eV. Defaults to None.
+          f (float, optional): Band renormalization factor. Defaults to None.
+          eps (float, optional): Local dynamic disorder in meV. Defaults to None.
           nrepeat (int, optional): Number of iterations with different realizations of 
             disorder. Defaults to None.
           iseed (int, optional): Index of random seed. Defaults to None.
@@ -65,6 +67,8 @@ class Molecules:
             par_dic = json.load(json_file)
          self.javg = np.array(par_dic['javg'])
          self.sigma = np.array(par_dic['sigma'])
+         self.f = np.array(par_dic['f'])
+         self.eps = np.array(par_dic['eps'])
          self.nrepeat = par_dic['nrepeat']
          self.iseed = par_dic['iseed']
          self.invtau = par_dic['invtau']
@@ -172,8 +176,13 @@ class Molecules:
       rnd_mm = np.random.normal(0, 1, size=(nmol, nmol))
       rnd_mm = np.tril(rnd_mm) + np.tril(rnd_mm, -1).T
 
-      hamiltonian_mm = self.javg[transinter_mm] + self.sigma[transinter_mm] * rnd_mm
-    
+      hamiltonian_mm = self.f * self.javg[transinter_mm] 
+      hamiltonian_mm += self.sigma[transinter_mm] * rnd_mm
+
+      k, l = np.nonzero(transinter_mm)
+      hamiltonian_mm[k, k] = self.eps * rnd_mm[k, k]
+      hamiltonian_mm[l, l] = hamiltonian_mm[k, k]
+
       return hamiltonian_mm
 
    def get_energies(self, nmol, transinter_mm):
