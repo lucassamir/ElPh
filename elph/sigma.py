@@ -136,6 +136,11 @@ def get_deviation(pair_atoms, dj_av, temp, molpair):
             'ratio': ssigma_e / j**2}
     np.savez_compressed('ratio_' + molpair, **data)
 
+    # ssigma_e = (1 / nq) * (epcoup_e**2 / (2 * np.tanh(freqs_e / (2 * temp))))
+    # data = {'freqs': freqs_e,
+    #         'sigma': ssigma_e}
+    # np.savez_compressed('Sigma_e_' + molpair, **data)
+
     return np.sqrt(ssigma)
 
 def get_sigma(pair, delta=0.01, temp=0.025):
