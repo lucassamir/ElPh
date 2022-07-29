@@ -91,6 +91,42 @@ def heat_atoms(molpair, ssigma_eav):
     # fig.write_html(molpair + '.html')
     # fig.show()
 
+def heat_grad(molpair, dj_matrix_av):
+    from ase.io import read
+    import matplotlib.pyplot as plt
+    from ase.data import covalent_radii
+
+    atoms = read(molpair + '/' + molpair + '.xyz')
+    pos = atoms.get_positions()
+    masses = atoms.get_masses()
+    numbers = atoms.get_atomic_numbers()
+    radii = [covalent_radii[num]*300 for num in numbers]
+    x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
+    nmin, nmax = -14.20794795, 14.20794795
+
+    data = {'x': x,
+            'y': y,
+            'z': z,
+            'size': 20 * masses}
+
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(projection='3d')
+    u = dj_matrix_av[:, 0] * 35
+    v = dj_matrix_av[:, 1] * 35
+    w = dj_matrix_av[:, 2] * 35
+    data['u'] = u
+    data['v'] = v
+    data['w'] = w
+    ax.quiver(x, y, z, u, v, w, color='black')
+    ax.scatter(x, y, z, s = radii, alpha=1, edgecolors='grey', c='lavender')
+    ax.set_xlim3d(nmin, nmax)
+    ax.set_ylim3d(nmin, nmax)
+    ax.set_zlim3d(nmin, nmax)
+    plt.axis('off')
+    manager = plt.get_current_fig_manager()
+    manager.full_screen_toggle()
+    plt.show()
+
 def heat_modes(molpair, ssigma_eav, vecs_eav, n):
     """Scatter plot of atoms with arrows indicating
     phonon displacements of n phonons modes with the 
@@ -117,7 +153,8 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
     ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=-1)
     nmin, nmax = -14.20794795, 14.20794795
 
-    ind = np.argsort(ssigma)[-n:][::-1]
+    # ind = np.argsort(ssigma)[-n:][::-1]
+    ind = list(range(-n,n))
 
     data = {'x': x,
             'y': y,
@@ -127,14 +164,14 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
     for i in ind:
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(projection='3d')
-        u = vecs_eav[i, :, 0]
-        v = vecs_eav[i, :, 1]
-        w = vecs_eav[i, :, 2]
+        u = vecs_eav[i, :, 0] * 350
+        v = vecs_eav[i, :, 1] * 350
+        w = vecs_eav[i, :, 2] * 350
         data['u'] = u
         data['v'] = v
         data['w'] = w
-        ax.quiver(x, y, z, u, v, w, length=2, normalize=True, color='black')
-        ax.scatter(x, y, z, s = radii, alpha=1, edgecolors='grey', c='white')
+        ax.quiver(x, y, z, u, v, w, color='black')
+        ax.scatter(x, y, z, s = radii, alpha=1, edgecolors='grey', c='lavender')
         ax.set_xlim3d(nmin, nmax)
         ax.set_ylim3d(nmin, nmax)
         ax.set_zlim3d(nmin, nmax)
@@ -194,6 +231,8 @@ def get_sigma(pair, delta, temp, mode, n):
         heat_atoms(molpair, ssigma_eav)
     elif mode == 'modes':
         heat_modes(molpair, ssigma_eav, vecs_eav, n)
+    elif mode == 'gradient':
+        heat_grad(molpair, dj_matrix_av)
     else:
         msg = 'The available visualization results are atoms and modes'
         raise NotImplementedError(msg)
@@ -215,8 +254,10 @@ def view(mode='atoms', n=3):
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
-    for pair in pairs.items()[1]:
-        get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
+    # for pair in pairs.items():
+    #     get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
+    pair = ('B', [1, 2])
+    get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
 
 if __name__ == '__main__':
     view()
