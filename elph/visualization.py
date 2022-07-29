@@ -1,6 +1,7 @@
 import numpy as np
 import json
 from elph.sigma import load_phonons, get_dj_matrix
+import cmcrameri.cm as cmc
 
 def heat_atoms(molpair, ssigma_eav):
     """Scatter plot of atoms with heat indicating 
@@ -13,6 +14,7 @@ def heat_atoms(molpair, ssigma_eav):
         ssigma_eav (array): Squared sigma array of sizes modes, atoms and directions
     """
     from ase.io import read
+    from ase.data import covalent_radii
     import matplotlib.pyplot as plt
     from matplotlib import cm
     # import plotly.graph_objects as go
@@ -20,6 +22,8 @@ def heat_atoms(molpair, ssigma_eav):
     atoms = read(molpair + '/' + molpair + '.xyz')
     pos = atoms.get_positions()
     masses = atoms.get_masses()
+    numbers = atoms.get_atomic_numbers()
+    radii = [covalent_radii[num]*300 for num in numbers]
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
     ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=0)
 
@@ -28,19 +32,25 @@ def heat_atoms(molpair, ssigma_eav):
     
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
-    s = ax.scatter(x, y, z, s = 20 * masses, c=ssigma / j**2, vmin=0, vmax=1.0, cmap=cm.jet)
+    # s = ax.scatter(x, y, z, s = 10 * masses, c=ssigma / j**2, vmin=0, vmax=0.01)
+    # s = ax.scatter(x, y, z, s = 25 * masses, c=ssigma*10**5,vmin=0, vmax=1, cmap=cmc.devon_r, alpha=1, edgecolors='grey')
+    s = ax.scatter(x, y, z, s = radii, c=ssigma*10**5,vmin=0, vmax=1, cmap=cmc.devon_r, alpha=1, edgecolors='grey')
     # nmax = max(max(x), max(y), max(z))
     # nmin = min(min(x), min(y), min(z))
-    # ax.set_xlim3d(nmin, nmax)
-    # ax.set_ylim3d(nmin, nmax)
-    # ax.set_zlim3d(nmin, nmax)
+    nmin, nmax = -14.20794795, 14.20794795
+    ax.set_xlim3d(nmin, nmax)
+    ax.set_ylim3d(nmin, nmax)
+    ax.set_zlim3d(nmin, nmax)
+    plt.axis('off')
     fig.colorbar(s)
+    manager = plt.get_current_fig_manager()
+    manager.full_screen_toggle()
     plt.show()
 
     data = {'x': x,
             'y': y,
             'z': z,
-            'size': 20 * masses,
+            'size': radii,
             'sigma': ssigma / j**2}
 
     np.savez_compressed('view_atoms_' + molpair + '.npz', **data)
@@ -53,12 +63,31 @@ def heat_atoms(molpair, ssigma_eav):
     #                                    y=y, 
     #                                    z=z, 
     #                                    mode='markers',
-    #                                    marker=dict(size=10*np.sqrt(masses/np.pi),
-    #                                                color=sigma,
-    #                                                colorscale='Viridis',
-    #                                                opacity=0.8,
+    #                                    marker=dict(size=20*np.sqrt(masses/np.pi),
+    #                                                color=ssigma,
+    #                                                colorscale=cmc.batlow.colors.tolist(),
+    #                                                opacity=1,
     #                                                ))],
     #                 layout=layout)
+    # fig.update_layout(scene = dict(
+    #                 xaxis = dict(
+    #                     showgrid = False, # thin lines in the background
+    #                     zeroline = False, # thick line at x=0
+    #                     visible = False,  # numbers below
+    #                 ),
+    #                 yaxis = dict(
+    #                     showgrid = False, # thin lines in the background
+    #                     zeroline = False, # thick line at x=0
+    #                     visible = False,  # numbers below
+    #                 ),
+    #                 zaxis = dict(
+    #                     showgrid = False, # thin lines in the background
+    #                     zeroline = False, # thick line at x=0
+    #                     visible = False,  # numbers below
+    #                 )),
+    #                 width=700,
+    #                 margin=dict(r=10, l=10, b=10, t=10)
+    #               )
     # fig.write_html(molpair + '.html')
     # fig.show()
 
@@ -77,12 +106,16 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
     """
     from ase.io import read
     import matplotlib.pyplot as plt
+    from ase.data import covalent_radii
 
     atoms = read(molpair + '/' + molpair + '.xyz')
     pos = atoms.get_positions()
     masses = atoms.get_masses()
+    numbers = atoms.get_atomic_numbers()
+    radii = [covalent_radii[num]*300 for num in numbers]
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
     ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=-1)
+    nmin, nmax = -14.20794795, 14.20794795
 
     ind = np.argsort(ssigma)[-n:][::-1]
 
@@ -100,8 +133,14 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
         data['u'] = u
         data['v'] = v
         data['w'] = w
-        ax.quiver(x, y, z, u, v, w, length=2, normalize=True)
-        ax.scatter(x, y, z, s = 20 * masses)
+        ax.quiver(x, y, z, u, v, w, length=2, normalize=True, color='black')
+        ax.scatter(x, y, z, s = radii, alpha=1, edgecolors='grey', c='white')
+        ax.set_xlim3d(nmin, nmax)
+        ax.set_ylim3d(nmin, nmax)
+        ax.set_zlim3d(nmin, nmax)
+        plt.axis('off')
+        manager = plt.get_current_fig_manager()
+        manager.full_screen_toggle()
         plt.show()
 
         np.savez_compressed('view_modes_' + molpair + '_' + '{}' .format(i) + '_' + '.npz', **data)
@@ -176,7 +215,7 @@ def view(mode='atoms', n=3):
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
-    for pair in pairs.items():
+    for pair in pairs.items()[1]:
         get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
 
 if __name__ == '__main__':
