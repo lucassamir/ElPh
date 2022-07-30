@@ -1,6 +1,44 @@
 import numpy as np
 import json
 from elph.sigma import load_phonons, get_dj_matrix
+import cmcrameri.cm as cmc
+
+def heat_grad(molpair, dj_matrix_av):
+    from ase.io import read
+    import matplotlib.pyplot as plt
+    from ase.data import covalent_radii
+
+    atoms = read(molpair + '/' + molpair + '.xyz')
+    pos = atoms.get_positions()
+    numbers = atoms.get_atomic_numbers()
+    radii = [covalent_radii[num]*300 for num in numbers]
+    x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
+    nmax = max(max(x), max(y), max(z))
+    nmin = min(min(x), min(y), min(z))
+
+    data = {'x': x,
+            'y': y,
+            'z': z,
+            'size': radii}
+
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(projection='3d')
+    u = dj_matrix_av[:, 0] * 35
+    v = dj_matrix_av[:, 1] * 35
+    w = dj_matrix_av[:, 2] * 35
+    data['u'] = u
+    data['v'] = v
+    data['w'] = w
+    ax.quiver(x, y, z, u, v, w, color='black')
+    ax.scatter(x, y, z, s = radii, alpha=1, edgecolors='grey', c='lavender')
+    ax.set_xlim3d(nmin, nmax)
+    ax.set_ylim3d(nmin, nmax)
+    ax.set_zlim3d(nmin, nmax)
+    plt.axis('off')
+    plt.show()
+
+    np.savez_compressed('view_grad_' + molpair + '.npz', **data)
+
 
 def heat_atoms(molpair, ssigma_eav):
     """Scatter plot of atoms with heat indicating 
@@ -13,34 +51,37 @@ def heat_atoms(molpair, ssigma_eav):
         ssigma_eav (array): Squared sigma array of sizes modes, atoms and directions
     """
     from ase.io import read
+    from ase.data import covalent_radii
     import matplotlib.pyplot as plt
     from matplotlib import cm
     # import plotly.graph_objects as go
 
     atoms = read(molpair + '/' + molpair + '.xyz')
     pos = atoms.get_positions()
-    masses = atoms.get_masses()
+    numbers = atoms.get_atomic_numbers()
+    radii = [covalent_radii[num]*300 for num in numbers]    
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
     ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=0)
+    nmax = max(max(x), max(y), max(z))
+    nmin = min(min(x), min(y), min(z))
 
     with open('J_' + molpair + '.json', 'r') as json_file:
         j = np.abs(np.float(json.load(json_file)[molpair]))
     
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
-    s = ax.scatter(x, y, z, s = 20 * masses, c=ssigma / j**2, vmin=0, vmax=1.0, cmap=cm.jet)
-    # nmax = max(max(x), max(y), max(z))
-    # nmin = min(min(x), min(y), min(z))
-    # ax.set_xlim3d(nmin, nmax)
-    # ax.set_ylim3d(nmin, nmax)
-    # ax.set_zlim3d(nmin, nmax)
+    s = ax.scatter(x, y, z, s = radii, c=ssigma*10**5, vmin=0, vmax=1, cmap=cmc.devon_r, alpha=1, edgecolors='grey')
+    ax.set_xlim3d(nmin, nmax)
+    ax.set_ylim3d(nmin, nmax)
+    ax.set_zlim3d(nmin, nmax)
     fig.colorbar(s)
+    plt.axis('off')
     plt.show()
 
     data = {'x': x,
             'y': y,
             'z': z,
-            'size': 20 * masses,
+            'size': radii,
             'sigma': ssigma / j**2}
 
     np.savez_compressed('view_atoms_' + molpair + '.npz', **data)
@@ -76,32 +117,40 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
         n (int): Top n phonon modes with highest sigma contribution
     """
     from ase.io import read
+    from ase.data import covalent_radii
     import matplotlib.pyplot as plt
 
     atoms = read(molpair + '/' + molpair + '.xyz')
     pos = atoms.get_positions()
-    masses = atoms.get_masses()
+    numbers = atoms.get_atomic_numbers()
+    radii = [covalent_radii[num]*300 for num in numbers]
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
     ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=-1)
+    nmax = max(max(x), max(y), max(z))
+    nmin = min(min(x), min(y), min(z))
 
     ind = np.argsort(ssigma)[-n:][::-1]
 
     data = {'x': x,
             'y': y,
             'z': z,
-            'size': 20 * masses}
+            'size': radii}
 
     for i in ind:
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(projection='3d')
-        u = vecs_eav[i, :, 0]
-        v = vecs_eav[i, :, 1]
-        w = vecs_eav[i, :, 2]
+        u = vecs_eav[i, :, 0] * 200
+        v = vecs_eav[i, :, 1] * 200
+        w = vecs_eav[i, :, 2] * 200
         data['u'] = u
         data['v'] = v
         data['w'] = w
-        ax.quiver(x, y, z, u, v, w, length=2, normalize=True)
-        ax.scatter(x, y, z, s = 20 * masses)
+        ax.quiver(x, y, z, u, v, w, color='black')
+        ax.scatter(x, y, z, s = radii, alpha=1, edgecolors='grey', c='lavender')
+        ax.set_xlim3d(nmin, nmax)
+        ax.set_ylim3d(nmin, nmax)
+        ax.set_zlim3d(nmin, nmax)
+        plt.axis('off')
         plt.show()
 
         np.savez_compressed('view_modes_' + molpair + '_' + '{}' .format(i) + '_' + '.npz', **data)
@@ -155,12 +204,17 @@ def get_sigma(pair, delta, temp, mode, n):
         heat_atoms(molpair, ssigma_eav)
     elif mode == 'modes':
         heat_modes(molpair, ssigma_eav, vecs_eav, n)
+    elif mode == 'gradient':
+        heat_grad(molpair, dj_matrix_av)
     else:
-        msg = 'The available visualization results are atoms and modes'
+        msg = 'The available visualization results are gradient, atoms and modes'
         raise NotImplementedError(msg)
 
 def view(mode='atoms', n=3):
-    """Main function of the visualization module. There are two modes:
+    """Main function of the visualization module. There are three modes:
+
+    [gradient]: Scatter plot of atoms with arrows indicating 
+    the gradientof the transfer integral.
 
     [atoms]: Scatter plot of atoms with heat indicating 
     the highest contributions to sigma.
