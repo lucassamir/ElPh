@@ -17,6 +17,7 @@ def heat_atoms(molpair, ssigma_eav):
     from ase.data import covalent_radii
     import matplotlib.pyplot as plt
     from matplotlib import cm
+    import matplotlib
     # import plotly.graph_objects as go
 
     atoms = read(molpair + '/' + molpair + '.xyz')
@@ -34,7 +35,7 @@ def heat_atoms(molpair, ssigma_eav):
     ax = fig.add_subplot(projection='3d')
     # s = ax.scatter(x, y, z, s = 10 * masses, c=ssigma / j**2, vmin=0, vmax=0.01)
     # s = ax.scatter(x, y, z, s = 25 * masses, c=ssigma*10**5,vmin=0, vmax=1, cmap=cmc.devon_r, alpha=1, edgecolors='grey')
-    s = ax.scatter(x, y, z, s = radii, c=ssigma*10**5,vmin=0, vmax=1, cmap=cmc.devon_r, alpha=1, edgecolors='grey')
+    s = ax.scatter(x, y, z, s = radii, c=ssigma/j**2, cmap=cmc.devon_r, alpha=1, edgecolors='grey', norm=matplotlib.colors.LogNorm(vmin=0.001, vmax=1,))
     # nmax = max(max(x), max(y), max(z))
     # nmin = min(min(x), min(y), min(z))
     nmin, nmax = -14.20794795, 14.20794795
@@ -233,6 +234,8 @@ def get_sigma(pair, delta, temp, mode, n):
         heat_modes(molpair, ssigma_eav, vecs_eav, n)
     elif mode == 'gradient':
         heat_grad(molpair, dj_matrix_av)
+    elif mode == 'spectrum':
+        return ssigma_eav, vecs_eav
     else:
         msg = 'The available visualization results are atoms and modes'
         raise NotImplementedError(msg)
@@ -254,10 +257,10 @@ def view(mode='atoms', n=3):
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
-    # for pair in pairs.items():
-    #     get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
-    pair = ('B', [1, 2])
-    get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
+    for pair in pairs.items():
+        get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
+    # pair = ('B', [1, 2])
+    # get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
 
 if __name__ == '__main__':
     view()
