@@ -40,7 +40,7 @@ def heat_grad(molpair, dj_matrix_av):
     np.savez_compressed('view_grad_' + molpair + '.npz', **data)
 
 
-def heat_atoms(molpair, ssigma_eav):
+def heat_atoms(molpair, ssigma):
     """Scatter plot of atoms with heat indicating 
     the highest contributions to sigma. Save plot data 
     (atomic positions, atomic sizes and sigma contribution) 
@@ -48,7 +48,7 @@ def heat_atoms(molpair, ssigma_eav):
 
     Args:
         molpair (str): Molecular pair label
-        ssigma_eav (array): Squared sigma array of sizes modes, atoms and directions
+        ssigma (array): Squared sigma array of size atoms
     """
     from ase.io import read
     from ase.data import covalent_radii
@@ -61,7 +61,6 @@ def heat_atoms(molpair, ssigma_eav):
     numbers = atoms.get_atomic_numbers()
     radii = [covalent_radii[num]*300 for num in numbers]    
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
-    ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=0)
     nmax = max(max(x), max(y), max(z))
     nmin = min(min(x), min(y), min(z))
 
@@ -70,7 +69,7 @@ def heat_atoms(molpair, ssigma_eav):
     
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
-    s = ax.scatter(x, y, z, s = radii, c=ssigma*10**5, vmin=0, vmax=1, cmap=cmc.devon_r, alpha=1, edgecolors='grey')
+    s = ax.scatter(x, y, z, s = radii, c=ssigma*10**5, vmin=0, vmax=30, cmap=cmc.devon_r, alpha=1, edgecolors='grey')
     ax.set_xlim3d(nmin, nmax)
     ax.set_ylim3d(nmin, nmax)
     ax.set_zlim3d(nmin, nmax)
@@ -103,7 +102,7 @@ def heat_atoms(molpair, ssigma_eav):
     # fig.write_html(molpair + '.html')
     # fig.show()
 
-def heat_modes(molpair, ssigma_eav, vecs_eav, n):
+def heat_modes(molpair, ssigma, vecs_eav, freqs_e, n):
     """Scatter plot of atoms with arrows indicating
     phonon displacements of n phonons modes with the 
     highest sigma contributions. Save plot data 
@@ -112,7 +111,7 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
 
     Args:
         molpair (str): Molecular pair label
-        ssigma_eav (array): Squared sigma array of sizes modes, atoms and directions
+        ssigma (array): Squared sigma array of size modes
         vecs_eav (array): Array of phonon eigendisplacements of size modes, atoms and directions
         n (int): Top n phonon modes with highest sigma contribution
     """
@@ -125,12 +124,11 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
     numbers = atoms.get_atomic_numbers()
     radii = [covalent_radii[num]*300 for num in numbers]
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
-    ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=-1)
     nmax = max(max(x), max(y), max(z))
     nmin = min(min(x), min(y), min(z))
 
     ind = np.argsort(ssigma)[-n:][::-1]
-
+    
     data = {'x': x,
             'y': y,
             'z': z,
@@ -145,17 +143,18 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
         data['u'] = u
         data['v'] = v
         data['w'] = w
-        ax.quiver(x, y, z, u, v, w, color='black')
+        ax.quiver(x, y, z, u, v, w, color='black', label='{} cm-1' .format(freqs_e[i] * 8065))
         ax.scatter(x, y, z, s = radii, alpha=1, edgecolors='grey', c='lavender')
         ax.set_xlim3d(nmin, nmax)
         ax.set_ylim3d(nmin, nmax)
         ax.set_zlim3d(nmin, nmax)
+        plt.legend()
         plt.axis('off')
         plt.show()
 
         np.savez_compressed('view_modes_' + molpair + '_' + '{}' .format(i) + '_' + '.npz', **data)
 
-def sigma_contribution(pair_atoms, dj_av, temp):
+def sigma_contribution(mode, pair_atoms, dj_av, temp):
     """Standard deviation (sigma) in function of
     modes, atoms and directions.
 
@@ -165,13 +164,20 @@ def sigma_contribution(pair_atoms, dj_av, temp):
         temp (float): Temperature in eV
 
     Returns:
-        typle: sigma and eigendisplacements in function of modes, atoms and directions
+        typle: squared sigma, eigendisplacements in function of modes, atoms and directions; and
+        frequencies of modes
     """
     freqs_e, vecs_eav, nq = load_phonons(pair_atoms)
     epcoup_eav = vecs_eav * dj_av[None, :, :]
-    ssigma_eav = (1 / nq) * (epcoup_eav**2 / (2 * np.tanh(freqs_e[:, None, None] / (2 * temp))))
+    
+    if mode == 'atoms':
+        epcoup_ea = np.sum(epcoup_eav, axis=-1)
+        ssigma = (1 / nq) * np.sum((epcoup_ea**2 / (2 * np.tanh(freqs_e[:, None] / (2 * temp)))), axis=0)
+    else:
+        epcoup_e = np.sum(np.sum(epcoup_eav, axis=-1), axis=-1)
+        ssigma = (1 / nq) * (epcoup_e**2 / (2 * np.tanh(freqs_e / (2 * temp))))
 
-    return ssigma_eav, vecs_eav
+    return ssigma, vecs_eav, freqs_e
 
 def get_sigma(pair, delta, temp, mode, n):
     """Read transfer integrals of displacements systems and calculate sigma
@@ -198,12 +204,12 @@ def get_sigma(pair, delta, temp, mode, n):
                                  np.arange((int(mol2) - 1) * offset, 
                                             int(mol2) * offset)])
 
-    ssigma_eav, vecs_eav = sigma_contribution(pair_atoms, dj_matrix_av, temp)
+    ssigma, vecs_eav, freqs_e = sigma_contribution(mode, pair_atoms, dj_matrix_av, temp)
 
     if mode == 'atoms':
-        heat_atoms(molpair, ssigma_eav)
+        heat_atoms(molpair, ssigma)
     elif mode == 'modes':
-        heat_modes(molpair, ssigma_eav, vecs_eav, n)
+        heat_modes(molpair, ssigma, vecs_eav, freqs_e, n)
     elif mode == 'gradient':
         heat_grad(molpair, dj_matrix_av)
     else:
