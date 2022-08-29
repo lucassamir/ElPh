@@ -209,6 +209,7 @@ def get_sigma(pair, delta=0.01, temp=0.025):
 
     # Create GradJ matrix with a atoms and v directions
     dj_matrix_av = get_dj_matrix(jlists, delta)
+    np.savez_compressed("dj_matrix.npz", dj=dj_matrix_av)
 
     # Calculate sigma
     offset = len(dj_matrix_av) // 2

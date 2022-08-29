@@ -125,7 +125,8 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
     numbers = atoms.get_atomic_numbers()
     radii = [covalent_radii[num]*300 for num in numbers]
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
-    ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=-1)
+    # ssigma = np.sum(np.sum(ssigma_eav, axis=-1), axis=-1)
+    ssigma = ssigma_eav[::36]
     nmax = max(max(x), max(y), max(z))
     nmin = min(min(x), min(y), min(z))
 
@@ -135,8 +136,12 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
             'y': y,
             'z': z,
             'size': radii}
+    data_a = np.load('ratio_A.npz')
+    freqs = data_a['freqs']* 8065
 
     for i in ind:
+        print(len(freqs))
+        print(freqs[i])
         fig = plt.figure(figsize=(8, 8))
         ax = fig.add_subplot(projection='3d')
         u = vecs_eav[i, :, 0] * 200
@@ -145,8 +150,8 @@ def heat_modes(molpair, ssigma_eav, vecs_eav, n):
         data['u'] = u
         data['v'] = v
         data['w'] = w
-        ax.quiver(x, y, z, u, v, w, color='black')
         ax.scatter(x, y, z, s = radii, alpha=1, edgecolors='grey', c='lavender')
+        ax.quiver(x, y, z, u, v, w, color='black')
         ax.set_xlim3d(nmin, nmax)
         ax.set_ylim3d(nmin, nmax)
         ax.set_zlim3d(nmin, nmax)
@@ -170,8 +175,11 @@ def sigma_contribution(pair_atoms, dj_av, temp):
     freqs_e, vecs_eav, nq = load_phonons(pair_atoms)
     epcoup_eav = vecs_eav * dj_av[None, :, :]
     ssigma_eav = (1 / nq) * (epcoup_eav**2 / (2 * np.tanh(freqs_e[:, None, None] / (2 * temp))))
+    epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
+    ssigma_e = (1 / nq) * epcoup_e**2 / \
+        (2 * np.tanh(freqs_e / (2 * temp)))
 
-    return ssigma_eav, vecs_eav
+    return ssigma_e, vecs_eav
 
 def get_sigma(pair, delta, temp, mode, n):
     """Read transfer integrals of displacements systems and calculate sigma
@@ -230,8 +238,10 @@ def view(mode='atoms', n=3):
     with open('all_pairs.json', 'r') as json_file:
         pairs = json.load(json_file)
     
-    for pair in pairs.items():
-        get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
+    # for pair in pairs.items():
+    #     get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
+    pair = ('A', [0, 1])
+    get_sigma(pair, delta=0.01, temp=0.025, mode=mode, n=int(n))
 
 if __name__ == '__main__':
     view()
