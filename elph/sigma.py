@@ -113,7 +113,7 @@ def get_dj_matrix(jlists, delta):
 
     return dj_matrix
 
-def get_deviation(pair_atoms, dj_av, temp):
+def get_deviation(pair_atoms, dj_av, temp, molpair):
     """Calculate standard deviation (sigma) of the transfer integral
 
     Args:
@@ -126,6 +126,7 @@ def get_deviation(pair_atoms, dj_av, temp):
     """
     freqs_e, vecs_eav, nq = load_phonons(pair_atoms)
     epcoup_e = np.einsum('av,eav->e', dj_av, vecs_eav)
+    np.savez(f'sigma_array_{molpair}.npz', freqs=freqs_e, sigma=epcoup_e**2/(2*np.tanh(freqs_e)/(2*temp)))
     ssigma = (1 / nq) * np.sum(epcoup_e**2 / \
         (2 * np.tanh(freqs_e / (2 * temp))))
 
@@ -217,7 +218,7 @@ def get_sigma(pair, delta=0.01, temp=0.025):
                                  np.arange((int(mol2) - 1) * offset, 
                                             int(mol2) * offset)])
 
-    sigma = get_deviation(pair_atoms, dj_matrix_av, temp)
+    sigma = get_deviation(pair_atoms, dj_matrix_av, temp,molpair)
     data = {molpair: sigma}
     
     print('Sigma_{} = {}' .format(pair[0], sigma))

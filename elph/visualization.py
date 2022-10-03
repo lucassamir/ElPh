@@ -59,7 +59,7 @@ def heat_atoms(molpair, ssigma):
     atoms = read(molpair + '/' + molpair + '.xyz')
     pos = atoms.get_positions()
     numbers = atoms.get_atomic_numbers()
-    radii = [covalent_radii[num]*300 for num in numbers]    
+    radii = [covalent_radii[num]*700 for num in numbers]    
     x, y, z = pos[:, 0], pos[:, 1], pos[:, 2]
     nmax = max(max(x), max(y), max(z))
     nmin = min(min(x), min(y), min(z))
@@ -69,12 +69,14 @@ def heat_atoms(molpair, ssigma):
     
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
-    s = ax.scatter(x, y, z, s = radii, c=ssigma*10**5, vmin=0, vmax=30, cmap=cmc.devon_r, alpha=1, edgecolors='grey')
+    ax.view_init(elev=-44., azim=-31)
+    s = ax.scatter(x, y, z, s = radii, c=ssigma*10**5, vmin=0, cmap=cmc.devon_r, alpha=1, edgecolors='grey')
     ax.set_xlim3d(nmin, nmax)
     ax.set_ylim3d(nmin, nmax)
     ax.set_zlim3d(nmin, nmax)
     fig.colorbar(s)
     plt.axis('off')
+    plt.savefig(f'ttf_heat_{molpair}.eps')
     plt.show()
 
     data = {'x': x,
